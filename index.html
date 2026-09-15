@@ -816,8 +816,7 @@
 
   <script>
     const SITE_ACCESS_PASSWORD = "gmskitchen123";
-
-    const MENU_SCHEMA_VERSION = "v2.0";
+    const MENU_SCHEMA_VERSION = "v2.1";
 
     const defaultStarterDishes = [
       {
@@ -1062,6 +1061,7 @@
         updateAuthUI();
         toggleLoginModal(false);
         renderCustomerOrders();
+        updateHistoryDrawer();
         alert('Welcome back, Kitchen Owner! Control buttons unlocked.');
       } else {
         alert('Incorrect PIN! Access denied.');
@@ -1080,8 +1080,8 @@
     function applyOrderTimeUI() {
       document.getElementById('topBarOrderTime').innerText = kitchenSettings.orderTime || '07:00 AM – 10:30 PM';
       document.getElementById('displayCutoffBreakfast').innerText = formatTime12(kitchenSettings.cutoffBreakfast || '09:30');
-      document.getElementById('displayCutoffLunch').innerText = formatTime12(kitchenSettings.cutoffLunch || '13:30');
-      document.getElementById('displayCutoffDinner').innerText = formatTime12(kitchenSettings.cutoffDinner || '21:30');
+      document.getElementById('displayCutoffLunch').innerText = formatTime12(kitchenSettings.cutoffLunch || '01:30 PM');
+      document.getElementById('displayCutoffDinner').innerText = formatTime12(kitchenSettings.cutoffDinner || '09:30 PM');
     }
 
     function toggleFixedPointInput(checked) {
@@ -1421,7 +1421,7 @@
       if (!isOwnerLoggedIn) return;
       historyMenu = historyMenu.filter(i => i.id !== id);
       activeMenu = activeMenu.filter(i => i.id !== id);
-      localStorage.setItem('rds_history_menu', JSON.stringify(historyMenu));
+      localStorage.setItem('rds_cloud_history_menu', JSON.stringify(historyMenu));
       localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
       updateCategoryCounts();
       updateUI();
