@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- html2canvas & jsPDF -->
+  <!-- html2canvas & jsPDF for Postcards and Bill PDF Generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -27,6 +27,25 @@
     }
     .animate-surplus-flash {
       animation: flashSurplus 2s infinite ease-in-out;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #invoicePrintTarget, #invoicePrintTarget * {
+        visibility: visible;
+      }
+      #invoicePrintTarget {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        box-shadow: none !important;
+        border: none !important;
+      }
     }
   </style>
 
@@ -74,7 +93,7 @@
         <span>Operating Timing: <strong id="topBarOrderTime" class="underline decoration-amber-300">07:00 AM – 10:30 PM</strong> | <span id="topBarDistanceText">3 KM Delivery</span></span>
       </div>
 
-      <!-- OWNER ADMIN CONTROLS (Unlocked State) -->
+      <!-- OWNER ADMIN CONTROLS -->
       <div id="ownerAdminBar" class="hidden flex items-center gap-2">
         <button onclick="toggleSettingsModal(true)" class="bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
           <i class="fa-solid fa-gear"></i> Settings
@@ -93,7 +112,7 @@
         </button>
       </div>
 
-      <!-- LOCKED STATUS (Locked State) -->
+      <!-- LOCKED STATUS -->
       <div id="lockedIndicator">
         <button type="button" onclick="promptOwnerLogin()" class="cursor-pointer bg-black/30 hover:bg-black/50 px-3 py-1 rounded-full text-xs font-extrabold text-amber-200 flex items-center gap-1.5 transition border border-amber-300/40 shadow-sm">
           <i class="fa-solid fa-lock text-[11px]"></i> Owner Login
@@ -310,7 +329,120 @@
     </div>
   </footer>
 
-  <!-- 🖼️ MODAL: ADVERTISING POSTCARD PREVIEW & EXPORT -->
+  <!-- 🧾 MODAL: OWNER GST / NON-GST INVOICE GENERATOR -->
+  <div id="invoiceModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border border-stone-200 text-stone-900">
+      
+      <!-- Top Action Controls -->
+      <div class="flex justify-between items-center border-b pb-3">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-file-invoice text-orange-600 text-lg"></i>
+          <h2 id="invoiceModalHeading" class="font-black text-base">Customer Food Bill</h2>
+        </div>
+        <button onclick="toggleInvoiceModal(false)" class="p-1 text-stone-400 hover:text-stone-700 font-bold text-xl leading-none">&times;</button>
+      </div>
+
+      <!-- GST Calculation Mode Switcher (Hidden if GST is Disabled) -->
+      <div id="gstModeSwitcher" class="bg-stone-100 p-1.5 rounded-2xl grid grid-cols-2 gap-1.5 text-xs font-bold text-center">
+        <button type="button" id="btnGstSeparate" onclick="setGstMode('separate')" class="py-2 rounded-xl transition bg-white text-orange-600 shadow-sm">
+          GST Added Separately
+        </button>
+        <button type="button" id="btnGstInclusive" onclick="setGstMode('inclusive')" class="py-2 rounded-xl transition text-stone-600 hover:text-stone-900">
+          GST Included in Price
+        </button>
+      </div>
+
+      <!-- PRINTABLE INVOICE SHEET -->
+      <div id="invoicePrintTarget" class="bg-white p-5 rounded-2xl border border-stone-300 font-mono text-xs space-y-3 shadow-sm">
+        
+        <!-- Kitchen Header -->
+        <div class="text-center border-b border-dashed pb-3 space-y-0.5 font-sans">
+          <h3 class="text-lg font-black text-stone-900">RDS CLOUD KITCHEN</h3>
+          <p id="invKitchenAddress" class="text-[11px] text-stone-600 font-medium"></p>
+          <p id="invGstin" class="text-[11px] font-bold text-stone-800"></p>
+          <p id="invPhone" class="text-[11px] text-stone-600"></p>
+          <span id="invBadgeType" class="inline-block bg-stone-900 text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded mt-1">
+            Retail Cash Bill
+          </span>
+        </div>
+
+        <!-- Order & Customer Meta -->
+        <div class="grid grid-cols-2 gap-2 text-[11px] border-b border-dashed pb-2">
+          <div>
+            <p><strong>Bill No:</strong> <span id="invOrderId"></span></p>
+            <p><strong>Date & Time:</strong> <span id="invDateTime"></span></p>
+            <p><strong>Order Mode:</strong> <span id="invMode" class="font-bold"></span></p>
+          </div>
+          <div class="text-right">
+            <p><strong>Customer:</strong> <span id="invCustName"></span></p>
+            <p><strong>Phone:</strong> <span id="invCustPhone"></span></p>
+            <p><strong>Payment:</strong> <span id="invPayment"></span></p>
+          </div>
+        </div>
+
+        <!-- Itemized Table -->
+        <div>
+          <table class="w-full text-left text-[11px]">
+            <thead>
+              <tr class="border-b border-stone-400 font-bold">
+                <th class="py-1">Item</th>
+                <th class="text-center py-1">Qty</th>
+                <th class="text-right py-1">Rate</th>
+                <th class="text-right py-1">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="invItemsTable" class="divide-y divide-stone-200">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totals & Tax Breakdown -->
+        <div class="border-t border-dashed pt-2 space-y-1 text-[11px]">
+          
+          <!-- GST Fields Container (Hidden when GST is Disabled) -->
+          <div id="invGstFields" class="space-y-1">
+            <div class="flex justify-between">
+              <span>Taxable Food Value:</span>
+              <span id="invTaxable">₹0.00</span>
+            </div>
+            <div class="flex justify-between text-stone-600">
+              <span>CGST (<span id="invCgstPct">2.5</span>%):</span>
+              <span id="invCgstVal">₹0.00</span>
+            </div>
+            <div class="flex justify-between text-stone-600">
+              <span>SGST (<span id="invSgstPct">2.5</span>%):</span>
+              <span id="invSgstVal">₹0.00</span>
+            </div>
+          </div>
+
+          <div class="flex justify-between border-t border-stone-800 pt-1.5 text-sm font-black font-sans">
+            <span>Grand Total (Net Payable):</span>
+            <span id="invGrandTotal" class="text-orange-600">₹0.00</span>
+          </div>
+          <p id="invTaxNote" class="text-[9px] text-stone-500 italic mt-1 text-center font-sans"></p>
+        </div>
+
+        <!-- Invoice Footer -->
+        <div class="text-center border-t border-dashed pt-2 text-[10px] text-stone-500 font-sans">
+          <p class="font-bold text-stone-700">Thank you for dining with RDS Cloud Kitchen!</p>
+          <p>Consume within 60 mins • For queries: contact kitchen support</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-2 font-sans pt-1">
+        <button onclick="printInvoiceSheet()" class="flex-1 bg-stone-900 hover:bg-black text-amber-300 font-black py-3 rounded-2xl shadow transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <i class="fa-solid fa-print"></i> Print Bill
+        </button>
+        <button onclick="downloadInvoicePdf()" class="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3 rounded-2xl shadow transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download"></i> Download PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🖼️ MODAL: ADVERTISING POSTCARD PREVIEW -->
   <div id="postcardModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
     <div class="bg-stone-950 rounded-3xl max-w-2xl w-full p-4 sm:p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border border-stone-800">
       <div class="flex justify-between items-center border-b border-stone-800 pb-3 text-white">
@@ -408,7 +540,7 @@
     </div>
   </div>
 
-  <!-- 🔑 MODAL: OWNER LOGIN (HIGH Z-INDEX & CLEAN PROMPT) -->
+  <!-- 🔑 MODAL: OWNER LOGIN -->
   <div id="loginModal" class="fixed inset-0 z-[110] bg-black/75 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-xs w-full p-6 space-y-4 shadow-2xl border border-orange-100">
       <div class="flex justify-between items-center border-b pb-2">
@@ -518,19 +650,44 @@
     </div>
   </div>
 
-  <!-- MODAL: KITCHEN MASTER SETTINGS -->
+  <!-- MODAL: KITCHEN MASTER SETTINGS (WITH GST ENABLE/DISABLE TOGGLE) -->
   <div id="settingsModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
         <div class="flex items-center gap-2 text-stone-900 font-extrabold text-base">
           <i class="fa-solid fa-gear text-orange-600"></i>
-          <h2>Kitchen Settings & Location Limits</h2>
+          <h2>Kitchen Settings & GST Controls</h2>
         </div>
         <button onclick="toggleSettingsModal(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
       </div>
 
       <form onsubmit="saveKitchenSettings(event)" class="space-y-3.5 text-xs">
         
+        <!-- 🧾 GST BILL ENABLE / DISABLE TOGGLE -->
+        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-black text-emerald-950 flex items-center gap-1.5 text-xs sm:text-sm">
+              <i class="fa-solid fa-receipt text-emerald-600"></i> Enable GST on Invoices / Orders?
+            </span>
+            <input type="checkbox" id="setGstEnabled" onchange="toggleGstSettingsFields(this.checked)" class="w-4 h-4 accent-emerald-600 cursor-pointer">
+          </div>
+          <p class="text-[11px] text-emerald-800">Keep disabled if GSTIN is pending. When turned off, invoices generate as simple, tax-free retail cash bills.</p>
+          
+          <div id="gstConfigFields" class="hidden space-y-2 pt-2 border-t border-emerald-200">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] font-bold text-stone-700 mb-0.5">GST Rate (%) *</label>
+                <input id="setGstRate" type="number" step="0.5" min="0" max="28" placeholder="e.g. 5" class="w-full p-2 border rounded-xl font-bold bg-white text-stone-900">
+                <p class="text-[10px] text-stone-500 mt-0.5">5% standard restaurant tax (2.5% CGST + 2.5% SGST).</p>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-stone-700 mb-0.5">Kitchen GSTIN / Tax ID</label>
+                <input id="setGstin" type="text" placeholder="e.g. 33AAAAA0000A1Z5" class="w-full p-2 border rounded-xl font-bold bg-white text-stone-900 uppercase">
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 📍 CUSTOM DELIVERY RADIUS -->
         <div class="p-3 bg-orange-50 border border-orange-200 rounded-2xl space-y-2">
           <label class="font-black text-stone-900 block flex items-center gap-1.5">
@@ -540,7 +697,6 @@
             <input id="setMaxKm" type="number" step="0.5" min="0.5" max="50" placeholder="e.g. 3 or 5" required class="w-full p-2.5 border rounded-xl font-extrabold bg-white text-stone-900 text-sm">
             <span class="font-black text-stone-700 text-sm">KM</span>
           </div>
-          <p class="text-[10px] text-stone-500">Change this anytime. The entire website, GPS checker, and disclaimers will adapt instantly.</p>
         </div>
 
         <!-- SURPLUS FLASH CONFIGURATION -->
@@ -551,7 +707,6 @@
             </span>
             <input type="checkbox" id="setSurplusActive" onchange="toggleSurplusInputs(this.checked)" class="w-4 h-4 accent-red-600">
           </div>
-          <p class="text-[11px] text-red-800">Turn this on when extra portions are cooked and available for immediate dispatch.</p>
           <div id="surplusFields" class="hidden space-y-2 pt-1 border-t border-red-200">
             <div>
               <label class="block text-[11px] font-bold text-red-900 mb-0.5">Surplus Banner Headline</label>
@@ -795,6 +950,9 @@
       cutoffLunch: '13:30',
       cutoffDinner: '21:30',
       maxDistanceKm: 3.0,
+      gstEnabled: false, // Default: DISABLED until GST number is obtained
+      gstRate: 5.0,
+      gstin: '',
       surplusActive: false,
       surplusHeadline: 'Fresh Extra Portions Available for Quick Dispatch!',
       surplusMessage: 'Cooked fresh in excess batch. Available to order now until portions finish.',
@@ -816,9 +974,15 @@
     let activeCategory = 'All';
     let base64Image = '';
     let currentOrderMode = 'delivery';
+    let currentInvoiceOrder = null;
+    let currentGstMode = 'separate';
 
     function getActiveLimit() {
       return parseFloat(kitchenSettings.maxDistanceKm) || 3.0;
+    }
+
+    function isGstActive() {
+      return !!kitchenSettings.gstEnabled;
     }
 
     function formatTime12(timeStr) {
@@ -905,6 +1069,10 @@
       document.getElementById('surplusFields').classList.toggle('hidden', !checked);
     }
 
+    function toggleGstSettingsFields(checked) {
+      document.getElementById('gstConfigFields').classList.toggle('hidden', !checked);
+    }
+
     function updateAuthUI() {
       const adminBar = document.getElementById('ownerAdminBar');
       const lockIndicator = document.getElementById('lockedIndicator');
@@ -918,7 +1086,6 @@
       updateUI();
     }
 
-    // --- REPAIRED LOGIN PROMPT ---
     function promptOwnerLogin() {
       if (isOwnerLoggedIn) {
         alert('You are already logged in as Owner. Controls are visible at the top bar.');
@@ -940,6 +1107,7 @@
         sessionStorage.setItem('rds_owner_auth', 'true');
         updateAuthUI();
         toggleLoginModal(false);
+        renderCustomerOrders();
         alert('Welcome back, Kitchen Owner! Control buttons unlocked.');
       } else {
         alert('Incorrect PIN! Access denied.');
@@ -951,6 +1119,7 @@
       isOwnerLoggedIn = false;
       sessionStorage.removeItem('rds_owner_auth');
       updateAuthUI();
+      renderCustomerOrders();
       alert('Logged out. Owner controls are locked.');
     }
 
@@ -983,6 +1152,13 @@
     function loadKitchenSettingsForm() {
       document.getElementById('setOrderTime').value = kitchenSettings.orderTime || '07:00 AM – 10:30 PM';
       document.getElementById('setMaxKm').value = kitchenSettings.maxDistanceKm || 3.0;
+      
+      const isGstOn = !!kitchenSettings.gstEnabled;
+      document.getElementById('setGstEnabled').checked = isGstOn;
+      toggleGstSettingsFields(isGstOn);
+      document.getElementById('setGstRate').value = kitchenSettings.gstRate !== undefined ? kitchenSettings.gstRate : 5.0;
+      document.getElementById('setGstin').value = kitchenSettings.gstin || '';
+
       document.getElementById('setCutoffBreakfast').value = kitchenSettings.cutoffBreakfast || '09:30';
       document.getElementById('setCutoffLunch').value = kitchenSettings.cutoffLunch || '13:30';
       document.getElementById('setCutoffDinner').value = kitchenSettings.cutoffDinner || '21:30';
@@ -1010,6 +1186,9 @@
 
       kitchenSettings.orderTime = document.getElementById('setOrderTime').value.trim();
       kitchenSettings.maxDistanceKm = parseFloat(document.getElementById('setMaxKm').value) || 3.0;
+      kitchenSettings.gstEnabled = document.getElementById('setGstEnabled').checked;
+      kitchenSettings.gstRate = parseFloat(document.getElementById('setGstRate').value) || 5.0;
+      kitchenSettings.gstin = document.getElementById('setGstin').value.trim().toUpperCase();
       kitchenSettings.cutoffBreakfast = document.getElementById('setCutoffBreakfast').value;
       kitchenSettings.cutoffLunch = document.getElementById('setCutoffLunch').value;
       kitchenSettings.cutoffDinner = document.getElementById('setCutoffDinner').value;
@@ -1035,8 +1214,9 @@
       applyDistanceUI();
       updateSurplusBanner();
       updateCheckoutModeUI();
+      renderCustomerOrders();
       updateUI();
-      alert(`Settings Saved! Location limit is now set to ${kitchenSettings.maxDistanceKm} KM.`);
+      alert(`Settings Saved! GST status is now ${kitchenSettings.gstEnabled ? 'ENABLED' : 'DISABLED'}.`);
       toggleSettingsModal(false);
     }
 
@@ -1709,6 +1889,7 @@
       alert(`Order ${newOrder.orderId} placed! Inventory updated.`);
     }
 
+    // --- RENDER CUSTOMER ORDERS (ADAPTIVE GST / CASH BILL BUTTON) ---
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase().trim();
@@ -1724,6 +1905,8 @@
         return;
       }
 
+      const gstActive = isGstActive();
+
       container.innerHTML = filtered.map(order => `
         <div class="p-4 border rounded-2xl bg-white shadow-sm space-y-2.5 text-xs">
           <div class="flex justify-between items-start border-b pb-2">
@@ -1736,7 +1919,15 @@
               </div>
               <p class="text-[11px] text-stone-500 font-semibold mt-0.5">${order.date} at ${order.placedAt}</p>
             </div>
-            <span class="font-black text-orange-600 text-sm">₹${order.total}</span>
+            
+            <div class="text-right">
+              <span class="font-black text-orange-600 text-sm">₹${order.total}</span>
+              ${isOwnerLoggedIn ? `
+                <button onclick="openInvoiceModal('${order.orderId}')" class="mt-1 block ml-auto text-[10px] font-black uppercase ${gstActive ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-stone-800 hover:bg-black text-amber-300'} px-2.5 py-1 rounded-lg shadow-sm transition">
+                  <i class="fa-solid fa-file-invoice mr-1"></i> ${gstActive ? 'GST Bill' : 'View Bill'}
+                </button>
+              ` : ''}
+            </div>
           </div>
 
           <div class="bg-orange-50/70 p-2.5 rounded-xl space-y-1">
@@ -1800,6 +1991,164 @@
         },
         () => alert('Please enable location permissions in your browser.')
       );
+    }
+
+    // --- 🧾 INVOICE & GST / NON-GST BILL GENERATOR LOGIC ---
+    function openInvoiceModal(orderId) {
+      const order = customerOrders.find(o => o.orderId === orderId);
+      if (!order) return;
+      currentInvoiceOrder = order;
+      currentGstMode = 'separate';
+      renderInvoiceSheet();
+      toggleInvoiceModal(true);
+    }
+
+    function setGstMode(mode) {
+      currentGstMode = mode;
+      const btnSep = document.getElementById('btnGstSeparate');
+      const btnInc = document.getElementById('btnGstInclusive');
+
+      if (mode === 'separate') {
+        btnSep.className = 'py-2 rounded-xl transition bg-white text-orange-600 shadow-sm';
+        btnInc.className = 'py-2 rounded-xl transition text-stone-600 hover:text-stone-900';
+      } else {
+        btnInc.className = 'py-2 rounded-xl transition bg-white text-orange-600 shadow-sm';
+        btnSep.className = 'py-2 rounded-xl transition text-stone-600 hover:text-stone-900';
+      }
+      renderInvoiceSheet();
+    }
+
+    function renderInvoiceSheet() {
+      if (!currentInvoiceOrder) return;
+      const order = currentInvoiceOrder;
+      const gstActive = isGstActive();
+      const gstRate = parseFloat(kitchenSettings.gstRate) || 5.0;
+      const halfRate = (gstRate / 2).toFixed(2);
+
+      const modalHeading = document.getElementById('invoiceModalHeading');
+      const modeSwitcher = document.getElementById('gstModeSwitcher');
+      const gstFields = document.getElementById('invGstFields');
+      const badgeType = document.getElementById('invBadgeType');
+      const gstinEl = document.getElementById('invGstin');
+
+      document.getElementById('invKitchenAddress').innerText = kitchenSettings.takeawayAddress || 'Main Kitchen Counter';
+      document.getElementById('invPhone').innerText = `Helpline: ${kitchenSettings.phone1 || ''}`;
+
+      document.getElementById('invOrderId').innerText = order.orderId;
+      document.getElementById('invDateTime').innerText = `${order.date} ${order.placedAt}`;
+      document.getElementById('invMode').innerText = order.mode;
+      document.getElementById('invCustName').innerText = order.customer.name;
+      document.getElementById('invCustPhone').innerText = order.customer.phone;
+      document.getElementById('invPayment').innerText = order.payment || 'COD';
+
+      const rawItemsTotal = order.items.reduce((sum, i) => sum + i.total, 0);
+
+      if (!gstActive) {
+        // NON-GST CASH RECEIPT MODE
+        modalHeading.innerText = 'Food Cash Bill / Retail Receipt';
+        modeSwitcher.classList.add('hidden');
+        gstFields.classList.add('hidden');
+        badgeType.innerText = 'Retail Cash Bill';
+        gstinEl.innerText = '';
+
+        document.getElementById('invItemsTable').innerHTML = order.items.map(i => `
+          <tr class="py-1">
+            <td class="py-1">${i.name}</td>
+            <td class="text-center py-1">${i.qty}</td>
+            <td class="text-right py-1">₹${i.price.toFixed(2)}</td>
+            <td class="text-right py-1 font-bold">₹${i.total.toFixed(2)}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('invGrandTotal').innerText = `₹${rawItemsTotal.toFixed(2)}`;
+        document.getElementById('invTaxNote').innerText = '* Simplified retail food bill (Non-GST / Exempt).';
+
+      } else {
+        // GST TAX INVOICE MODE
+        modalHeading.innerText = 'GST Tax Invoice Generator';
+        modeSwitcher.classList.remove('hidden');
+        gstFields.classList.remove('hidden');
+        badgeType.innerText = 'Tax Invoice';
+        gstinEl.innerText = kitchenSettings.gstin ? `GSTIN: ${kitchenSettings.gstin}` : 'GSTIN: PENDING REGISTRATION';
+
+        document.getElementById('invCgstPct').innerText = halfRate;
+        document.getElementById('invSgstPct').innerText = halfRate;
+
+        let taxableAmount = 0;
+        let cgstAmount = 0;
+        let sgstAmount = 0;
+        let grandTotal = 0;
+
+        if (currentGstMode === 'separate') {
+          taxableAmount = rawItemsTotal;
+          const totalGst = (taxableAmount * gstRate) / 100;
+          cgstAmount = totalGst / 2;
+          sgstAmount = totalGst / 2;
+          grandTotal = taxableAmount + totalGst;
+
+          document.getElementById('invItemsTable').innerHTML = order.items.map(i => `
+            <tr class="py-1">
+              <td class="py-1">${i.name}</td>
+              <td class="text-center py-1">${i.qty}</td>
+              <td class="text-right py-1">₹${i.price.toFixed(2)}</td>
+              <td class="text-right py-1 font-bold">₹${i.total.toFixed(2)}</td>
+            </tr>
+          `).join('');
+
+          document.getElementById('invTaxNote').innerText = `* GST (${gstRate}%) is charged separately on food item value.`;
+        } else {
+          grandTotal = rawItemsTotal;
+          taxableAmount = grandTotal / (1 + (gstRate / 100));
+          const totalGst = grandTotal - taxableAmount;
+          cgstAmount = totalGst / 2;
+          sgstAmount = totalGst / 2;
+
+          document.getElementById('invItemsTable').innerHTML = order.items.map(i => {
+            const itemBaseRate = i.price / (1 + (gstRate / 100));
+            const itemBaseTotal = i.total / (1 + (gstRate / 100));
+            return `
+              <tr class="py-1">
+                <td class="py-1">${i.name}</td>
+                <td class="text-center py-1">${i.qty}</td>
+                <td class="text-right py-1">₹${itemBaseRate.toFixed(2)}</td>
+                <td class="text-right py-1 font-bold">₹${itemBaseTotal.toFixed(2)}</td>
+              </tr>
+            `;
+          }).join('');
+
+          document.getElementById('invTaxNote').innerText = `* Menu prices are inclusive of ${gstRate}% GST (${halfRate}% CGST + ${halfRate}% SGST).`;
+        }
+
+        document.getElementById('invTaxable').innerText = `₹${taxableAmount.toFixed(2)}`;
+        document.getElementById('invCgstVal').innerText = `₹${cgstAmount.toFixed(2)}`;
+        document.getElementById('invSgstVal').innerText = `₹${sgstAmount.toFixed(2)}`;
+        document.getElementById('invGrandTotal').innerText = `₹${grandTotal.toFixed(2)}`;
+      }
+    }
+
+    function printInvoiceSheet() {
+      window.print();
+    }
+
+    function downloadInvoicePdf() {
+      const target = document.getElementById('invoicePrintTarget');
+      html2canvas(target, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        logging: false
+      }).then(canvas => {
+        const { jsPDF } = window.jspdf;
+        const imgData = canvas.toDataURL('image/png');
+        const pdfWidth = 80;
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        
+        const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`Bill-${currentInvoiceOrder ? currentInvoiceOrder.orderId : Date.now()}.pdf`);
+      }).catch(err => {
+        alert('Could not render PDF. Please use the Print Bill button instead.');
+      });
     }
 
     // --- 📢 ADVERTISING POSTCARD RENDER & DOWNLOAD LOGIC ---
@@ -1906,6 +2255,7 @@
     }
 
     // Modal toggles
+    function toggleInvoiceModal(show) { document.getElementById('invoiceModal').classList.toggle('hidden', !show); }
     function togglePostcardModal(show) { document.getElementById('postcardModal').classList.toggle('hidden', !show); }
     function toggleLoginModal(show) { 
       const m = document.getElementById('loginModal');
