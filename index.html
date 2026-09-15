@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- html2canvas for instant postcard PNG image generation -->
+  <!-- html2canvas for postcard export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
@@ -114,7 +114,6 @@
       </div>
 
       <div class="flex items-center gap-2 sm:gap-3">
-        <!-- 📢 DOWNLOADABLE ADVERTISING POSTCARD BUTTON -->
         <button onclick="openPostcardPreview()" title="Download promotional menu postcard" class="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full border border-purple-300 bg-purple-50 text-purple-800 hover:bg-purple-100 transition shadow-sm">
           <i class="fa-solid fa-image text-purple-600"></i>
           <span class="hidden md:inline">Ad Postcard</span>
@@ -309,91 +308,99 @@
     </div>
   </footer>
 
-  <!-- 🖼️ MODAL: ADVERTISING POSTCARD PREVIEW & EXPORT -->
-  <div id="postcardModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-stone-900 rounded-3xl max-w-xl w-full p-5 space-y-4 shadow-2xl max-h-[95vh] overflow-y-auto border border-stone-800">
-      <div class="flex justify-between items-center border-b border-stone-800 pb-2 text-white">
+  <!-- 🖼️ MODAL: ADVERTISING POSTCARD PREVIEW & EXPORT (NO CUTOFFS, FULL DISH LIST WITH IMAGES) -->
+  <div id="postcardModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-stone-950 rounded-3xl max-w-2xl w-full p-4 sm:p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border border-stone-800">
+      <div class="flex justify-between items-center border-b border-stone-800 pb-3 text-white">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-bullhorn text-orange-500"></i>
-          <h2 class="font-extrabold text-sm">Download Advertising Postcard</h2>
+          <h2 class="font-extrabold text-sm sm:text-base">Download Advertising Postcard</h2>
         </div>
-        <button onclick="togglePostcardModal(false)" class="p-1 text-stone-400 hover:text-white font-bold text-lg">&times;</button>
+        <button onclick="togglePostcardModal(false)" class="p-1 text-stone-400 hover:text-white font-bold text-xl leading-none">&times;</button>
       </div>
 
-      <!-- CANVAS TARGET POSTCARD -->
+      <!-- CANVAS TARGET POSTCARD (Dyna-flow container: full dishes rendered without clipping) -->
       <div class="flex justify-center">
-        <div id="adPostcardTarget" class="w-full bg-gradient-to-br from-stone-900 via-stone-950 to-neutral-900 text-white rounded-2xl p-6 border-4 border-orange-500 space-y-4 shadow-2xl">
+        <div id="adPostcardTarget" class="w-full max-w-xl bg-stone-950 text-white rounded-3xl p-6 sm:p-8 border-4 border-orange-500 space-y-5 shadow-2xl">
           
           <!-- Postcard Header -->
-          <div class="flex justify-between items-start border-b border-white/10 pb-3">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center font-black">
-                  <i class="fa-solid fa-utensils text-sm"></i>
-                </span>
-                <h3 class="text-xl font-black tracking-tight text-white">RDS <span class="text-orange-500">CLOUD KITCHEN</span></h3>
-              </div>
-              <p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mt-1">
-                Authentic Homestyle Cooking • <span class="postcardRadiusText">3 KM Delivery</span>
-              </p>
-            </div>
-            <div class="text-right">
-              <span class="bg-orange-500/20 border border-orange-500 text-orange-400 text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
-                Fresh Batch
+          <div class="flex justify-between items-center border-b border-white/10 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center font-black text-lg shadow">
+                <i class="fa-solid fa-utensils"></i>
               </span>
+              <div>
+                <h3 class="text-xl sm:text-2xl font-black tracking-tight text-white leading-none">RDS <span class="text-orange-500">CLOUD KITCHEN</span></h3>
+                <p class="text-[11px] font-bold text-amber-400 uppercase tracking-widest mt-1">
+                  Fresh Homestyle Delicacies • <span class="postcardRadiusText">3 KM Delivery</span>
+                </p>
+              </div>
+            </div>
+            <span class="bg-orange-500/20 border border-orange-500/60 text-orange-300 text-[10px] font-black uppercase px-3 py-1 rounded-full whitespace-nowrap">
+              Fresh Batches
+            </span>
+          </div>
+
+          <!-- Featured Hero Image of First Dish -->
+          <div id="postcardHeroWrapper" class="hidden rounded-2xl overflow-hidden relative border border-white/10 h-44 sm:h-52 bg-stone-900">
+            <img id="postcardHeroImg" src="" alt="Featured Item" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-4">
+              <span id="postcardHeroBadge" class="bg-orange-600 text-white font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full w-max mb-1"></span>
+              <h4 id="postcardHeroTitle" class="text-lg sm:text-xl font-extrabold text-white leading-tight"></h4>
+              <p id="postcardHeroPrice" class="text-sm font-black text-amber-300"></p>
             </div>
           </div>
 
-          <!-- Highlight Banner inside card -->
-          <div class="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-3 text-center shadow">
-            <p class="font-black text-sm uppercase tracking-wide">Delivered Piping Hot to Your Doorstep</p>
-            <p class="text-[11px] font-medium text-amber-100">Breakfast • Lunch • Dinner • Advance Pre-Orders</p>
+          <!-- Headline -->
+          <div class="bg-gradient-to-r from-orange-600 to-amber-600 rounded-2xl p-3.5 text-center shadow-lg">
+            <p class="font-black text-sm sm:text-base uppercase tracking-wide">Piping Hot Delivery To Your Doorstep</p>
+            <p class="text-xs font-semibold text-amber-100 mt-0.5">Breakfast • Lunch • Dinner • Advance Pre-Orders</p>
           </div>
 
-          <!-- Dynamic Active Dishes Grid inside postcard -->
-          <div class="space-y-2">
-            <div class="flex justify-between items-center text-xs font-black uppercase text-stone-400 border-b border-white/5 pb-1">
-              <span>Today's Featured Menu Items</span>
+          <!-- Full Active Dishes List (Clean layout without overflow hidden or truncation) -->
+          <div class="space-y-3">
+            <div class="flex justify-between items-center text-xs font-black uppercase text-stone-400 border-b border-white/10 pb-1.5">
+              <span>Today's Active Menu Items</span>
               <span>Price</span>
             </div>
-            <div id="postcardDishesList" class="space-y-1.5 divide-y divide-white/5 max-h-60 overflow-hidden">
+            <div id="postcardDishesList" class="space-y-2.5">
               <!-- Dynamically populated via JS -->
             </div>
           </div>
 
-          <!-- 🌐 WEBSITE ADDRESS PROMPT (REPLACED WHATSAPP PROMPT) -->
-          <div class="bg-white/5 rounded-xl p-3 space-y-2 border border-white/10">
+          <!-- Website URL Prompt -->
+          <div class="bg-white/5 rounded-2xl p-4 space-y-2.5 border border-white/10">
             <div>
               <p class="text-stone-400 font-bold uppercase text-[10px] flex items-center gap-1.5">
                 <i class="fa-solid fa-globe text-orange-400"></i> Order Online Directly On Our Website:
               </p>
-              <p id="postcardWebsiteUrl" class="font-black text-amber-300 text-xs sm:text-sm tracking-wide break-all mt-1 underline decoration-amber-400"></p>
+              <p id="postcardWebsiteUrl" class="font-black text-amber-300 text-xs sm:text-sm tracking-wide break-all mt-1 underline decoration-amber-400 leading-snug"></p>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 text-[10px] border-t border-white/10 pt-2">
+            <div class="grid grid-cols-2 gap-3 text-[10px] border-t border-white/10 pt-2.5">
               <div>
-                <p class="text-stone-400 font-bold uppercase">Settlement:</p>
-                <p class="font-extrabold text-stone-200">UPI / Cash on Delivery</p>
+                <p class="text-stone-400 font-bold uppercase">Payment Options:</p>
+                <p class="font-extrabold text-stone-200 text-[11px] mt-0.5">UPI / Cash on Delivery</p>
               </div>
               <div>
-                <p class="text-stone-400 font-bold uppercase">Self-Pickup Counter:</p>
-                <p id="postcardCounter" class="text-stone-300 truncate"></p>
+                <p class="text-stone-400 font-bold uppercase">Counter Takeaway:</p>
+                <p id="postcardCounter" class="text-stone-200 text-[11px] leading-tight mt-0.5"></p>
               </div>
             </div>
           </div>
 
-          <div class="text-center text-[9px] text-stone-500 uppercase tracking-widest pt-1 border-t border-white/5">
-            Strict Hygiene • Clean Packaging • Dedicated Cloud Kitchen
+          <div class="text-center text-[10px] text-stone-500 uppercase tracking-widest pt-1 border-t border-white/5 font-semibold">
+            Strict Hygiene • Food-Grade Sealed Packs • Dedicated Cloud Kitchen
           </div>
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="flex gap-2">
-        <button onclick="downloadPostcardImage()" class="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3 rounded-xl shadow-lg active:scale-95 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
-          <i class="fa-solid fa-download"></i> Download PNG Postcard
+      <!-- Export Buttons -->
+      <div class="flex gap-2 pt-1">
+        <button onclick="downloadPostcardImage()" class="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download"></i> Save Full Postcard (PNG)
         </button>
-        <button onclick="togglePostcardModal(false)" class="px-4 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold py-3 rounded-xl text-xs transition">
+        <button onclick="togglePostcardModal(false)" class="px-5 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold py-3.5 rounded-2xl text-xs transition">
           Close
         </button>
       </div>
@@ -1094,7 +1101,6 @@
       }
     }
 
-    // --- DISH CREATION & EDITING LOGIC ---
     function openDishModalForCreate() {
       document.getElementById('dishForm').reset();
       document.getElementById('editingDishId').value = '';
@@ -1347,7 +1353,6 @@
                     </div>
                   ` : ''}
 
-                  <!-- OWNER EDIT & DELETE BUTTONS -->
                   ${isOwnerLoggedIn ? `
                     <div class="absolute bottom-3 right-3 flex items-center gap-1.5">
                       <button onclick="openDishModalForEdit('${item.id}')" title="Edit this dish" class="w-8 h-8 rounded-full bg-stone-900/90 hover:bg-orange-600 text-amber-300 flex items-center justify-center transition shadow">
@@ -1775,22 +1780,44 @@
       
       document.querySelectorAll('.postcardRadiusText').forEach(el => el.innerText = `${limit} KM Delivery`);
       
-      // Clean web URL for the postcard (e.g. your GitHub Pages live address)
+      // Clean, full website address
       const cleanUrl = window.location.origin + window.location.pathname;
       document.getElementById('postcardWebsiteUrl').innerText = cleanUrl;
       document.getElementById('postcardCounter').innerText = kitchenSettings.takeawayAddress || 'Counter Pickup Available';
 
+      // 1. Render Featured Hero Image from first dish
+      const heroWrapper = document.getElementById('postcardHeroWrapper');
+      if (activeMenu.length > 0 && activeMenu[0].image) {
+        const featured = activeMenu[0];
+        document.getElementById('postcardHeroImg').src = featured.image;
+        document.getElementById('postcardHeroBadge').innerText = `Chef's Choice • ${featured.category}`;
+        document.getElementById('postcardHeroTitle').innerText = featured.name;
+        document.getElementById('postcardHeroPrice').innerText = `₹${featured.price}`;
+        heroWrapper.classList.remove('hidden');
+      } else {
+        heroWrapper.classList.add('hidden');
+      }
+
+      // 2. Render ALL dishes without truncation/cutoffs, with thumbnails
       if (activeMenu.length === 0) {
         container.innerHTML = '<p class="text-xs text-stone-400 py-3 text-center">No dishes on active menu right now.</p>';
       } else {
-        container.innerHTML = activeMenu.slice(0, 7).map(item => `
-          <div class="flex justify-between items-center py-1 text-xs">
-            <div class="flex items-center gap-1.5 truncate">
-              <span class="w-2 h-2 rounded-full ${item.isVeg ? 'bg-emerald-400' : 'bg-rose-500'} flex-shrink-0"></span>
-              <span class="font-bold text-stone-100 truncate">${item.name}</span>
-              <span class="text-[9px] text-amber-400 font-bold uppercase">(${item.category})</span>
+        container.innerHTML = activeMenu.map(item => `
+          <div class="flex items-center justify-between py-2 border-b border-white/10 gap-3">
+            <div class="flex items-center gap-3">
+              ${item.image ? `<img src="${item.image}" alt="${item.name}" class="w-11 h-11 rounded-xl object-cover border border-white/10 bg-stone-900 flex-shrink-0">` : ''}
+              <div>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="w-2 h-2 rounded-full ${item.isVeg ? 'bg-emerald-400' : 'bg-rose-500'} flex-shrink-0"></span>
+                  <span class="font-extrabold text-stone-100 text-xs sm:text-sm leading-snug">${item.name}</span>
+                  <span class="text-[9px] text-amber-400 font-bold uppercase bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                    ${item.category}
+                  </span>
+                </div>
+                ${item.desc ? `<p class="text-[10px] text-stone-400 mt-0.5 leading-tight">${item.desc}</p>` : ''}
+              </div>
             </div>
-            <span class="font-black text-white pl-2">₹${item.price}</span>
+            <span class="font-black text-white text-sm sm:text-base whitespace-nowrap pl-2">₹${item.price}</span>
           </div>
         `).join('');
       }
@@ -1800,10 +1827,15 @@
 
     function downloadPostcardImage() {
       const target = document.getElementById('adPostcardTarget');
+      
+      // Ensure canvas captures full height without clipping
       html2canvas(target, {
-        scale: 2, // High-res output
+        scale: 2, // High resolution output
         backgroundColor: '#0c0a09',
-        useCORS: true
+        useCORS: true,
+        logging: false,
+        windowWidth: target.scrollWidth,
+        windowHeight: target.scrollHeight
       }).then(canvas => {
         const link = document.createElement('a');
         link.download = `RDS-Kitchen-Menu-Postcard-${Date.now()}.png`;
