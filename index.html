@@ -4,21 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <title>RDS CLOUD KITCHEN | Delivery, Takeaway & Pre-Orders</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- PapaParse for robust CSV loading -->
+  <!-- PapaParse, html2canvas & jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     @keyframes pulseAlert {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.85; transform: scale(0.99); }
+    }
+    .animate-preorder-blink { animation: pulseAlert 1.8s infinite ease-in-out; }
+    @keyframes flashSurplus {
+      0%, 100% { transform: scale(1); box-shadow: 0 10px 25px -5px rgba(234, 88, 12, 0.4); }
+      50% { transform: scale(1.01); box-shadow: 0 15px 30px -5px rgba(220, 38, 38, 0.5); }
+    }
+    .animate-surplus-flash { animation: flashSurplus 2s infinite ease-in-out; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #invoicePrintTarget, #invoicePrintTarget * { visibility: visible; }
+      #invoicePrintTarget { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; box-shadow: none !important; border: none !important; }
     }
   </style>
 
@@ -27,9 +39,7 @@
       theme: {
         extend: {
           fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
-          colors: {
-            brand: { 500: '#f97316', 600: '#ea580c', 700: '#c2410c' }
-          }
+          colors: { brand: { 500: '#f97316', 600: '#ea580c', 700: '#c2410c' } }
         }
       }
     }
@@ -59,9 +69,30 @@
 
   <!-- TOP BAR -->
   <div class="bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 text-white text-xs font-semibold py-2 px-4 shadow-sm">
-    <div class="max-w-6xl mx-auto flex justify-between items-center">
-      <span>Operating Timing: <strong>00:30 hrs – 22:00 hrs</strong></span>
-      <button onclick="lockPage()" class="bg-black/30 px-3 py-1 rounded-full text-xs font-bold text-amber-200">Lock Page</button>
+    <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-clock text-amber-200 animate-pulse"></i>
+        <span>Operating Timing: <strong id="topBarOrderTime" class="underline decoration-amber-300">00:30 hrs – 22:00 hrs</strong> | <span id="topBarDistanceText">3 KM Delivery</span></span>
+      </div>
+
+      <!-- OWNER ADMIN CONTROLS -->
+      <div id="ownerAdminBar" class="hidden flex items-center gap-2">
+        <button type="button" onclick="toggleSettingsModal(true)" class="cursor-pointer bg-white/25 hover:bg-white/40 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-gear"></i> Settings
+        </button>
+        <button type="button" onclick="toggleCustomerHistory(true)" class="cursor-pointer bg-white/25 hover:bg-white/40 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-users"></i> Orders (<span id="ordersCount">0</span>)
+        </button>
+        <button type="button" onclick="logoutOwner()" class="cursor-pointer bg-rose-700 hover:bg-rose-800 text-white px-2.5 py-1 rounded-full text-xs font-bold transition shadow-sm">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+
+      <div id="lockedIndicator">
+        <button type="button" onclick="promptOwnerLogin()" class="cursor-pointer bg-black/30 hover:bg-black/50 px-3 py-1 rounded-full text-xs font-extrabold text-amber-200 flex items-center gap-1.5 transition border border-amber-300/40 shadow-sm">
+          <i class="fa-solid fa-lock text-[11px]"></i> Owner Login
+        </button>
+      </div>
     </div>
   </div>
 
@@ -74,8 +105,26 @@
         </div>
         <div>
           <h1 class="text-xl font-black tracking-tight text-stone-900 leading-none">RDS <span class="text-orange-600">CLOUD KITCHEN</span></h1>
-          <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">Breakfast • Lunch • Dinner</p>
+          <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">Breakfast • Lunch • Dinner • <span id="navDistanceText">3.0 KM Delivery</span></p>
         </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button onclick="openPostcardPreview()" title="Download promotional menu postcard" class="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full border border-purple-300 bg-purple-50 text-purple-800 hover:bg-purple-100 transition shadow-sm cursor-pointer">
+          <i class="fa-solid fa-image text-purple-600"></i>
+          <span class="hidden md:inline">Ad Postcard</span>
+        </button>
+
+        <button onclick="checkDeliveryRadius()" class="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 transition shadow-sm cursor-pointer">
+          <i class="fa-solid fa-location-dot text-orange-500"></i>
+          <span class="hidden sm:inline" id="btnCheckDistanceText">Check 3KM Eligibility</span>
+        </button>
+
+        <button onclick="toggleCart(true)" class="relative flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white px-4 py-2 rounded-full font-bold shadow-md shadow-orange-500/20 active:scale-95 transition cursor-pointer">
+          <i class="fa-solid fa-basket-shopping"></i>
+          <span class="text-xs">Cart</span>
+          <span id="cartBadge" class="bg-stone-900 text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-black hidden">0</span>
+        </button>
       </div>
     </div>
   </header>
@@ -83,12 +132,103 @@
   <!-- MAIN CONTAINER -->
   <main class="max-w-6xl mx-auto px-4 py-6 space-y-6 flex-grow w-full">
 
-    <!-- CATEGORY PILLS -->
+    <!-- LOCATION STATUS -->
+    <div id="locationAlert" class="hidden p-4 rounded-2xl border flex items-start gap-3 shadow-sm transition-all duration-300">
+      <div id="locIcon" class="mt-0.5 text-lg"></div>
+      <div class="text-xs">
+        <p id="locHeading" class="font-bold text-sm"></p>
+        <p id="locSub" class="opacity-80 mt-0.5"></p>
+      </div>
+    </div>
+
+    <!-- ⚡ SURPLUS FLASH ANNOUNCEMENT -->
+    <section id="surplusFlashBanner" class="hidden animate-surplus-flash rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-red-600 via-orange-600 to-amber-500 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-3 border-2 border-yellow-300">
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-2xl bg-yellow-300 text-red-950 flex items-center justify-center font-black text-2xl flex-shrink-0 shadow-md">
+          <i class="fa-solid fa-fire-burner animate-bounce"></i>
+        </div>
+        <div>
+          <span class="bg-black/30 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider text-yellow-200">Surplus Batch Sale Active</span>
+          <h2 id="surplusHeadline" class="text-base sm:text-lg font-black mt-1">Extra Portions Cooked Fresh & Ready!</h2>
+          <p id="surplusMessage" class="text-xs text-white/95 font-medium mt-0.5"></p>
+        </div>
+      </div>
+      <button onclick="document.getElementById('menuGrid').scrollIntoView({ behavior: 'smooth' })" class="bg-yellow-300 hover:bg-yellow-400 text-stone-900 font-black text-xs px-5 py-2.5 rounded-xl uppercase tracking-wider shadow active:scale-95 transition whitespace-nowrap cursor-pointer">
+        Order Surplus Now
+      </button>
+    </section>
+
+    <!-- BLINKING PRE-ORDER BANNER -->
+    <section id="preorderBlinkBanner" class="hidden animate-preorder-blink rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-purple-700 via-rose-600 to-amber-500 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-3 border-2 border-amber-300">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-2xl bg-amber-300 text-purple-900 flex items-center justify-center font-black text-xl flex-shrink-0">
+          <i class="fa-solid fa-bell animate-bounce"></i>
+        </div>
+        <div>
+          <span class="bg-white/20 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">Advance Chef Pre-Order Open</span>
+          <h2 class="text-base sm:text-lg font-black mt-0.5">Special Batch Ready for Booking!</h2>
+          <p class="text-xs text-white/90 font-medium">Book in advance to secure your portions.</p>
+        </div>
+      </div>
+      <button onclick="filterCategory('Pre-Orders')" class="bg-amber-300 hover:bg-amber-400 text-purple-950 font-black text-xs px-5 py-2.5 rounded-xl uppercase tracking-wider shadow active:scale-95 transition whitespace-nowrap cursor-pointer">
+        View Pre-Orders
+      </button>
+    </section>
+
+    <!-- 🌅 NEXT DAY MENU PREVIEW BANNER -->
+    <section id="nextDayBanner" class="hidden rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-3 border-2 border-blue-300">
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-2xl bg-blue-300 text-indigo-950 flex items-center justify-center font-black text-2xl flex-shrink-0 shadow-md">
+          <i class="fa-solid fa-calendar-days"></i>
+        </div>
+        <div>
+          <span class="bg-black/30 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider text-blue-200">Tomorrow's Special Preview</span>
+          <h2 id="nextDayHeadline" class="text-base sm:text-lg font-black mt-1">Tomorrow's Menu Announced!</h2>
+          <p id="nextDaySub" class="text-xs text-white/95 font-medium mt-0.5"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⏰ STATIC CUTOFF SCHEDULE BAR (UNLINKED FROM MENU ITEMS) -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center font-bold">
+          <i class="fa-solid fa-mug-saucer"></i>
+        </div>
+        <div>
+          <span class="text-[10px] font-black text-amber-700 uppercase">Breakfast Order Cutoff</span>
+          <p class="font-extrabold text-xs text-stone-900">07:00 AM</p>
+        </div>
+      </div>
+
+      <div class="bg-orange-50 border border-orange-200 rounded-2xl p-3 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-orange-200 text-orange-800 flex items-center justify-center font-bold">
+          <i class="fa-solid fa-bowl-rice"></i>
+        </div>
+        <div>
+          <span class="text-[10px] font-black text-orange-700 uppercase">Lunch Order Cutoff</span>
+          <p class="font-extrabold text-xs text-stone-900">11:00 AM</p>
+        </div>
+      </div>
+
+      <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-3 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-200 text-indigo-800 flex items-center justify-center font-bold">
+          <i class="fa-solid fa-moon"></i>
+        </div>
+        <div>
+          <span class="text-[10px] font-black text-indigo-700 uppercase">Dinner Order Cutoff</span>
+          <p class="font-extrabold text-xs text-stone-900">06:00 PM</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEAL CATEGORY PILLS -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-      <button onclick="filterCategory('All')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-stone-900 text-white shadow">All Items</button>
-      <button onclick="filterCategory('Breakfast')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600">Breakfast</button>
-      <button onclick="filterCategory('Lunch')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600">Lunch</button>
-      <button onclick="filterCategory('Dinner')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600">Dinner</button>
+      <button onclick="filterCategory('All')" class="cat-pill active-cat px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-stone-900 text-white shadow cursor-pointer">All Items</button>
+      <button onclick="filterCategory('Breakfast')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-amber-400 cursor-pointer">Breakfast</button>
+      <button onclick="filterCategory('Lunch')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-400 cursor-pointer">Lunch</button>
+      <button onclick="filterCategory('Dinner')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-indigo-400 cursor-pointer">Dinner</button>
+      <button onclick="filterCategory('Pre-Orders')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-purple-100 text-purple-800 border border-purple-300 hover:bg-purple-200 cursor-pointer">Pre-Orders</button>
     </div>
 
     <!-- EMPTY STATE -->
@@ -96,131 +236,82 @@
       <div class="w-14 h-14 rounded-full bg-orange-50 text-orange-500 mx-auto flex items-center justify-center text-2xl">
         <i class="fa-solid fa-utensils"></i>
       </div>
-      <h3 class="font-extrabold text-stone-800 text-lg">Loading Menu...</h3>
-      <p class="text-xs text-stone-500 max-w-sm mx-auto">Pulling live items from Google Sheets.</p>
+      <h3 class="font-extrabold text-stone-800 text-lg">Loading Kitchen Menu...</h3>
+      <p class="text-xs text-stone-500 max-w-sm mx-auto">Syncing live dishes directly from Google Sheets.</p>
     </div>
 
     <!-- MENU GRID -->
     <section id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></section>
+
+    <!-- 📜 STATUTORY & OPERATING DISCLAIMER SUITE -->
+    <section class="bg-amber-100/60 border border-amber-200 rounded-3xl p-6 text-stone-700 text-xs space-y-4">
+      <div class="flex items-center gap-2 text-stone-900 font-black uppercase text-sm border-b border-amber-200 pb-2">
+        <i class="fa-solid fa-shield-halved text-orange-600"></i>
+        <span>RDS Cloud Kitchen Standard Operating, Food Safety & Delivery Disclaimers</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 leading-relaxed">
+        <div class="space-y-1.5">
+          <p class="font-bold text-stone-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-map-location-dot text-orange-600"></i> 1. Hyperlocal Delivery Limit & Fixed Point Policy
+          </p>
+          <p>Orders are dispatched exclusively within our automated <strong class="disclaimerKmText">3.0 KM</strong> geographic boundary to ensure food arrives at optimal temperature.</p>
+        </div>
+
+        <div class="space-y-1.5">
+          <p class="font-bold text-stone-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> 2. Delivery Failure & Unforeseen Delays
+          </p>
+          <p>The kitchen is not liable for failed or delayed fulfillment caused by incorrect phone numbers, unanswered doorbells, or inaccurate GPS pins.</p>
+        </div>
+
+        <div class="space-y-1.5">
+          <p class="font-bold text-stone-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-wheat-awn text-amber-700"></i> 3. Food Safety, Quality & Allergens
+          </p>
+          <p>All items are prepared in a cloud kitchen environment that processes milk, gluten, tree nuts, legumes, and traditional spices. Consume within 60 minutes.</p>
+        </div>
+
+        <div class="space-y-1.5">
+          <p class="font-bold text-stone-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-indian-rupee-sign text-emerald-700"></i> 4. Payment Settlements & Cancellations
+          </p>
+          <p>We accept verified online UPI QR/phone transfers and Cash on Delivery (COD). Once prep commences, cancellations cannot be entertained.</p>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <script>
-    const SITE_ACCESS_PASSWORD = "gmskitchen123";
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1hLHDIINJidqJjw4vi9BxvIVAMf9tcpOlCiWAZe-9UfY/export?format=csv";
+  <footer class="bg-white border-t border-orange-100 py-6 text-center text-xs text-stone-400">
+    <p>© RDS Cloud Kitchen • Hyperlocal Delivery, Takeaway & Meal Pre-Orders</p>
+    <div class="mt-2 flex items-center justify-center gap-3">
+      <button type="button" onclick="promptOwnerLogin()" class="cursor-pointer text-[11px] text-stone-500 hover:text-orange-600 font-bold transition flex items-center gap-1">
+        <i class="fa-solid fa-key text-[10px]"></i> Kitchen Staff Portal
+      </button>
+      <span>•</span>
+      <button onclick="lockPage()" class="cursor-pointer text-[11px] text-stone-400 hover:text-rose-600 transition flex items-center gap-1">
+        <i class="fa-solid fa-lock text-[10px]"></i> Lock Page
+      </button>
+    </div>
+  </footer>
 
-    function checkSiteAccess() {
-      const isUnlocked = localStorage.getItem("rds_site_unlocked") === "true";
-      const gateScreen = document.getElementById("siteGateScreen");
-      if (isUnlocked && gateScreen) {
-        gateScreen.classList.add("hidden");
-      } else if (gateScreen) {
-        gateScreen.classList.remove("hidden");
-      }
-    }
-
-    function verifySitePassword(e) {
-      e.preventDefault();
-      const input = document.getElementById("sitePasswordInput");
-      const entered = (input?.value || "").trim().toLowerCase();
-      const err = document.getElementById("sitePassError");
-
-      if (entered === SITE_ACCESS_PASSWORD) {
-        localStorage.setItem("rds_site_unlocked", "true");
-        document.getElementById("siteGateScreen").classList.add("hidden");
-        if (err) err.classList.add("hidden");
-      } else {
-        if (err) err.classList.remove("hidden");
-        if (input) input.value = "";
-      }
-    }
-
-    function lockPage() {
-      localStorage.removeItem("rds_site_unlocked");
-      location.reload();
-    }
-
-    let activeMenu = [];
-    let activeCategory = 'All';
-
-    function fetchGoogleSheet() {
-      Papa.parse(SHEET_CSV_URL, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-          if (results.data && results.data.length > 0) {
-            activeMenu = results.data.map((row, i) => ({
-              id: row.id || `DISH-${i+1}`,
-              name: row.name || `Dish ${i+1}`,
-              category: row.category || 'Lunch',
-              price: Number(row.price) || 100,
-              desc: row.desc || '',
-              isVeg: String(row.isVeg).toLowerCase() === 'true',
-              quantity: Number(row.quantity) || 10,
-              image: row.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c'
-            }));
-            updateUI();
-          }
-        },
-        error: function(err) {
-          console.warn("CSV fetch error:", err);
-        }
-      });
-    }
-
-    function filterCategory(cat) {
-      activeCategory = cat;
-      updateUI();
-    }
-
-    function updateUI() {
-      const grid = document.getElementById('menuGrid');
-      const empty = document.getElementById('emptyMenuState');
-
-      let items = activeMenu;
-      if (activeCategory !== 'All') {
-        items = activeMenu.filter(i => i.category.toLowerCase() === activeCategory.toLowerCase());
-      }
-
-      if (!items || items.length === 0) {
-        grid.classList.add('hidden');
-        empty.classList.remove('hidden');
-      } else {
-        empty.classList.add('hidden');
-        grid.classList.remove('hidden');
-        grid.innerHTML = items.map(item => `
-          <div class="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between">
-            <div>
-              <div class="relative w-full h-48 bg-stone-100 overflow-hidden">
-                <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">
-                <div class="absolute top-3 right-3 bg-orange-100 text-orange-900 border px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">
-                  ${item.category}
-                </div>
-              </div>
-              <div class="p-4 space-y-2">
-                <div class="flex justify-between items-start">
-                  <div>
-                    <h3 class="font-extrabold text-stone-900 text-base">${item.name}</h3>
-                    <span class="font-black text-stone-900 text-base">₹${item.price}</span>
-                  </div>
-                  <span class="px-2 py-0.5 rounded-md font-black text-[10px] bg-amber-100 text-amber-800">
-                    ${item.quantity} Portions Left
-                  </span>
-                </div>
-                <p class="text-xs text-stone-500">${item.desc}</p>
-              </div>
-            </div>
+  <!-- 🛒 SLIDE-OVER CART DRAWER -->
+  <div id="cartDrawer" class="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm hidden flex justify-end">
+    <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between p-6 overflow-y-auto">
+      <div class="space-y-4">
+        <div class="flex items-center justify-between border-b pb-3">
+          <div class="flex items-center gap-2 text-stone-900 font-extrabold text-base">
+            <i class="fa-solid fa-basket-shopping text-orange-600"></i>
+            <h2>Your Food Cart</h2>
           </div>
-        `).join('');
-      }
-    }
+          <button type="button" onclick="toggleCart(false)" class="cursor-pointer p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
+        </div>
 
-    function init() {
-      checkSiteAccess();
-      fetchGoogleSheet();
-    }
+        <!-- FULFILLMENT MODE -->
+        <div class="bg-stone-100 p-1 rounded-2xl grid grid-cols-2 gap-1 text-xs font-extrabold text-center">
+          <button type="button" id="tabDelivery" onclick="setOrderMode('delivery')" class="py-2 rounded-xl transition bg-white text-orange-600 shadow-sm cursor-pointer">Delivery</button>
+          <button type="button" id="tabTakeaway" onclick="setOrderMode('takeaway')" class="py-2 rounded-xl transition text-stone-600 hover:text-stone-900 cursor-pointer">Takeaway</button>
+        </div>
 
-    window.onload = init;
-  </script>
-</body>
-</html>
+        <div id="takeawayBanner" class="hidden p-3 bg-blue-50 border border-blue-200 rounded-2xl text-xs space-y-1">
+          <p class="font-bold text-blue-900"><i class="fa-solid fa-store"></i> Counter Pickup Address
