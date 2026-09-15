@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RDS CLOUD KITCHEN | Fresh Food (3 KM Delivery)</title>
+  
+  <!-- Standalone Tailwind CSS & FontAwesome Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+          colors: {
+            brand: { 500: '#f97316', 600: '#ea580c', 700: '#c2410c' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-b from-amber-50/70 via-white to-orange-50/40 text-stone-800 min-h-screen flex flex-col font-sans">
+
+  <!-- TOP BAR -->
+  <div class="bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 text-white text-xs font-semibold py-2 px-4 shadow-sm">
+    <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-fire text-amber-200 animate-bounce"></i>
+        <span>Accepting Orders: 11:30 AM – 10:30 PM | Freshly Prepared</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="toggleHistory(true)" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          History Box (<span id="historyCount">0</span>)
+        </button>
+        <button onclick="toggleDishModal(true)" class="bg-stone-900 hover:bg-black text-amber-300 px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i> Add New Dish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex justify-between items-center">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shadow-orange-500/30">
+          <i class="fa-solid fa-utensils text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-black tracking-tight text-stone-900 leading-none">RDS <span class="text-orange-600">CLOUD KITCHEN</span></h1>
+          <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">Strict 3.0 KM Hyperlocal Delivery</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button onclick="checkDeliveryRadius()" class="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 transition shadow-sm">
+          <i class="fa-solid fa-location-dot text-orange-500"></i>
+          <span class="hidden sm:inline">Check 3KM Eligibility</span>
+          <span class="sm:hidden">3KM Check</span>
+        </button>
+
+        <button onclick="toggleCart(true)" class="relative flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white px-4 py-2 rounded-full font-bold shadow-md shadow-orange-500/20 active:scale-95 transition">
+          <i class="fa-solid fa-basket-shopping"></i>
+          <span class="text-xs">Cart</span>
+          <span id="cartBadge" class="bg-stone-900 text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-black hidden">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6 flex-grow w-full">
+
+    <!-- LOCATION STATUS NOTIFICATION -->
+    <div id="locationAlert" class="hidden p-4 rounded-2xl border flex items-start gap-3 shadow-sm transition-all duration-300">
+      <div id="locIcon" class="mt-0.5 text-lg"></div>
+      <div class="text-xs">
+        <p id="locHeading" class="font-bold text-sm"></p>
+        <p id="locSub" class="opacity-80 mt-0.5"></p>
+      </div>
+    </div>
+
+    <!-- SPECIAL OFFER BANNER PANEL -->
+    <section class="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 text-white shadow-xl shadow-orange-500/15 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="space-y-1.5 max-w-xl z-10">
+        <span class="text-[10px] font-black tracking-widest bg-black/20 backdrop-blur-md px-3 py-1 rounded-full uppercase">
+          Today's Chef Offer
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-black leading-tight">Authentic Homestyle Flavors Delivered Piping Hot</h2>
+        <p class="text-xs sm:text-sm text-white/90 font-medium">Prepared freshly upon order. Dedicated delivery within our 3 KM perimeter.</p>
+      </div>
+      <button onclick="toggleDishModal(true)" class="z-10 bg-white text-stone-900 hover:bg-stone-100 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg active:scale-95 transition">
+        + Enter Dish Manually (.jpg)
+      </button>
+      <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    </section>
+
+    <!-- CATEGORY PILLS -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <button onclick="filterCategory('All')" class="cat-pill active-cat px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-stone-900 text-white shadow">All</button>
+      <button onclick="filterCategory('Starters')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300">Starters</button>
+      <button onclick="filterCategory('Main Course')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300">Main Course</button>
+      <button onclick="filterCategory('Combos')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300">Combos</button>
+      <button onclick="filterCategory('Beverages')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300">Beverages</button>
+      <button onclick="filterCategory('Dessert')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300">Dessert</button>
+    </div>
+
+    <!-- MENU CONTAINER -->
+    <div id="emptyMenuState" class="text-center py-20 bg-white border border-dashed border-orange-200 rounded-3xl p-8 space-y-3 shadow-sm">
+      <div class="w-14 h-14 rounded-full bg-orange-50 text-orange-500 mx-auto flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-utensils"></i>
+      </div>
+      <h3 class="font-extrabold text-stone-800 text-lg">No Dishes on Today's Active Menu</h3>
+      <p class="text-xs text-stone-500 max-w-sm mx-auto">Click "+ Add New Dish" above to enter dish details and upload a .jpg photo, or restore from the History Box.</p>
+      <div class="pt-2 flex justify-center gap-3">
+        <button onclick="toggleDishModal(true)" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition">
+          + Add First Dish (.jpg)
+        </button>
+      </div>
+    </div>
+
+    <section id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></section>
+
+    <!-- DISCLAIMER BOX -->
+    <section class="bg-amber-100/60 border border-amber-200 rounded-3xl p-5 text-stone-700 text-xs space-y-2.5">
+      <div class="flex items-center gap-2 text-stone-900 font-black uppercase text-sm">
+        <i class="fa-solid fa-shield-halved text-orange-600"></i>
+        <span>RDS Cloud Kitchen Operating & Delivery Disclaimer</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 leading-relaxed">
+        <p>• <strong>Strict 3.0 KM Radius:</strong> Prepared in a dedicated cloud kitchen and dispatched strictly within 3 KM to guarantee maximum hotness and quality.</p>
+        <p>• <strong>Allergen Notice:</strong> Kitchen prepares items that contain dairy, gluten, nuts, and spices. Please contact us for custom dietary requirements.</p>
+        <p>• <strong>Delivery-Only:</strong> We operate strictly as an online delivery kitchen. No dine-in or self-takeaway facility is available.</p>
+        <p>• <strong>Food-Grade Packaging:</strong> Handled with sanitized safety seals. Consume within 60 minutes of delivery.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: MANUAL DISH ENTRY -->
+  <div id="dishModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="font-extrabold text-stone-900 text-lg">Enter Dish Manually</h2>
+        <button onclick="toggleDishModal(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="dishForm" onsubmit="saveNewDish(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="font-bold text-stone-700 block mb-1">Dish Name *</label>
+          <input id="formDishName" type="text" placeholder="e.g. Chicken Dum Biryani" required class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none text-stone-900 bg-stone-50">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-bold text-stone-700 block mb-1">Category</label>
+            <select id="formCategory" class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
+              <option value="Starters">Starters</option>
+              <option value="Main Course" selected>Main Course</option>
+              <option value="Combos">Combos</option>
+              <option value="Beverages">Beverages</option>
+              <option value="Dessert">Dessert</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-stone-700 block mb-1">Price (₹) *</label>
+            <input id="formPrice" type="number" placeholder="220" required class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-stone-700 block mb-1">Description</label>
+          <textarea id="formDesc" rows="2" placeholder="Fragrant rice, spicy masala, boiled egg..." class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900"></textarea>
+        </div>
+
+        <div>
+          <label class="font-bold text-stone-700 block mb-1">Upload Dish Photo (.jpg) *</label>
+          <input id="formImageFile" type="file" accept="image/jpeg,image/jpg,image/png" onchange="previewImage(event)" required class="w-full text-xs text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+          <div id="imagePreviewBox" class="mt-2 relative w-full h-36 rounded-xl overflow-hidden border hidden">
+            <img id="imagePreview" src="" alt="Preview" class="w-full h-full object-cover">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 pt-1">
+          <span class="font-bold text-stone-700">Food Type:</span>
+          <label class="flex items-center gap-1.5 cursor-pointer font-bold text-emerald-700">
+            <input type="radio" name="diet" value="veg"> Pure Veg
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer font-bold text-rose-700">
+            <input type="radio" name="diet" value="non-veg" checked> Non-Veg
+          </label>
+        </div>
+
+        <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-extrabold py-3.5 rounded-2xl shadow-md active:scale-95 transition">
+          Publish Dish to Active Menu
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DRAWER: HISTORY BOX -->
+  <div id="historyDrawer" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex justify-end">
+    <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between p-6 overflow-y-auto">
+      <div class="space-y-4">
+        <div class="flex items-center justify-between border-b pb-3">
+          <div class="flex items-center gap-2 text-stone-900 font-extrabold text-base">
+            <i class="fa-solid fa-clock-rotate-left text-orange-600"></i>
+            <h2>Kitchen History Box</h2>
+          </div>
+          <button onclick="toggleHistory(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
+        </div>
+        <p class="text-xs text-stone-500">Every dish you create is preserved here. Re-activate them anytime without uploading photos again!</p>
+        <div id="historyList" class="space-y-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRAWER: CART -->
+  <div id="cartDrawer" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex justify-end">
+    <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between p-6">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b">
+          <h2 class="font-extrabold text-base text-stone-900">Your Fresh Order</h2>
+          <button onclick="toggleCart(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
+        </div>
+        <div id="cartItemsContainer" class="divide-y max-h-[60vh] overflow-y-auto mt-2"></div>
+      </div>
+
+      <div id="cartFooter" class="border-t pt-4 space-y-2 text-xs hidden">
+        <div class="flex justify-between">
+          <span class="text-stone-500">Item Total</span>
+          <span id="cartSubtotal" class="font-bold">₹0</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-stone-500">Delivery Fee (Within 3 KM)</span>
+          <span class="font-bold text-emerald-600">FREE</span>
+        </div>
+        <div class="flex justify-between text-base font-extrabold border-t border-dashed pt-2">
+          <span>Payable Amount</span>
+          <span id="cartTotal" class="text-orange-600">₹0</span>
+        </div>
+        <button onclick="alert('Order confirmed! Prepared fresh at RDS Cloud Kitchen.')" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition">
+          Confirm Order
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Kitchen Coordinates: Thuvakudi, Tamil Nadu
+    const KITCHEN_LAT = 10.7626;
+    const KITCHEN_LNG = 78.8139;
+    const MAX_KM = 3.0;
+
+    let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || '[]');
+    let historyMenu = JSON.parse(localStorage.getItem('rds_cloud_history_menu') || '[]');
+    let cart = {};
+    let activeCategory = 'All';
+    let base64Image = '';
+
+    function init() {
+      updateUI();
+      updateHistoryDrawer();
+    }
+
+    function previewImage(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          base64Image = reader.result;
+          document.getElementById('imagePreview').src = base64Image;
+          document.getElementById('imagePreviewBox').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function saveNewDish(e) {
+      e.preventDefault();
+      const name = document.getElementById('formDishName').value.trim();
+      const category = document.getElementById('formCategory').value;
+      const price = parseFloat(document.getElementById('formPrice').value);
+      const desc = document.getElementById('formDesc').value.trim();
+      const isVeg = document.querySelector('input[name="diet"]:checked').value === 'veg';
+
+      if (!base64Image) {
+        alert('Please choose a .jpg photo for the dish.');
+        return;
+      }
+
+      const dish = {
+        id: 'DISH-' + Date.now(),
+        name, category, price, desc, isVeg,
+        image: base64Image
+      };
+
+      activeMenu.unshift(dish);
+      historyMenu = [dish, ...historyMenu.filter(i => i.name.toLowerCase() !== name.toLowerCase())];
+
+      localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
+      localStorage.setItem('rds_cloud_history_menu', JSON.stringify(historyMenu));
+
+      document.getElementById('dishForm').reset();
+      document.getElementById('imagePreviewBox').classList.add('hidden');
+      base64Image = '';
+      toggleDishModal(false);
+
+      updateUI();
+      updateHistoryDrawer();
+    }
+
+    function removeActiveDish(id) {
+      activeMenu = activeMenu.filter(item => item.id !== id);
+      delete cart[id];
+      localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
+      updateUI();
+      updateCartUI();
+    }
+
+    function reAddFromHistory(id) {
+      const item = historyMenu.find(i => i.id === id);
+      if (item && !activeMenu.some(i => i.id === id)) {
+        activeMenu.unshift(item);
+        localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
+        updateUI();
+        updateHistoryDrawer();
+      }
+    }
+
+    function deleteFromHistory(id) {
+      historyMenu = historyMenu.filter(i => i.id !== id);
+      activeMenu = activeMenu.filter(i => i.id !== id);
+      localStorage.setItem('rds_cloud_history_menu', JSON.stringify(historyMenu));
+      localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
+      updateUI();
+      updateHistoryDrawer();
+    }
+
+    function filterCategory(cat) {
+      activeCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        if (btn.innerText === cat) {
+          btn.className = 'cat-pill active-cat px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-stone-900 text-white shadow';
+        } else {
+          btn.className = 'cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300';
+        }
+      });
+      updateUI();
+    }
+
+    function updateUI() {
+      const grid = document.getElementById('menuGrid');
+      const empty = document.getElementById('emptyMenuState');
+      const items = activeCategory === 'All' ? activeMenu : activeMenu.filter(i => i.category === activeCategory);
+
+      if (items.length === 0) {
+        grid.classList.add('hidden');
+        empty.classList.remove('hidden');
+      } else {
+        empty.classList.add('hidden');
+        grid.classList.remove('hidden');
+        grid.innerHTML = items.map(item => `
+          <div class="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between group">
+            <div>
+              <div class="relative w-full h-48 bg-stone-100 overflow-hidden">
+                <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full ${item.isVeg ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                  <span class="text-[10px] font-black uppercase text-stone-700">${item.isVeg ? 'Pure Veg' : 'Non-Veg'}</span>
+                </div>
+                <button onclick="removeActiveDish('${item.id}')" title="Remove from today's menu" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-stone-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition">
+                  <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+              </div>
+              <div class="p-4 space-y-1.5">
+                <div class="flex justify-between items-start">
+                  <h3 class="font-extrabold text-stone-900 text-base group-hover:text-orange-600 transition">${item.name}</h3>
+                  <span class="font-black text-stone-900 text-base">₹${item.price}</span>
+                </div>
+                <p class="text-xs text-stone-500 line-clamp-2">${item.desc || ''}</p>
+              </div>
+            </div>
+            <div class="p-4 pt-0">
+              ${cart[item.id] ? `
+                <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl p-1">
+                  <button onclick="changeQty('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-white text-orange-600 shadow-sm flex items-center justify-center font-bold hover:bg-orange-100">-</button>
+                  <span class="font-black text-sm text-stone-900">${cart[item.id]}</span>
+                  <button onclick="changeQty('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-orange-500 text-white shadow-sm flex items-center justify-center font-bold hover:bg-orange-600">+</button>
+                </div>
+              ` : `
+                <button onclick="changeQty('${item.id}', 1)" class="w-full bg-gradient-to-r from-stone-900 to-stone-800 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs py-3 rounded-2xl shadow transition active:scale-95">
+                  ADD TO ORDER +
+                </button>
+              `}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function updateHistoryDrawer() {
+      document.getElementById('historyCount').innerText = historyMenu.length;
+      const list = document.getElementById('historyList');
+      if (historyMenu.length === 0) {
+        list.innerHTML = '<div class="py-16 text-center text-xs text-stone-400 font-medium">No dishes in history yet.</div>';
+      } else {
+        list.innerHTML = historyMenu.map(item => {
+          const isActive = activeMenu.some(i => i.id === item.id);
+          return `
+            <div class="flex items-center justify-between p-3 border rounded-2xl hover:border-orange-200 transition bg-white">
+              <div class="flex items-center gap-3">
+                <img src="${item.image}" class="w-12 h-12 rounded-xl object-cover bg-stone-100 flex-shrink-0">
+                <div>
+                  <p class="font-bold text-xs text-stone-900">${item.name}</p>
+                  <p class="text-[11px] text-stone-500">₹${item.price} •${item.category}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                ${isActive ? `
+                  <span class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg">Live</span>
+                ` : `
+                  <button onclick="reAddFromHistory('${item.id}')" title="Add back to menu" class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 flex items-center justify-center">
+                    <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                  </button>
+                `}
+                <button onclick="deleteFromHistory('${item.id}')" title="Delete forever" class="w-8 h-8 rounded-lg text-stone-400 hover:text-rose-600 flex items-center justify-center">
+                  <i class="fa-regular fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function changeQty(id, delta) {
+      if (!cart[id]) cart[id] = 0;
+      cart[id] += delta;
+      if (cart[id] <= 0) delete cart[id];
+      updateUI();
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const container = document.getElementById('cartItemsContainer');
+      const footer = document.getElementById('cartFooter');
+      const badge = document.getElementById('cartBadge');
+      const entries = Object.entries(cart);
+      const count = entries.reduce((s, [, q]) => s + q, 0);
+
+      if (count > 0) {
+        badge.innerText = count;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      if (entries.length === 0) {
+        container.innerHTML = `
+          <div class="py-20 text-center space-y-1">
+            <i class="fa-solid fa-basket-shopping text-3xl text-stone-300 mb-2"></i>
+            <p class="font-bold text-stone-400 text-sm">Cart is empty</p>
+            <p class="text-xs text-stone-400">Select dishes from the menu.</p>
+          </div>
+        `;
+        footer.classList.add('hidden');
+      } else {
+        footer.classList.remove('hidden');
+        let total = 0;
+        container.innerHTML = entries.map(([id, qty]) => {
+          const dish = activeMenu.find(i => i.id === id) || historyMenu.find(i => i.id === id);
+          if (!dish) return '';
+          total += dish.price * qty;
+          return `
+            <div class="py-3 flex justify-between items-center text-xs">
+              <div>
+                <p class="font-bold text-stone-900">${dish.name}</p>
+                <p class="text-stone-500">₹${dish.price} ×${qty}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="changeQty('${dish.id}', -1)" class="w-6 h-6 rounded bg-stone-100 flex items-center justify-center font-bold hover:bg-stone-200">-</button>
+                <span class="font-bold">${qty}</span>
+                <button onclick="changeQty('${dish.id}', 1)" class="w-6 h-6 rounded bg-stone-100 flex items-center justify-center font-bold hover:bg-stone-200">+</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+        document.getElementById('cartSubtotal').innerText = '₹' + total;
+        document.getElementById('cartTotal').innerText = '₹' + total;
+      }
+    }
+
+    function checkDeliveryRadius() {
+      const alertBox = document.getElementById('locationAlert');
+      const icon = document.getElementById('locIcon');
+      const head = document.getElementById('locHeading');
+      const sub = document.getElementById('locSub');
+
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your device.');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const R = 6371;
+          const dLat = ((lat - KITCHEN_LAT) * Math.PI) / 180;
+          const dLon = ((lng - KITCHEN_LNG) * Math.PI) / 180;
+          const a = Math.sin(dLat/2)**2 + Math.cos(KITCHEN_LAT*Math.PI/180) * Math.cos(lat*Math.PI/180) * Math.sin(dLon/2)**2;
+          const dist = parseFloat((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2));
+
+          alertBox.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-900', 'bg-rose-50', 'border-rose-200', 'text-rose-900');
+          if (dist <= MAX_KM) {
+            alertBox.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-900');
+            icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
+            head.innerText = `Delivery Available! (${dist} KM away)`;
+            sub.innerText = `You are within our ${MAX_KM} KM cloud kitchen dispatch boundary.`;
+          } else {
+            alertBox.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-900');
+            icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-600"></i>';
+            head.innerText = `Outside Delivery Radius (${dist} KM away)`;
+            sub.innerText = `We strictly deliver within ${MAX_KM} KM to keep food piping hot.`;
+          }
+        },
+        () => {
+          alert('Please allow location permissions on your browser to verify delivery zone.');
+        }
+      );
+    }
+
+    function toggleDishModal(show) {
+      document.getElementById('dishModal').classList.toggle('hidden', !show);
+    }
+
+    function toggleHistory(show) {
+      document.getElementById('historyDrawer').classList.toggle('hidden', !show);
+    }
+
+    function toggleCart(show) {
+      document.getElementById('cartDrawer').classList.toggle('hidden', !show);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
