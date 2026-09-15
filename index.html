@@ -34,6 +34,27 @@
 </head>
 <body class="bg-gradient-to-b from-amber-50/70 via-white to-orange-50/40 text-stone-800 min-h-screen flex flex-col font-sans">
 
+  <!-- 🔒 SITE-WIDE GATEKEEPER PASSWORD SCREEN -->
+  <div id="siteGateScreen" class="fixed inset-0 z-[100] bg-stone-950 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-7 space-y-5 shadow-2xl text-center border border-orange-100">
+      <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl mx-auto shadow-lg shadow-orange-500/30">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-black text-stone-900 tracking-tight">RDS CLOUD KITCHEN</h1>
+        <p class="text-xs text-stone-500 mt-1">Please enter password to enter the kitchen store.</p>
+      </div>
+      <form onsubmit="verifySitePassword(event)" class="space-y-3">
+        <input id="sitePasswordInput" type="password" placeholder="Enter Access Password" required class="w-full p-3 border-2 border-orange-100 rounded-2xl font-bold tracking-wider text-center focus:border-orange-500 focus:outline-none bg-stone-50 text-stone-900 text-sm">
+        <p id="sitePassError" class="text-rose-600 text-xs font-bold hidden">Incorrect password. Please try again.</p>
+        <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition text-sm uppercase tracking-wide">
+          Unlock Webpage
+        </button>
+      </form>
+      <p class="text-[10px] text-stone-400 font-semibold">Strict 3.0 KM Hyperlocal Cloud Kitchen</p>
+    </div>
+  </div>
+
   <!-- TOP BAR -->
   <div class="bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 text-white text-xs font-semibold py-2 px-4 shadow-sm">
     <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
@@ -134,7 +155,7 @@
           Fresh Homestyle Cooking
         </span>
         <h2 class="text-2xl sm:text-3xl font-black leading-tight">Limited Daily Portions Cooked Fresh Daily</h2>
-        <p class="text-xs sm:text-sm text-white/90 font-medium">Real-time inventory portion counter. Book live orders or reserve pre-order portions.</p>
+        <p class="text-xs sm:text-sm text-white/90 font-medium">Real-time portion counter. Book live orders or reserve pre-order portions.</p>
       </div>
       <div class="z-10 flex items-center gap-2">
         <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2">
@@ -144,7 +165,7 @@
       <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
     </section>
 
-    <!-- CATEGORY PILLS (Includes Pre-Order Column) -->
+    <!-- CATEGORY PILLS -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
       <button onclick="filterCategory('All')" class="cat-pill active-cat px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-stone-900 text-white shadow">All</button>
       <button onclick="filterCategory('Pre-Orders')" class="cat-pill px-4 py-2 rounded-full text-xs font-extrabold transition whitespace-nowrap bg-purple-100 text-purple-800 border border-purple-300 hover:bg-purple-200 flex items-center gap-1.5">
@@ -163,7 +184,7 @@
         <i class="fa-solid fa-utensils"></i>
       </div>
       <h3 class="font-extrabold text-stone-800 text-lg">No Dishes in this Section</h3>
-      <p class="text-xs text-stone-500 max-w-sm mx-auto">Dishes are being updated or portions are sold out. Please select another category!</p>
+      <p class="text-xs text-stone-500 max-w-sm mx-auto">Dishes are being prepared or portions are finished. Please check back shortly!</p>
     </div>
 
     <!-- MENU GRID -->
@@ -176,19 +197,25 @@
         <span>RDS Cloud Kitchen Portion, Delivery & Pre-Order Policy</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 leading-relaxed">
-        <p>• <strong>Live Portion Depletion:</strong> Item quantity remaining is updated live. When stock reaches 0, the item will immediately display as <strong>SOLD OUT</strong> to prevent overselling.</p>
-        <p>• <strong>Advance Pre-Orders:</strong> Pre-ordered items are prepared exclusively for the scheduled date and time chosen by the chef. Cancellations cannot be accepted once preparation begins.</p>
-        <p>• <strong>3.0 KM Delivery & Takeaway:</strong> Deliveries dispatched within 3 KM. Self-pickup orders can be collected directly at our kitchen counter address.</p>
-        <p>• <strong>Payments:</strong> Orders can be settled via instant UPI QR / Phone transfer or Cash on Delivery/Pickup.</p>
+        <p>• <strong>Live Portion Depletion:</strong> Remaining portions update in real-time. When reaching 0, dishes automatically show <strong>SOLD OUT</strong>.</p>
+        <p>• <strong>Advance Pre-Orders:</strong> Pre-order items are cooked exclusively for the listed date and time schedule.</p>
+        <p>• <strong>3.0 KM Delivery & Takeaway:</strong> Dispatched within 3 KM radius. Takeaway orders collected directly from kitchen counter.</p>
+        <p>• <strong>Payments:</strong> Pay through instant UPI transfer or Cash on Delivery/Pickup.</p>
       </div>
     </section>
   </main>
 
   <footer class="bg-white border-t border-orange-100 py-6 text-center text-xs text-stone-400">
     <p>© RDS Cloud Kitchen • Hyperlocal 3 KM Delivery, Takeaway & Pre-Orders</p>
-    <button onclick="promptOwnerLogin()" class="mt-2 text-[11px] text-stone-400 hover:text-orange-600 transition flex items-center justify-center gap-1 mx-auto">
-      <i class="fa-solid fa-key text-[10px]"></i> Kitchen Staff Portal
-    </button>
+    <div class="mt-2 flex items-center justify-center gap-3">
+      <button onclick="promptOwnerLogin()" class="text-[11px] text-stone-400 hover:text-orange-600 transition flex items-center gap-1">
+        <i class="fa-solid fa-key text-[10px]"></i> Kitchen Staff Portal
+      </button>
+      <span>•</span>
+      <button onclick="lockPage()" class="text-[11px] text-stone-400 hover:text-rose-600 transition flex items-center gap-1">
+        <i class="fa-solid fa-lock text-[10px]"></i> Lock Page
+      </button>
+    </div>
   </footer>
 
   <!-- MODAL: OWNER LOGIN -->
@@ -213,7 +240,7 @@
     </div>
   </div>
 
-  <!-- MODAL: MANUAL DISH ENTRY (WITH QUANTITY & PRE-ORDER CONTROLS) -->
+  <!-- MODAL: MANUAL DISH ENTRY -->
   <div id="dishModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
@@ -485,7 +512,41 @@
 
   <script>
     const MAX_KM = 3.0;
+    const SITE_ACCESS_PASSWORD = "gmskitchen123";
 
+    // --- GATEKEEPER ACCESS VERIFICATION ---
+    function checkSiteAccess() {
+      const isUnlocked = sessionStorage.getItem("rds_site_unlocked") === "true";
+      const gateScreen = document.getElementById("siteGateScreen");
+      if (isUnlocked) {
+        gateScreen.classList.add("hidden");
+      } else {
+        gateScreen.classList.remove("hidden");
+      }
+    }
+
+    function verifySitePassword(e) {
+      e.preventDefault();
+      const entered = document.getElementById("sitePasswordInput").value.trim();
+      const err = document.getElementById("sitePassError");
+
+      if (entered === SITE_ACCESS_PASSWORD) {
+        sessionStorage.setItem("rds_site_unlocked", "true");
+        document.getElementById("siteGateScreen").classList.add("hidden");
+        err.classList.add("hidden");
+      } else {
+        err.classList.remove("hidden");
+        document.getElementById("sitePasswordInput").value = "";
+      }
+    }
+
+    function lockPage() {
+      sessionStorage.removeItem("rds_site_unlocked");
+      sessionStorage.removeItem("rds_owner_auth");
+      location.reload();
+    }
+
+    // Local Storage Data
     let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || '[]');
     let historyMenu = JSON.parse(localStorage.getItem('rds_cloud_history_menu') || '[]');
     let customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
@@ -511,6 +572,7 @@
     let currentOrderMode = 'delivery';
 
     function init() {
+      checkSiteAccess();
       applyOrderTimeUI();
       updateAuthUI();
       updateUI();
@@ -812,7 +874,7 @@
       updateUI();
     }
 
-    // --- MENU GRID WITH LIVE QUANTITY & SOLD OUT STATES ---
+    // --- MENU GRID ---
     function updateUI() {
       const grid = document.getElementById('menuGrid');
       const empty = document.getElementById('emptyMenuState');
@@ -838,20 +900,17 @@
                 <div class="relative w-full h-48 bg-stone-100 overflow-hidden">
                   <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 ${isSoldOut ? 'grayscale' : ''}">
                   
-                  <!-- VEG/NON-VEG BADGE -->
                   <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1.5">
                     <span class="w-2.5 h-2.5 rounded-full ${item.isVeg ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
                     <span class="text-[10px] font-black uppercase text-stone-700">${item.isVeg ? 'Veg' : 'Non-Veg'}</span>
                   </div>
 
-                  <!-- PRE-ORDER BADGE -->
                   ${item.isPreorder ? `
                     <div class="absolute top-3 right-3 bg-purple-900/90 text-amber-300 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow">
                       <i class="fa-solid fa-calendar-check"></i> Pre-Order
                     </div>
                   ` : ''}
 
-                  <!-- SOLD OUT OVERLAY -->
                   ${isSoldOut ? `
                     <div class="absolute inset-0 bg-stone-900/70 backdrop-blur-[2px] flex items-center justify-center">
                       <span class="bg-rose-600 text-white font-black text-sm px-4 py-1.5 rounded-xl uppercase tracking-widest shadow-lg border border-rose-400">
@@ -874,7 +933,6 @@
                       <span class="font-black text-stone-900 text-base">₹${item.price}</span>
                     </div>
 
-                    <!-- QUANTITY REMAINING BADGE -->
                     <div class="text-right flex flex-col items-end">
                       <span class="px-2 py-0.5 rounded-md font-black text-[10px] ${item.quantity <= 3 ? 'bg-rose-100 text-rose-700 animate-pulse' : 'bg-amber-100 text-amber-800'}">
                         ${isSoldOut ? '0 Left' : `${item.quantity} Portions Left`}
@@ -885,7 +943,6 @@
                     </div>
                   </div>
 
-                  <!-- PRE-ORDER DELIVERY SCHEDULE BOX -->
                   ${item.isPreorder ? `
                     <div class="p-2 bg-purple-50 rounded-xl border border-purple-200 text-[11px] text-purple-900 leading-tight">
                       <p><strong><i class="fa-solid fa-truck text-purple-600"></i> Delivery Schedule:</strong> ${item.preorderDate || 'Scheduled Batch'}</p>
@@ -897,7 +954,6 @@
                 </div>
               </div>
 
-              <!-- CART ACTION BUTTON -->
               <div class="p-4 pt-0">
                 ${isSoldOut ? `
                   <button disabled class="w-full bg-stone-200 text-stone-400 font-bold text-xs py-3 rounded-2xl cursor-not-allowed">
@@ -1035,7 +1091,7 @@
       }
     }
 
-    // --- PLACE ORDER & DEDUCT QUANTITIES ---
+    // --- PLACE CUSTOMER ORDER ---
     function placeCustomerOrder() {
       const name = document.getElementById('custName').value.trim();
       const phone = document.getElementById('custPhone').value.trim();
@@ -1064,11 +1120,10 @@
         return;
       }
 
-      // Check inventory availability before committing
       for (const [id, qty] of entries) {
         const dish = activeMenu.find(i => i.id === id);
         if (dish && dish.quantity < qty) {
-          alert(`Sorry! Only ${dish.quantity} portions left for "${dish.name}". Please adjust your order.`);
+          alert(`Sorry! Only ${dish.quantity} portions left for "${dish.name}".`);
           return;
         }
       }
@@ -1080,7 +1135,6 @@
       entries.forEach(([id, qty]) => {
         const dish = activeMenu.find(i => i.id === id);
         if (dish) {
-          // Deduct quantity from live inventory
           dish.quantity = Math.max(0, dish.quantity - qty);
           if (dish.isPreorder) hasPreorders = true;
 
@@ -1096,7 +1150,6 @@
         }
       });
 
-      // Persist inventory deduction
       localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
 
       if (kitchenSettings.minOrder > 0 && grandTotal < kitchenSettings.minOrder) {
