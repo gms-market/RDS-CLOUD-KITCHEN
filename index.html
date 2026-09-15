@@ -12,24 +12,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- html2canvas & jsPDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- PapaParse for robust CSV loading -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
     @keyframes pulseAlert {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.85; transform: scale(0.99); }
-    }
-    .animate-preorder-blink {
-      animation: pulseAlert 1.8s infinite ease-in-out;
-    }
-    @keyframes flashSurplus {
-      0%, 100% { transform: scale(1); box-shadow: 0 10px 25px -5px rgba(234, 88, 12, 0.4); }
-      50% { transform: scale(1.01); box-shadow: 0 15px 30px -5px rgba(220, 38, 38, 0.5); }
-    }
-    .animate-surplus-flash {
-      animation: flashSurplus 2s infinite ease-in-out;
     }
   </style>
 
@@ -65,23 +54,14 @@
           Unlock Webpage
         </button>
       </form>
-      <p class="text-[10px] text-stone-400 font-semibold">Strict Hyperlocal Cloud Kitchen</p>
     </div>
   </div>
 
   <!-- TOP BAR -->
   <div class="bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 text-white text-xs font-semibold py-2 px-4 shadow-sm">
-    <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
-      <div class="flex items-center gap-2">
-        <i class="fa-solid fa-clock text-amber-200 animate-pulse"></i>
-        <span>Operating Timing: <strong id="topBarOrderTime" class="underline decoration-amber-300">00:30 hrs – 22:00 hrs</strong> | <span id="topBarDistanceText">3 KM Delivery</span></span>
-      </div>
-
-      <div id="lockedIndicator">
-        <button type="button" onclick="promptOwnerLogin()" class="cursor-pointer bg-black/30 hover:bg-black/50 px-3 py-1 rounded-full text-xs font-extrabold text-amber-200 flex items-center gap-1.5 transition border border-amber-300/40 shadow-sm">
-          <i class="fa-solid fa-lock text-[11px]"></i> Owner Login
-        </button>
-      </div>
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <span>Operating Timing: <strong>00:30 hrs – 22:00 hrs</strong></span>
+      <button onclick="lockPage()" class="bg-black/30 px-3 py-1 rounded-full text-xs font-bold text-amber-200">Lock Page</button>
     </div>
   </div>
 
@@ -89,7 +69,7 @@
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 py-3.5 flex justify-between items-center">
       <div class="flex items-center gap-2.5">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shadow-orange-500/30">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md">
           <i class="fa-solid fa-utensils text-lg"></i>
         </div>
         <div>
@@ -102,13 +82,13 @@
 
   <!-- MAIN CONTAINER -->
   <main class="max-w-6xl mx-auto px-4 py-6 space-y-6 flex-grow w-full">
-    
-    <!-- MEAL CATEGORY PILLS -->
+
+    <!-- CATEGORY PILLS -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-      <button onclick="filterCategory('All')" class="cat-pill active-cat px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-stone-900 text-white shadow">All Items</button>
-      <button onclick="filterCategory('Breakfast')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-amber-400 flex items-center gap-1.5">Breakfast</button>
-      <button onclick="filterCategory('Lunch')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-400 flex items-center gap-1.5">Lunch</button>
-      <button onclick="filterCategory('Dinner')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-indigo-400 flex items-center gap-1.5">Dinner</button>
+      <button onclick="filterCategory('All')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-stone-900 text-white shadow">All Items</button>
+      <button onclick="filterCategory('Breakfast')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600">Breakfast</button>
+      <button onclick="filterCategory('Lunch')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600">Lunch</button>
+      <button onclick="filterCategory('Dinner')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600">Dinner</button>
     </div>
 
     <!-- EMPTY STATE -->
@@ -116,8 +96,8 @@
       <div class="w-14 h-14 rounded-full bg-orange-50 text-orange-500 mx-auto flex items-center justify-center text-2xl">
         <i class="fa-solid fa-utensils"></i>
       </div>
-      <h3 class="font-extrabold text-stone-800 text-lg">Loading Kitchen Menu...</h3>
-      <p class="text-xs text-stone-500 max-w-sm mx-auto">Fetching live dishes from Google Sheets.</p>
+      <h3 class="font-extrabold text-stone-800 text-lg">Loading Menu...</h3>
+      <p class="text-xs text-stone-500 max-w-sm mx-auto">Pulling live items from Google Sheets.</p>
     </div>
 
     <!-- MENU GRID -->
@@ -126,7 +106,7 @@
 
   <script>
     const SITE_ACCESS_PASSWORD = "gmskitchen123";
-    const GOOGLE_SPREADSHEET_ID = "1hLHDIINJidqJjw4vi9BxvIVAMf9tcpOlCiWAZe-9UfY";
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1hLHDIINJidqJjw4vi9BxvIVAMf9tcpOlCiWAZe-9UfY/export?format=csv";
 
     function checkSiteAccess() {
       const isUnlocked = localStorage.getItem("rds_site_unlocked") === "true";
@@ -141,7 +121,6 @@
     function verifySitePassword(e) {
       e.preventDefault();
       const input = document.getElementById("sitePasswordInput");
-      // Automatically sanitize input by removing spaces and lowercasing
       const entered = (input?.value || "").trim().toLowerCase();
       const err = document.getElementById("sitePassError");
 
@@ -155,50 +134,38 @@
       }
     }
 
-    let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || '[]');
+    function lockPage() {
+      localStorage.removeItem("rds_site_unlocked");
+      location.reload();
+    }
+
+    let activeMenu = [];
     let activeCategory = 'All';
 
-    window.googleSheetDataCallback = function(json) {
-      try {
-        if (!json || !json.table) return;
-        const rows = json.table.rows || [];
-        const cols = (json.table.cols || []).map(c => (c.label || "").trim().toLowerCase());
-        
-        if (rows.length > 0) {
-          const loadedDishes = rows.map((r, i) => {
-            const getVal = (colName) => {
-              const idx = cols.findIndex(c => c.includes(colName));
-              if (idx !== -1 && r.c && r.c[idx]) {
-                return r.c[idx].v !== null ? r.c[idx].v : (r.c[idx].f || "");
-              }
-              return (r.c && r.c[i]) ? (r.c[i].v !== null ? r.c[i].v : "") : "";
-            };
-
-            return {
-              id: "DISH-GS-" + (i + 1),
-              name: String(getVal("name") || (r.c[1] ? r.c[1].v : `Dish ${i+1}`)),
-              category: String(getVal("category") || (r.c[2] ? r.c[2].v : "Lunch")),
-              price: Number(getVal("price") || (r.c[3] ? r.c[3].v : 100)) || 0,
-              desc: String(getVal("desc") || (r.c[4] ? r.c[4].v : "")),
-              isVeg: String(getVal("veg") || (r.c[5] ? r.c[5].v : "")).toLowerCase() === "true",
-              quantity: Number(getVal("quantity") || (r.c[6] ? r.c[6].v : 15)) || 10,
-              image: String(getVal("image") || (r.c[8] ? r.c[8].v : "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"))
-            };
-          });
-
-          activeMenu = loadedDishes;
-          localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
-          updateUI();
+    function fetchGoogleSheet() {
+      Papa.parse(SHEET_CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          if (results.data && results.data.length > 0) {
+            activeMenu = results.data.map((row, i) => ({
+              id: row.id || `DISH-${i+1}`,
+              name: row.name || `Dish ${i+1}`,
+              category: row.category || 'Lunch',
+              price: Number(row.price) || 100,
+              desc: row.desc || '',
+              isVeg: String(row.isVeg).toLowerCase() === 'true',
+              quantity: Number(row.quantity) || 10,
+              image: row.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c'
+            }));
+            updateUI();
+          }
+        },
+        error: function(err) {
+          console.warn("CSV fetch error:", err);
         }
-      } catch (err) {
-        console.warn("Could not process Google Sheet records:", err);
-      }
-    };
-
-    function loadGoogleSheetViaJSONP() {
-      const script = document.createElement("script");
-      script.src = `https://docs.google.com/spreadsheets/d/${GOOGLE_SPREADSHEET_ID}/gviz/tq?tqx=out:json&tq=&responseHandler=googleSheetDataCallback`;
-      document.body.appendChild(script);
+      });
     }
 
     function filterCategory(cat) {
@@ -250,8 +217,7 @@
 
     function init() {
       checkSiteAccess();
-      updateUI();
-      loadGoogleSheetViaJSONP();
+      fetchGoogleSheet();
     }
 
     window.onload = init;
