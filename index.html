@@ -57,13 +57,13 @@
         <h1 class="text-xl font-black text-stone-900 tracking-tight">RDS CLOUD KITCHEN</h1>
         <p class="text-xs text-stone-500 mt-1">Please enter password to access kitchen menu.</p>
       </div>
-      <div class="space-y-3">
+      <form onsubmit="verifySitePasswordDirect(event)" class="space-y-3">
         <input id="sitePasswordInput" type="text" autocapitalize="none" autocomplete="off" placeholder="Enter Password" class="w-full p-3 border-2 border-orange-100 rounded-2xl font-bold tracking-wider text-center focus:border-orange-500 focus:outline-none bg-stone-50 text-stone-900 text-sm">
         <p id="sitePassError" class="text-rose-600 text-xs font-bold hidden">Incorrect password. Please try: gmskitchen123</p>
-        <button type="button" onclick="verifySitePasswordDirect()" class="cursor-pointer w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition text-sm uppercase tracking-wide">
+        <button type="submit" class="cursor-pointer w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition text-sm uppercase tracking-wide">
           Unlock Webpage
         </button>
-      </div>
+      </form>
     </div>
   </div>
 
@@ -268,4 +268,4 @@
     <div class="bg-white rounded-3xl max-w-xs w-full p-6 space-y-4 shadow-2xl border text-xs">
       <div class="flex justify-between items-center border-b pb-2"><h2 class="font-extrabold text-sm"><i class="fa-solid fa-lock text-orange-600 mr-1"></i> Owner Verification</h2><button onclick="toggleLoginModal(false)" class="cursor-pointer text-xl font-bold">&times;</button></div>
       <form onsubmit="handleOwnerLogin(event)" class="space-y-3">
-        <input id="ownerPinInput" type="password" placeholder="PIN: 1234" required autofocus class="w-ful
+        <input id="ownerPinInput" type="password" placeholder="PIN: 1234" required autofocus clas
