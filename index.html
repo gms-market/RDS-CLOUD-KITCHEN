@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RDS CLOUD KITCHEN | Fresh Food (3 KM Delivery)</title>
+  <title>RDS CLOUD KITCHEN | Delivery & Takeaway</title>
   
   <!-- Tailwind CSS & FontAwesome Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -30,12 +30,12 @@
     <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-clock text-amber-200 animate-pulse"></i>
-        <span>Accepting Orders: <strong id="topBarOrderTime" class="underline decoration-amber-300">11:30 AM – 10:30 PM</strong> | 3 KM Delivery</span>
+        <span>Accepting Orders: <strong id="topBarOrderTime" class="underline decoration-amber-300">11:30 AM – 10:30 PM</strong> | Delivery & Takeaway</span>
       </div>
 
-      <!-- OWNER ADMIN CONTROLS (Hidden from customers by default) -->
+      <!-- OWNER ADMIN CONTROLS -->
       <div id="ownerAdminBar" class="hidden flex items-center gap-2">
-        <button onclick="toggleSettingsModal(true)" title="Configure Alert Numbers, Email & Operating Hours" class="bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
+        <button onclick="toggleSettingsModal(true)" title="Configure Alert Numbers, GPS, Pickup Address & UPI" class="bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
           <i class="fa-solid fa-gear"></i> Settings
         </button>
         <button onclick="toggleCustomerHistory(true)" class="bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
@@ -52,7 +52,7 @@
         </button>
       </div>
 
-      <!-- LOCKED STATUS (Visible when logged out) -->
+      <!-- LOCKED STATUS -->
       <div id="lockedIndicator">
         <button onclick="promptOwnerLogin()" class="bg-black/20 hover:bg-black/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-amber-100 flex items-center gap-1 transition">
           <i class="fa-solid fa-lock text-[10px]"></i> Owner Login
@@ -70,7 +70,7 @@
         </div>
         <div>
           <h1 class="text-xl font-black tracking-tight text-stone-900 leading-none">RDS <span class="text-orange-600">CLOUD KITCHEN</span></h1>
-          <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">Strict 3.0 KM Hyperlocal Delivery</p>
+          <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">3.0 KM Delivery & Fresh Takeaway</p>
         </div>
       </div>
 
@@ -106,14 +106,14 @@
     <section class="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 text-white shadow-xl shadow-orange-500/15 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div class="space-y-1.5 max-w-xl z-10">
         <span class="text-[10px] font-black tracking-widest bg-black/20 backdrop-blur-md px-3 py-1 rounded-full uppercase">
-          Today's Chef Offer
+          Today's Special Offer
         </span>
-        <h2 class="text-2xl sm:text-3xl font-black leading-tight">Authentic Homestyle Flavors Delivered Piping Hot</h2>
-        <p class="text-xs sm:text-sm text-white/90 font-medium">Prepared freshly upon order. Dedicated delivery within our 3 KM perimeter.</p>
+        <h2 class="text-2xl sm:text-3xl font-black leading-tight">Authentic Homestyle Flavors Delivered Hot & Ready</h2>
+        <p class="text-xs sm:text-sm text-white/90 font-medium">Prepared freshly upon order. Fast 3 KM Delivery or Quick Counter Takeaway available!</p>
       </div>
       <div class="z-10 flex items-center gap-2">
         <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2">
-          <i class="fa-solid fa-bolt text-amber-200"></i> Fresh & Hot
+          <i class="fa-solid fa-bag-shopping text-amber-200"></i> Delivery + Takeaway
         </div>
       </div>
       <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -129,35 +129,36 @@
       <button onclick="filterCategory('Dessert')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300">Dessert</button>
     </div>
 
-    <!-- MENU CONTAINER -->
+    <!-- EMPTY MENU STATE -->
     <div id="emptyMenuState" class="text-center py-20 bg-white border border-dashed border-orange-200 rounded-3xl p-8 space-y-3 shadow-sm">
       <div class="w-14 h-14 rounded-full bg-orange-50 text-orange-500 mx-auto flex items-center justify-center text-2xl">
         <i class="fa-solid fa-utensils"></i>
       </div>
       <h3 class="font-extrabold text-stone-800 text-lg">Menu Being Prepared</h3>
-      <p class="text-xs text-stone-500 max-w-sm mx-auto">Today's fresh menu is being updated by our chef. Please check back shortly!</p>
+      <p class="text-xs text-stone-500 max-w-sm mx-auto">Today's fresh menu is being updated. Please check back shortly!</p>
     </div>
 
+    <!-- MENU GRID -->
     <section id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></section>
 
-    <!-- DISCLAIMER BOX -->
+    <!-- UPDATED LEGAL & OPERATING DISCLAIMER -->
     <section class="bg-amber-100/60 border border-amber-200 rounded-3xl p-5 text-stone-700 text-xs space-y-2.5">
       <div class="flex items-center gap-2 text-stone-900 font-black uppercase text-sm">
         <i class="fa-solid fa-shield-halved text-orange-600"></i>
-        <span>RDS Cloud Kitchen Operating & Delivery Disclaimer</span>
+        <span>RDS Cloud Kitchen Operating, Delivery & Takeaway Policy</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 leading-relaxed">
-        <p>• <strong>Strict 3.0 KM Radius:</strong> Prepared in a dedicated cloud kitchen and dispatched strictly within 3 KM to guarantee maximum hotness and quality.</p>
-        <p>• <strong>Allergen Notice:</strong> Kitchen prepares items that contain dairy, gluten, nuts, and spices. Please contact us for custom dietary requirements.</p>
-        <p>• <strong>Delivery-Only:</strong> We operate strictly as an online delivery kitchen. No dine-in or self-takeaway facility is available.</p>
-        <p>• <strong>Food-Grade Packaging:</strong> Handled with sanitized safety seals. Consume within 60 minutes of delivery.</p>
+        <p>• <strong>3.0 KM Delivery Radius & Hubs:</strong> Home deliveries are dispatched strictly within our designated 3.0 KM perimeter. If "Fixed Delivery Point" is active, meals will be handed over at the announced common landmark for your safety and speed.</p>
+        <p>• <strong>Self-Pickup / Takeaway:</strong> Self-pickup orders must be collected directly from our designated kitchen counter address within 30 minutes of preparation notification.</p>
+        <p>• <strong>Payments & Settlements:</strong> We accept verified UPI QR / Phone transfer and Cash on Delivery (COD). Please settle UPI payments before handover.</p>
+        <p>• <strong>Food Quality & Allergens:</strong> Cooked in a commercial environment handling dairy, gluten, nuts, and authentic spices. Dispatched in sanitized, food-grade packaging. Consume within 60 minutes.</p>
       </div>
     </section>
   </main>
 
   <!-- FOOTER -->
   <footer class="bg-white border-t border-orange-100 py-6 text-center text-xs text-stone-400">
-    <p>© RDS Cloud Kitchen • Strict 3 KM Local Kitchen</p>
+    <p>© RDS Cloud Kitchen • 3 KM Hyperlocal Delivery & Fresh Takeaway</p>
     <button onclick="promptOwnerLogin()" class="mt-2 text-[11px] text-stone-400 hover:text-orange-600 transition flex items-center justify-center gap-1 mx-auto">
       <i class="fa-solid fa-key text-[10px]"></i> Kitchen Staff Portal
     </button>
@@ -176,10 +177,10 @@
       <form onsubmit="handleOwnerLogin(event)" class="space-y-3 text-xs">
         <div>
           <label class="font-bold text-stone-700 block mb-1">Enter Secret Owner PIN:</label>
-          <input id="ownerPinInput" type="password" placeholder="Default PIN: 1234" required class="w-full p-2.5 border rounded-xl font-bold tracking-widest text-center text-base focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
+          <input id="ownerPinInput" type="password" placeholder="Default: 1234" required class="w-full p-2.5 border rounded-xl font-bold tracking-widest text-center text-base focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
         </div>
         <button type="submit" class="w-full bg-stone-900 hover:bg-black text-amber-300 font-extrabold py-2.5 rounded-xl shadow transition">
-          Unlock Kitchen Controls
+          Unlock Controls
         </button>
       </form>
     </div>
@@ -196,7 +197,7 @@
       <form id="dishForm" onsubmit="saveNewDish(event)" class="space-y-4 text-xs">
         <div>
           <label class="font-bold text-stone-700 block mb-1">Dish Name *</label>
-          <input id="formDishName" type="text" placeholder="e.g. Malabar Chicken Dum Biryani" required class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none text-stone-900 bg-stone-50">
+          <input id="formDishName" type="text" placeholder="e.g. Chicken Dum Biryani" required class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none text-stone-900 bg-stone-50">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -218,7 +219,7 @@
 
         <div>
           <label class="font-bold text-stone-700 block mb-1">Description</label>
-          <textarea id="formDesc" rows="2" placeholder="Fragrant rice, spicy masala, boiled egg..." class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900"></textarea>
+          <textarea id="formDesc" rows="2" placeholder="Ingredients, spice level, sides..." class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900"></textarea>
         </div>
 
         <div>
@@ -246,45 +247,106 @@
     </div>
   </div>
 
-  <!-- MODAL: KITCHEN SETTINGS -->
+  <!-- MODAL: KITCHEN SETTINGS (GPS, TAKEAWAY, FIXED POINT, UPI, ALERTS) -->
   <div id="settingsModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
         <div class="flex items-center gap-2 text-stone-900 font-extrabold text-base">
           <i class="fa-solid fa-gear text-orange-600"></i>
-          <h2>Kitchen Settings</h2>
+          <h2>Kitchen Master Settings</h2>
         </div>
         <button onclick="toggleSettingsModal(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
       </div>
 
       <form onsubmit="saveKitchenSettings(event)" class="space-y-3.5 text-xs">
+        
+        <!-- Operating Hours -->
         <div class="bg-orange-50 p-3 rounded-2xl border border-orange-200 space-y-1">
           <label class="font-black text-stone-900 block">
-            <i class="fa-solid fa-clock text-orange-600 mr-1"></i> Order Accepting Time (Manual Entry) *
+            <i class="fa-solid fa-clock text-orange-600 mr-1"></i> Order Accepting Time *
           </label>
           <input id="setOrderTime" type="text" placeholder="e.g. 11:30 AM – 10:30 PM" required class="w-full p-2.5 border rounded-xl font-bold focus:ring-2 focus:ring-orange-500 outline-none bg-white text-stone-900">
         </div>
 
-        <div>
-          <label class="font-bold text-stone-700 block mb-1">Kitchen Alert Email</label>
-          <input id="setKitchenEmail" type="email" placeholder="orders@rdskitchen.com" required class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
-        </div>
-        <div>
-          <label class="font-bold text-stone-700 block mb-1">Primary Phone 1 (WhatsApp)</label>
-          <input id="setPhone1" type="tel" placeholder="e.g. 919876543210" required class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
-        </div>
-        <div>
-          <label class="font-bold text-stone-700 block mb-1">Secondary Phone 2 (Backup WhatsApp)</label>
-          <input id="setPhone2" type="tel" placeholder="e.g. 919876543211" required class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
+        <!-- GPS Coordinates -->
+        <div class="p-3 bg-stone-50 border rounded-2xl space-y-2">
+          <p class="font-bold text-stone-800"><i class="fa-solid fa-location-crosshairs text-orange-600 mr-1"></i> Kitchen GPS Origin (3 KM Calculation)</p>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-stone-500 mb-0.5">Latitude</label>
+              <input id="setKitchenLat" type="number" step="any" placeholder="10.7626" required class="w-full p-2 border rounded-xl font-mono text-stone-900 bg-white">
+            </div>
+            <div>
+              <label class="block text-[11px] text-stone-500 mb-0.5">Longitude</label>
+              <input id="setKitchenLng" type="number" step="any" placeholder="78.8139" required class="w-full p-2 border rounded-xl font-mono text-stone-900 bg-white">
+            </div>
+          </div>
+          <button type="button" onclick="detectCurrentKitchenLocation()" class="text-[11px] text-orange-600 font-bold hover:underline flex items-center gap-1">
+            <i class="fa-solid fa-crosshairs"></i> Use My Current Phone / Device GPS
+          </button>
         </div>
 
-        <div class="border-t pt-2 space-y-1">
-          <label class="font-bold text-stone-700 block mb-1">Change Owner Secret PIN</label>
-          <input id="setOwnerPin" type="password" placeholder="Set custom PIN (leave blank to keep current)" class="w-full p-2.5 border rounded-xl font-bold tracking-wider focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
+        <!-- Takeaway Counter Address -->
+        <div class="p-3 bg-stone-50 border rounded-2xl space-y-1">
+          <label class="font-bold text-stone-800 block">
+            <i class="fa-solid fa-shop text-orange-600 mr-1"></i> Kitchen Takeaway Address (For Customer Self-Pickup) *
+          </label>
+          <textarea id="setTakeawayAddress" rows="2" placeholder="e.g. Door No. 4B, Trichy Main Road, Thuvakudi, Trichy" required class="w-full p-2 border rounded-xl bg-white text-stone-900"></textarea>
+        </div>
+
+        <!-- Fixed Point Delivery Toggle -->
+        <div class="p-3 bg-stone-50 border rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-stone-800">Fixed Point Delivery Hub</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="setFixedPointToggle" onchange="toggleFixedPointInput(this.checked)" class="sr-only peer">
+              <div class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
+            </label>
+          </div>
+          <p class="text-[11px] text-stone-500">Enable this if you don't deliver to doorsteps and want customers to collect food at a common landmark.</p>
+          <div id="fixedPointField" class="hidden">
+            <input id="setFixedPointDesc" type="text" placeholder="e.g. Deliveries Handed Over at Main Gate / Community Park" class="w-full p-2 border rounded-xl bg-white text-stone-900">
+          </div>
+        </div>
+
+        <!-- Payment Setup (UPI & COD) -->
+        <div class="p-3 bg-stone-50 border rounded-2xl space-y-2">
+          <p class="font-bold text-stone-800"><i class="fa-solid fa-wallet text-orange-600 mr-1"></i> UPI Payment Configuration</p>
+          <div>
+            <label class="block text-[11px] text-stone-500 mb-0.5">UPI ID or UPI Phone Number (GPay/PhonePe/Paytm)</label>
+            <input id="setUpiId" type="text" placeholder="e.g. rdskitchen@okaxis or 9876543210@upi" required class="w-full p-2 border rounded-xl bg-white text-stone-900 font-semibold">
+          </div>
+          <div>
+            <label class="block text-[11px] text-stone-500 mb-0.5">Minimum Order Amount (₹)</label>
+            <input id="setMinOrder" type="number" placeholder="100" class="w-full p-2 border rounded-xl bg-white text-stone-900">
+          </div>
+        </div>
+
+        <!-- Notification Alerts -->
+        <div class="p-3 bg-stone-50 border rounded-2xl space-y-2">
+          <p class="font-bold text-stone-800"><i class="fa-solid fa-bell text-orange-600 mr-1"></i> Alert Contacts</p>
+          <div>
+            <label class="block text-[11px] text-stone-500 mb-0.5">Kitchen Email</label>
+            <input id="setKitchenEmail" type="email" placeholder="orders@rdskitchen.com" required class="w-full p-2 border rounded-xl bg-white text-stone-900">
+          </div>
+          <div>
+            <label class="block text-[11px] text-stone-500 mb-0.5">Phone 1 (WhatsApp / Calls)</label>
+            <input id="setPhone1" type="tel" placeholder="e.g. 919876543210" required class="w-full p-2 border rounded-xl bg-white text-stone-900">
+          </div>
+          <div>
+            <label class="block text-[11px] text-stone-500 mb-0.5">Phone 2 (Secondary WhatsApp)</label>
+            <input id="setPhone2" type="tel" placeholder="e.g. 919876543211" required class="w-full p-2 border rounded-xl bg-white text-stone-900">
+          </div>
+        </div>
+
+        <!-- Change PIN -->
+        <div>
+          <label class="font-bold text-stone-700 block mb-1">Change Owner PIN</label>
+          <input id="setOwnerPin" type="password" placeholder="Leave empty to keep current PIN" class="w-full p-2.5 border rounded-xl font-bold tracking-wider bg-stone-50 text-stone-900">
         </div>
 
         <button type="submit" class="w-full bg-stone-900 hover:bg-black text-amber-300 font-bold py-3 rounded-xl shadow transition mt-2">
-          Save All Settings
+          Save All Kitchen Settings
         </button>
       </form>
     </div>
@@ -336,45 +398,91 @@
           <h2 class="font-extrabold text-base text-stone-900">Your Fresh Order</h2>
           <button onclick="toggleCart(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
         </div>
-        <div id="cartItemsContainer" class="divide-y max-h-[35vh] overflow-y-auto mt-2"></div>
+        <div id="cartItemsContainer" class="divide-y max-h-[25vh] overflow-y-auto mt-2"></div>
       </div>
 
+      <!-- CUSTOMER ORDER FULFILLMENT FORM -->
       <div id="cartFooter" class="border-t pt-4 space-y-3 text-xs hidden">
-        <div class="space-y-2 bg-stone-50 p-3 rounded-2xl border">
-          <p class="font-black text-stone-900 text-xs uppercase tracking-wide">Customer & Delivery Info</p>
-          <input id="custName" type="text" placeholder="Your Full Name *" required class="w-full p-2.5 border rounded-xl bg-white text-stone-900 outline-none focus:ring-2 focus:ring-orange-500">
-          <input id="custPhone" type="tel" placeholder="Customer Phone Number *" required class="w-full p-2.5 border rounded-xl bg-white text-stone-900 outline-none focus:ring-2 focus:ring-orange-500">
-          <textarea id="custAddress" rows="2" placeholder="Delivery Address / Landmark (Within 3 KM) *" required class="w-full p-2.5 border rounded-xl bg-white text-stone-900 outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+        
+        <!-- FULFILLMENT MODE: DELIVERY VS TAKEAWAY -->
+        <div class="grid grid-cols-2 gap-2 bg-stone-100 p-1 rounded-2xl text-center">
+          <button type="button" id="tabDelivery" onclick="setOrderMode('delivery')" class="py-2 rounded-xl font-black text-xs transition bg-white text-orange-600 shadow-sm">
+            <i class="fa-solid fa-truck-fast mr-1"></i> Delivery (3 KM)
+          </button>
+          <button type="button" id="tabTakeaway" onclick="setOrderMode('takeaway')" class="py-2 rounded-xl font-black text-xs transition text-stone-600 hover:text-stone-900">
+            <i class="fa-solid fa-bag-shopping mr-1"></i> Takeaway (Pickup)
+          </button>
         </div>
 
-        <div class="space-y-1">
+        <!-- FIXED POINT NOTICE IF ACTIVE -->
+        <div id="fixedPointBanner" class="hidden p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-stone-800 text-[11px] leading-relaxed">
+          <i class="fa-solid fa-circle-info text-orange-600 mr-1"></i>
+          <strong>Fixed Pickup Point Notice:</strong> <span id="fixedPointNoticeText"></span>
+        </div>
+
+        <!-- TAKEAWAY ADDRESS DISPLAY IF IN TAKEAWAY MODE -->
+        <div id="takeawayBanner" class="hidden p-2.5 bg-orange-50 border border-orange-200 rounded-xl text-stone-800 text-[11px] leading-relaxed">
+          <i class="fa-solid fa-store text-orange-600 mr-1"></i>
+          <strong>Pickup From Kitchen Counter:</strong>
+          <p id="takeawayCounterText" class="mt-0.5 font-bold"></p>
+        </div>
+
+        <div class="space-y-2 bg-stone-50 p-3 rounded-2xl border">
+          <input id="custName" type="text" placeholder="Your Full Name *" required class="w-full p-2.5 border rounded-xl bg-white text-stone-900 outline-none focus:ring-2 focus:ring-orange-500">
+          <input id="custPhone" type="tel" placeholder="Customer Phone Number *" required class="w-full p-2.5 border rounded-xl bg-white text-stone-900 outline-none focus:ring-2 focus:ring-orange-500">
+          
+          <div id="addressInputWrap">
+            <textarea id="custAddress" rows="2" placeholder="Delivery Address / Apartment / Landmark *" class="w-full p-2.5 border rounded-xl bg-white text-stone-900 outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+          </div>
+        </div>
+
+        <!-- PAYMENT METHOD SELECTION -->
+        <div class="space-y-1.5 bg-stone-50 p-3 rounded-2xl border">
+          <label class="font-bold text-stone-800 block mb-1">Select Payment Method:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 p-2 border rounded-xl bg-white cursor-pointer hover:border-orange-300">
+              <input type="radio" name="paymentType" value="UPI" checked onchange="togglePaymentBox('UPI')">
+              <span class="font-bold text-stone-800">UPI Transfer</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 border rounded-xl bg-white cursor-pointer hover:border-orange-300">
+              <input type="radio" name="paymentType" value="COD" onchange="togglePaymentBox('COD')">
+              <span class="font-bold text-stone-800">Cash on Hand</span>
+            </label>
+          </div>
+
+          <!-- UPI INSTRUCTIONS BOX -->
+          <div id="upiInfoBox" class="pt-2 text-[11px] text-stone-600 space-y-1 border-t mt-2">
+            <p>Pay to Kitchen UPI ID: <strong id="displayUpiId" class="text-stone-900 bg-amber-100 px-1.5 py-0.5 rounded font-mono"></strong></p>
+            <p class="text-[10px] text-stone-500">You can pay via Google Pay, PhonePe, or Paytm during or right after placing your order.</p>
+          </div>
+        </div>
+
+        <div class="space-y-1 pt-1">
           <div class="flex justify-between">
             <span class="text-stone-500">Item Total</span>
             <span id="cartSubtotal" class="font-bold">₹0</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-stone-500">Delivery Fee (Within 3 KM)</span>
-            <span class="font-bold text-emerald-600">FREE</span>
+            <span class="text-stone-500">Delivery / Handling</span>
+            <span id="deliveryChargeText" class="font-bold text-emerald-600">FREE</span>
           </div>
           <div class="flex justify-between text-base font-extrabold border-t border-dashed pt-1">
-            <span>Payable Amount</span>
+            <span>Grand Total</span>
             <span id="cartTotal" class="text-orange-600">₹0</span>
           </div>
         </div>
 
         <button onclick="placeCustomerOrder()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition text-sm">
-          Place Order & Notify Kitchen
+          Confirm Order
         </button>
       </div>
     </div>
   </div>
 
   <script>
-    const KITCHEN_LAT = 10.7626;
-    const KITCHEN_LNG = 78.8139;
     const MAX_KM = 3.0;
 
-    // Local Storage Data
+    // Local Storage Data with defaults
     let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || '[]');
     let historyMenu = JSON.parse(localStorage.getItem('rds_cloud_history_menu') || '[]');
     let customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
@@ -383,6 +491,13 @@
       email: 'kitchen@rdskitchen.com',
       phone1: '919876543210',
       phone2: '919876543211',
+      lat: 10.7626,
+      lng: 78.8139,
+      takeawayAddress: 'Door No. 4B, Main Bazaar Road, Thuvakudi, Trichy',
+      useFixedPoint: false,
+      fixedPointDesc: 'Handover at Main Colony Entrance Gate',
+      upiId: 'rdskitchen@okaxis',
+      minOrder: 0,
       pin: '1234'
     }));
 
@@ -390,6 +505,7 @@
     let cart = {};
     let activeCategory = 'All';
     let base64Image = '';
+    let currentOrderMode = 'delivery'; // 'delivery' or 'takeaway'
 
     function init() {
       applyOrderTimeUI();
@@ -398,9 +514,10 @@
       updateHistoryDrawer();
       renderCustomerOrders();
       loadKitchenSettingsForm();
+      updateCheckoutModeUI();
     }
 
-    // --- OWNER AUTHENTICATION (PIN PROTECTION) ---
+    // --- OWNER AUTHENTICATION ---
     function updateAuthUI() {
       const adminBar = document.getElementById('ownerAdminBar');
       const lockIndicator = document.getElementById('lockedIndicator');
@@ -411,12 +528,12 @@
         adminBar.classList.add('hidden');
         lockIndicator.classList.remove('hidden');
       }
-      updateUI(); // Re-renders menu to show/hide dish delete buttons
+      updateUI();
     }
 
     function promptOwnerLogin() {
       if (isOwnerLoggedIn) {
-        alert('You are already logged in as Owner.');
+        alert('Already logged in as Kitchen Owner.');
         return;
       }
       document.getElementById('ownerPinInput').value = '';
@@ -446,14 +563,40 @@
       alert('Logged out. Owner controls are now locked.');
     }
 
-    // --- MANUAL ORDER TIME & SETTINGS ---
+    // --- SETTINGS FORM & GPS ---
     function applyOrderTimeUI() {
-      const timeDisplay = kitchenSettings.orderTime || '11:30 AM – 10:30 PM';
-      document.getElementById('topBarOrderTime').innerText = timeDisplay;
+      document.getElementById('topBarOrderTime').innerText = kitchenSettings.orderTime || '11:30 AM – 10:30 PM';
+    }
+
+    function toggleFixedPointInput(checked) {
+      document.getElementById('fixedPointField').classList.toggle('hidden', !checked);
+    }
+
+    function detectCurrentKitchenLocation() {
+      if (!navigator.geolocation) {
+        alert('GPS not supported on this browser.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          document.getElementById('setKitchenLat').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('setKitchenLng').value = pos.coords.longitude.toFixed(6);
+          alert(`Kitchen GPS captured:\nLat: ${pos.coords.latitude}\nLng: ${pos.coords.longitude}`);
+        },
+        () => alert('Could not fetch GPS. Please allow location permissions.')
+      );
     }
 
     function loadKitchenSettingsForm() {
       document.getElementById('setOrderTime').value = kitchenSettings.orderTime || '11:30 AM – 10:30 PM';
+      document.getElementById('setKitchenLat').value = kitchenSettings.lat || 10.7626;
+      document.getElementById('setKitchenLng').value = kitchenSettings.lng || 78.8139;
+      document.getElementById('setTakeawayAddress').value = kitchenSettings.takeawayAddress || '';
+      document.getElementById('setFixedPointToggle').checked = !!kitchenSettings.useFixedPoint;
+      toggleFixedPointInput(!!kitchenSettings.useFixedPoint);
+      document.getElementById('setFixedPointDesc').value = kitchenSettings.fixedPointDesc || '';
+      document.getElementById('setUpiId').value = kitchenSettings.upiId || '';
+      document.getElementById('setMinOrder').value = kitchenSettings.minOrder || 0;
       document.getElementById('setKitchenEmail').value = kitchenSettings.email || '';
       document.getElementById('setPhone1').value = kitchenSettings.phone1 || '';
       document.getElementById('setPhone2').value = kitchenSettings.phone2 || '';
@@ -465,6 +608,13 @@
       if (!isOwnerLoggedIn) return;
 
       kitchenSettings.orderTime = document.getElementById('setOrderTime').value.trim();
+      kitchenSettings.lat = parseFloat(document.getElementById('setKitchenLat').value);
+      kitchenSettings.lng = parseFloat(document.getElementById('setKitchenLng').value);
+      kitchenSettings.takeawayAddress = document.getElementById('setTakeawayAddress').value.trim();
+      kitchenSettings.useFixedPoint = document.getElementById('setFixedPointToggle').checked;
+      kitchenSettings.fixedPointDesc = document.getElementById('setFixedPointDesc').value.trim();
+      kitchenSettings.upiId = document.getElementById('setUpiId').value.trim();
+      kitchenSettings.minOrder = parseFloat(document.getElementById('setMinOrder').value) || 0;
       kitchenSettings.email = document.getElementById('setKitchenEmail').value.trim();
       kitchenSettings.phone1 = document.getElementById('setPhone1').value.trim().replace(/\D/g, '');
       kitchenSettings.phone2 = document.getElementById('setPhone2').value.trim().replace(/\D/g, '');
@@ -474,11 +624,61 @@
 
       localStorage.setItem('rds_kitchen_settings', JSON.stringify(kitchenSettings));
       applyOrderTimeUI();
-      alert('Kitchen operating time & alert contacts updated successfully!');
+      updateCheckoutModeUI();
+      alert('All Kitchen Settings (GPS, Takeaway, Fixed Point, UPI, Contacts) Updated!');
       toggleSettingsModal(false);
     }
 
-    // --- PHOTO UPLOAD & MANUAL DISH ENTRY ---
+    // --- CHECKOUT MODES (DELIVERY VS TAKEAWAY) ---
+    function setOrderMode(mode) {
+      currentOrderMode = mode;
+      const tabDel = document.getElementById('tabDelivery');
+      const tabTak = document.getElementById('tabTakeaway');
+
+      if (mode === 'delivery') {
+        tabDel.className = 'py-2 rounded-xl font-black text-xs transition bg-white text-orange-600 shadow-sm';
+        tabTak.className = 'py-2 rounded-xl font-black text-xs transition text-stone-600 hover:text-stone-900';
+      } else {
+        tabTak.className = 'py-2 rounded-xl font-black text-xs transition bg-white text-orange-600 shadow-sm';
+        tabDel.className = 'py-2 rounded-xl font-black text-xs transition text-stone-600 hover:text-stone-900';
+      }
+      updateCheckoutModeUI();
+    }
+
+    function updateCheckoutModeUI() {
+      const fixedBanner = document.getElementById('fixedPointBanner');
+      const takeawayBanner = document.getElementById('takeawayBanner');
+      const addressWrap = document.getElementById('addressInputWrap');
+      const addressInput = document.getElementById('custAddress');
+      const upiDisplay = document.getElementById('displayUpiId');
+
+      if (upiDisplay) upiDisplay.innerText = kitchenSettings.upiId || 'Not Configured';
+
+      if (currentOrderMode === 'takeaway') {
+        takeawayBanner.classList.remove('hidden');
+        document.getElementById('takeawayCounterText').innerText = kitchenSettings.takeawayAddress || 'Address will be provided upon order.';
+        fixedBanner.classList.add('hidden');
+        addressWrap.classList.add('hidden');
+        addressInput.removeAttribute('required');
+      } else {
+        takeawayBanner.classList.add('hidden');
+        addressWrap.classList.remove('hidden');
+        addressInput.setAttribute('required', 'true');
+
+        if (kitchenSettings.useFixedPoint) {
+          fixedBanner.classList.remove('hidden');
+          document.getElementById('fixedPointNoticeText').innerText = kitchenSettings.fixedPointDesc || 'Handed over at fixed community point.';
+        } else {
+          fixedBanner.classList.add('hidden');
+        }
+      }
+    }
+
+    function togglePaymentBox(type) {
+      document.getElementById('upiInfoBox').classList.toggle('hidden', type !== 'UPI');
+    }
+
+    // --- PHOTO UPLOAD & DISH ENTRY ---
     function previewImage(e) {
       const file = e.target.files[0];
       if (file) {
@@ -714,15 +914,27 @@
       }
     }
 
-    // --- CUSTOMER CHECKOUT ---
+    // --- PLACE CUSTOMER ORDER ---
     function placeCustomerOrder() {
       const name = document.getElementById('custName').value.trim();
       const phone = document.getElementById('custPhone').value.trim();
-      const address = document.getElementById('custAddress').value.trim();
+      let address = document.getElementById('custAddress').value.trim();
+      const paymentMethod = document.querySelector('input[name="paymentType"]:checked').value;
 
-      if (!name || !phone || !address) {
-        alert('Please enter your Name, Phone Number, and Delivery Address.');
+      if (!name || !phone) {
+        alert('Please enter your Name and Phone Number.');
         return;
+      }
+
+      if (currentOrderMode === 'delivery' && !address) {
+        alert('Please provide your Delivery Address.');
+        return;
+      }
+
+      if (currentOrderMode === 'takeaway') {
+        address = `SELF-PICKUP AT KITCHEN COUNTER: ${kitchenSettings.takeawayAddress}`;
+      } else if (kitchenSettings.useFixedPoint) {
+        address = `[FIXED POINT HUB]: ${kitchenSettings.fixedPointDesc} | Customer Address/Details: ${address}`;
       }
 
       const entries = Object.entries(cart);
@@ -741,6 +953,11 @@
         }
       });
 
+      if (kitchenSettings.minOrder > 0 && grandTotal < kitchenSettings.minOrder) {
+        alert(`Minimum order amount is ₹${kitchenSettings.minOrder}. Please add more items.`);
+        return;
+      }
+
       const orderTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const orderDate = new Date().toLocaleDateString();
 
@@ -748,6 +965,8 @@
         orderId: 'RDS-' + Math.floor(100000 + Math.random() * 900000),
         placedAt: orderTimestamp,
         date: orderDate,
+        mode: currentOrderMode.toUpperCase(),
+        payment: paymentMethod,
         customer: { name, phone, address },
         items: orderItems,
         total: grandTotal
@@ -758,13 +977,13 @@
 
       const itemSummary = orderItems.map(i => `${i.name} (x${i.qty}) - ₹${i.total}`).join('%0A• ');
       const messageText = `*NEW ORDER: ${newOrder.orderId}*%0A` +
-        `*Order Placed At:* ${orderDate} at ${orderTimestamp}%0A` +
+        `*Order Mode:* ${newOrder.mode}%0A` +
+        `*Payment Method:* ${paymentMethod}%0A` +
         `*Customer:* ${name}%0A` +
         `*Phone:* ${phone}%0A` +
-        `*Address:* ${address}%0A%0A` +
+        `*Address / Pickup:* ${address}%0A%0A` +
         `*Items:*%0A• ${itemSummary}%0A%0A` +
-        `*Grand Total:* ₹${grandTotal}%0A` +
-        `*Delivery Radius:* 3 KM Hyperlocal`;
+        `*Grand Total:* ₹${grandTotal}`;
 
       const whatsappUrl1 = `https://wa.me/${kitchenSettings.phone1}?text=${messageText}`;
       const whatsappUrl2 = `https://wa.me/${kitchenSettings.phone2}?text=${messageText}`;
@@ -783,7 +1002,7 @@
         window.open(whatsappUrl2, '_blank');
       }
 
-      alert(`Order ${newOrder.orderId} placed successfully!`);
+      alert(`Order ${newOrder.orderId} Placed!\nPayment Mode: ${paymentMethod}\nNotifications sent to kitchen.`);
     }
 
     // --- RENDER CUSTOMER ORDERS ---
@@ -798,7 +1017,7 @@
       }
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="py-16 text-center text-xs text-stone-400 font-medium">No customer orders found.</div>`;
+        container.innerHTML = `<div class="py-16 text-center text-xs text-stone-400 font-medium">No customer orders recorded yet.</div>`;
         return;
       }
 
@@ -806,8 +1025,12 @@
         <div class="p-4 border rounded-2xl bg-white shadow-sm space-y-2.5 text-xs">
           <div class="flex justify-between items-start border-b pb-2">
             <div>
-              <span class="font-extrabold text-stone-900 text-sm">${order.orderId}</span>
-              <p class="text-[11px] text-stone-500 font-semibold">${order.date} at ${order.placedAt}</p>
+              <div class="flex items-center gap-2">
+                <span class="font-extrabold text-stone-900 text-sm">${order.orderId}</span>
+                <span class="px-2 py-0.5 rounded-md font-black text-[10px] ${order.mode === 'TAKEAWAY' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}">${order.mode}</span>
+                <span class="px-2 py-0.5 rounded-md font-black text-[10px] bg-stone-100 text-stone-700">${order.payment || 'COD'}</span>
+              </div>
+              <p class="text-[11px] text-stone-500 font-semibold mt-0.5">${order.date} at ${order.placedAt}</p>
             </div>
             <span class="font-black text-orange-600 text-sm">₹${order.total}</span>
           </div>
@@ -815,11 +1038,11 @@
           <div class="bg-orange-50/70 p-2.5 rounded-xl space-y-1">
             <p><strong class="text-stone-800">Customer:</strong> ${order.customer.name}</p>
             <p><strong class="text-stone-800">Phone:</strong> <a href="tel:${order.customer.phone}" class="text-orange-600 font-bold underline">${order.customer.phone}</a></p>
-            <p><strong class="text-stone-800">Address:</strong> ${order.customer.address}</p>
+            <p><strong class="text-stone-800">Fulfillment Detail:</strong> ${order.customer.address}</p>
           </div>
 
           <div>
-            <p class="font-bold text-stone-700 mb-1">Ordered Dishes:</p>
+            <p class="font-bold text-stone-700 mb-1">Items:</p>
             <div class="divide-y border-t border-b">
               ${order.items.map(i => `
                 <div class="py-1 flex justify-between text-stone-600">
@@ -833,7 +1056,7 @@
       `).join('');
     }
 
-    // --- 3 KM RADIUS VERIFICATION ---
+    // --- DYNAMIC GPS 3 KM CALCULATION ---
     function checkDeliveryRadius() {
       const alertBox = document.getElementById('locationAlert');
       const icon = document.getElementById('locIcon');
@@ -845,14 +1068,17 @@
         return;
       }
 
+      const kitchenLat = kitchenSettings.lat || 10.7626;
+      const kitchenLng = kitchenSettings.lng || 78.8139;
+
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
           const R = 6371;
-          const dLat = ((lat - KITCHEN_LAT) * Math.PI) / 180;
-          const dLon = ((lng - KITCHEN_LNG) * Math.PI) / 180;
-          const a = Math.sin(dLat/2)**2 + Math.cos(KITCHEN_LAT*Math.PI/180) * Math.cos(lat*Math.PI/180) * Math.sin(dLon/2)**2;
+          const dLat = ((lat - kitchenLat) * Math.PI) / 180;
+          const dLon = ((lng - kitchenLng) * Math.PI) / 180;
+          const a = Math.sin(dLat/2)**2 + Math.cos(kitchenLat*Math.PI/180) * Math.cos(lat*Math.PI/180) * Math.sin(dLon/2)**2;
           const dist = parseFloat((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2));
 
           alertBox.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-900', 'bg-rose-50', 'border-rose-200', 'text-rose-900');
@@ -860,16 +1086,16 @@
             alertBox.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-900');
             icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
             head.innerText = `Delivery Available! (${dist} KM away)`;
-            sub.innerText = `You are within our ${MAX_KM} KM cloud kitchen dispatch boundary.`;
+            sub.innerText = `You are inside our ${MAX_KM} KM cloud kitchen dispatch perimeter.`;
           } else {
             alertBox.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-900');
             icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-600"></i>';
             head.innerText = `Outside Delivery Radius (${dist} KM away)`;
-            sub.innerText = `We strictly deliver within ${MAX_KM} KM to keep food piping hot.`;
+            sub.innerText = `Delivery is restricted to ${MAX_KM} KM. However, you can select "Takeaway" to pick up directly!`;
           }
         },
         () => {
-          alert('Please allow location permissions on your browser to verify delivery zone.');
+          alert('Please allow location permissions on your browser to calculate delivery distance.');
         }
       );
     }
