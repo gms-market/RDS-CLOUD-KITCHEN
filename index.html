@@ -266,8 +266,8 @@
       <div class="w-14 h-14 rounded-full bg-orange-50 text-orange-500 mx-auto flex items-center justify-center text-2xl">
         <i class="fa-solid fa-utensils"></i>
       </div>
-      <h3 class="font-extrabold text-stone-800 text-lg">Loading Kitchen Menu...</h3>
-      <p class="text-xs text-stone-500 max-w-sm mx-auto">Syncing live food items. If items do not appear, please verify your network connection.</p>
+      <h3 class="font-extrabold text-stone-800 text-lg">No Dishes Currently Listed</h3>
+      <p class="text-xs text-stone-500 max-w-sm mx-auto">Please add items to your Google Sheet or click Owner Login to publish new dishes.</p>
     </div>
 
     <!-- MENU GRID -->
@@ -890,12 +890,32 @@
     let currentInvoiceOrder = null;
     let currentGstMode = 'separate';
 
-    // Fetch Google Sheet safely in the background
+    // Fetch Google Sheet safely in background with CORS proxy fallback
     async function syncGoogleSheetMenu() {
+      let csvText = "";
       try {
-        const response = await fetch(GOOGLE_SHEET_CSV_URL);
-        if (!response.ok) throw new Error("Network response was not ok");
-        const csvText = await response.text();
+        // Direct fetch with 4s timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const response = await fetch(GOOGLE_SHEET_CSV_URL, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (response.ok) csvText = await response.text();
+      } catch (err) {
+        console.warn("Direct Google Sheet fetch failed/timed out, attempting proxy fallback...");
+      }
+
+      if (!csvText) {
+        try {
+          // Proxy fallback if direct fetch is blocked by browser CORS
+          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(GOOGLE_SHEET_CSV_URL)}`;
+          const res = await fetch(proxyUrl);
+          if (res.ok) csvText = await res.text();
+        } catch (e) {
+          console.warn("Proxy fallback also failed; retaining local cache.");
+        }
+      }
+
+      if (csvText) {
         const parsed = parseCSV(csvText);
         if (parsed && parsed.length > 0) {
           activeMenu = parsed;
@@ -906,8 +926,6 @@
           updateUI();
           updateHistoryDrawer();
         }
-      } catch (err) {
-        console.warn("Could not sync from Google Sheet; using cached local menu.");
       }
     }
 
@@ -994,7 +1012,7 @@
       updateCheckoutModeUI();
       updatePreorderAlert();
 
-      // Fetch live updates from sheet in background
+      // Run Google Sheet sync in background without blocking UI
       syncGoogleSheetMenu();
 
       setInterval(() => {
@@ -1847,366 +1865,6 @@
       alert(`Order ${newOrder.orderId} placed! Inventory updated.`);
     }
 
-    function renderCustomerOrders() {
-      const container = document.getElementById('customerOrdersList');
-      const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase().trim();
-      document.getElementById('ordersCount').innerText = customerOrders.length;
-
-      let filtered = customerOrders;
-      if (search) {
-        filtered = customerOrders.filter(o => o.customer.phone.toLowerCase().includes(search) || o.customer.name.toLowerCase().includes(search));
-      }
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="py-16 text-center text-xs text-stone-400 font-medium">No customer orders found.</div>`;
-        return;
-      }
-
-      const gstActive = isGstActive();
-
-      container.innerHTML = filtered.map(order => `
-        <div class="p-4 border rounded-2xl bg-white shadow-sm space-y-2.5 text-xs">
-          <div class="flex justify-between items-start border-b pb-2">
-            <div>
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-extrabold text-stone-900 text-sm">${order.orderId}</span>
-                <span class="px-2 py-0.5 rounded font-black text-[10px] ${order.mode === 'TAKEAWAY' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}">${order.mode}</span>
-                ${order.hasPreorders ? `<span class="px-2 py-0.5 rounded font-black text-[10px] bg-purple-100 text-purple-800">PRE-ORDER</span>` : ''}
-                <span class="px-2 py-0.5 rounded font-black text-[10px] bg-stone-100 text-stone-700">${order.payment || 'COD'}</span>
-              </div>
-              <p class="text-[11px] text-stone-500 font-semibold mt-0.5">${order.date} at ${order.placedAt}</p>
-            </div>
-            
-            <div class="text-right">
-              <span class="font-black text-orange-600 text-sm">₹${order.total}</span>
-              ${isOwnerLoggedIn ? `
-                <button type="button" onclick="openInvoiceModal('${order.orderId}')" class="cursor-pointer mt-1 block ml-auto text-[10px] font-black uppercase ${gstActive ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-stone-800 hover:bg-black text-amber-300'} px-2.5 py-1 rounded-lg shadow-sm transition">
-                  <i class="fa-solid fa-file-invoice mr-1"></i> ${gstActive ? 'GST Bill' : 'View Bill'}
-                </button>
-              ` : ''}
-            </div>
-          </div>
-
-          <div class="bg-orange-50/70 p-2.5 rounded-xl space-y-1">
-            <p><strong class="text-stone-800">Customer:</strong> ${order.customer.name}</p>
-            <p><strong class="text-stone-800">Phone:</strong> <a href="tel:${order.customer.phone}" class="text-orange-600 font-bold underline">${order.customer.phone}</a></p>
-            <p><strong class="text-stone-800">Fulfillment:</strong> ${order.customer.address}</p>
-          </div>
-
-          <div>
-            <p class="font-bold text-stone-700 mb-1">Items:</p>
-            <div class="divide-y border-t border-b">
-              ${order.items.map(i => `
-                <div class="py-1 flex justify-between text-stone-600">
-                  <span>${i.name} (${i.category}) × ${i.qty}</span>
-                  <span class="font-bold">₹${i.total}</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function checkDeliveryRadius() {
-      const alertBox = document.getElementById('locationAlert');
-      const icon = document.getElementById('locIcon');
-      const head = document.getElementById('locHeading');
-      const sub = document.getElementById('locSub');
-      const limit = getActiveLimit();
-
-      if (!navigator.geolocation) {
-        alert('Geolocation is not supported by your device.');
-        return;
-      }
-
-      const kitchenLat = kitchenSettings.lat || 10.7626;
-      const kitchenLng = kitchenSettings.lng || 78.8139;
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          const R = 6371;
-          const dLat = ((lat - kitchenLat) * Math.PI) / 180;
-          const dLon = ((lng - kitchenLng) * Math.PI) / 180;
-          const a = Math.sin(dLat/2)**2 + Math.cos(kitchenLat*Math.PI/180) * Math.cos(lat*Math.PI/180) * Math.sin(dLon/2)**2;
-          const dist = parseFloat((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2));
-
-          alertBox.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-900', 'bg-rose-50', 'border-rose-200', 'text-rose-900');
-          if (dist <= limit) {
-            alertBox.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-900');
-            icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
-            head.innerText = `Delivery Available! (${dist} KM away)`;
-            sub.innerText = `You are inside our ${limit} KM cloud kitchen delivery perimeter.`;
-          } else {
-            alertBox.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-900');
-            icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-600"></i>';
-            head.innerText = `Outside Delivery Radius (${dist} KM away)`;
-            sub.innerText = `Delivery is restricted to within ${limit} KM. However, you can choose "Takeaway" to collect your meal!`;
-          }
-        },
-        () => alert('Please enable location permissions in your browser.')
-      );
-    }
-
-    function openInvoiceModal(orderId) {
-      const order = customerOrders.find(o => o.orderId === orderId);
-      if (!order) return;
-      currentInvoiceOrder = order;
-      currentGstMode = 'separate';
-      renderInvoiceSheet();
-      toggleInvoiceModal(true);
-    }
-
-    function setGstMode(mode) {
-      currentGstMode = mode;
-      const btnSep = document.getElementById('btnGstSeparate');
-      const btnInc = document.getElementById('btnGstInclusive');
-
-      if (mode === 'separate') {
-        btnSep.className = 'py-2 rounded-xl transition bg-white text-orange-600 shadow-sm cursor-pointer';
-        btnInc.className = 'py-2 rounded-xl transition text-stone-600 hover:text-stone-900 cursor-pointer';
-      } else {
-        btnInc.className = 'py-2 rounded-xl transition bg-white text-orange-600 shadow-sm cursor-pointer';
-        btnSep.className = 'py-2 rounded-xl transition text-stone-600 hover:text-stone-900 cursor-pointer';
-      }
-      renderInvoiceSheet();
-    }
-
-    function renderInvoiceSheet() {
-      if (!currentInvoiceOrder) return;
-      const order = currentInvoiceOrder;
-      const gstActive = isGstActive();
-      const gstRate = parseFloat(kitchenSettings.gstRate) || 5.0;
-      const halfRate = (gstRate / 2).toFixed(2);
-
-      const modalHeading = document.getElementById('invoiceModalHeading');
-      const modeSwitcher = document.getElementById('gstModeSwitcher');
-      const gstFields = document.getElementById('invGstFields');
-      const badgeType = document.getElementById('invBadgeType');
-      const gstinEl = document.getElementById('invGstin');
-
-      document.getElementById('invKitchenAddress').innerText = kitchenSettings.takeawayAddress || 'Main Kitchen Counter';
-      document.getElementById('invPhone').innerText = `Helpline: ${kitchenSettings.phone1 || ''}`;
-
-      document.getElementById('invOrderId').innerText = order.orderId;
-      document.getElementById('invDateTime').innerText = `${order.date} ${order.placedAt}`;
-      document.getElementById('invMode').innerText = order.mode;
-      document.getElementById('invCustName').innerText = order.customer.name;
-      document.getElementById('invCustPhone').innerText = order.customer.phone;
-      document.getElementById('invPayment').innerText = order.payment || 'COD';
-
-      const rawItemsTotal = order.items.reduce((sum, i) => sum + i.total, 0);
-
-      if (!gstActive) {
-        modalHeading.innerText = 'Food Cash Bill / Retail Receipt';
-        modeSwitcher.classList.add('hidden');
-        gstFields.classList.add('hidden');
-        badgeType.innerText = 'Retail Cash Bill';
-        gstinEl.innerText = '';
-
-        document.getElementById('invItemsTable').innerHTML = order.items.map(i => `
-          <tr class="py-1">
-            <td class="py-1">${i.name}</td>
-            <td class="text-center py-1">${i.qty}</td>
-            <td class="text-right py-1">₹${i.price.toFixed(2)}</td>
-            <td class="text-right py-1 font-bold">₹${i.total.toFixed(2)}</td>
-          </tr>
-        `).join('');
-
-        document.getElementById('invGrandTotal').innerText = `₹${rawItemsTotal.toFixed(2)}`;
-        document.getElementById('invTaxNote').innerText = '* Simplified retail food bill (Non-GST / Exempt).';
-
-      } else {
-        modalHeading.innerText = 'GST Tax Invoice Generator';
-        modeSwitcher.classList.remove('hidden');
-        gstFields.classList.remove('hidden');
-        badgeType.innerText = 'Tax Invoice';
-        gstinEl.innerText = kitchenSettings.gstin ? `GSTIN: ${kitchenSettings.gstin}` : 'GSTIN: PENDING REGISTRATION';
-
-        document.getElementById('invCgstPct').innerText = halfRate;
-        document.getElementById('invSgstPct').innerText = halfRate;
-
-        let taxableAmount = 0;
-        let cgstAmount = 0;
-        let sgstAmount = 0;
-        let grandTotal = 0;
-
-        if (currentGstMode === 'separate') {
-          taxableAmount = rawItemsTotal;
-          const totalGst = (taxableAmount * gstRate) / 100;
-          cgstAmount = totalGst / 2;
-          sgstAmount = totalGst / 2;
-          grandTotal = taxableAmount + totalGst;
-
-          document.getElementById('invItemsTable').innerHTML = order.items.map(i => `
-            <tr class="py-1">
-              <td class="py-1">${i.name}</td>
-              <td class="text-center py-1">${i.qty}</td>
-              <td class="text-right py-1">₹${i.price.toFixed(2)}</td>
-              <td class="text-right py-1 font-bold">₹${i.total.toFixed(2)}</td>
-            </tr>
-          `).join('');
-
-          document.getElementById('invTaxNote').innerText = `* GST (${gstRate}%) is charged separately on food item value.`;
-        } else {
-          grandTotal = rawItemsTotal;
-          taxableAmount = grandTotal / (1 + (gstRate / 100));
-          const totalGst = grandTotal - taxableAmount;
-          cgstAmount = totalGst / 2;
-          sgstAmount = totalGst / 2;
-
-          document.getElementById('invItemsTable').innerHTML = order.items.map(i => {
-            const itemBaseRate = i.price / (1 + (gstRate / 100));
-            const itemBaseTotal = i.total / (1 + (gstRate / 100));
-            return `
-              <tr class="py-1">
-                <td class="py-1">${i.name}</td>
-                <td class="text-center py-1">${i.qty}</td>
-                <td class="text-right py-1">₹${itemBaseRate.toFixed(2)}</td>
-                <td class="text-right py-1 font-bold">₹${itemBaseTotal.toFixed(2)}</td>
-              </tr>
-            `;
-          }).join('');
-
-          document.getElementById('invTaxNote').innerText = `* Menu prices are inclusive of ${gstRate}% GST (${halfRate}% CGST + ${halfRate}% SGST).`;
-        }
-
-        document.getElementById('invTaxable').innerText = `₹${taxableAmount.toFixed(2)}`;
-        document.getElementById('invCgstVal').innerText = `₹${cgstAmount.toFixed(2)}`;
-        document.getElementById('invSgstVal').innerText = `₹${sgstAmount.toFixed(2)}`;
-        document.getElementById('invGrandTotal').innerText = `₹${grandTotal.toFixed(2)}`;
-      }
-    }
-
-    function printInvoiceSheet() {
-      window.print();
-    }
-
-    function downloadInvoicePdf() {
-      const target = document.getElementById('invoicePrintTarget');
-      html2canvas(target, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        logging: false
-      }).then(canvas => {
-        const { jsPDF } = window.jspdf;
-        const imgData = canvas.toDataURL('image/png');
-        const pdfWidth = 80;
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        
-        const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save(`Bill-${currentInvoiceOrder ? currentInvoiceOrder.orderId : Date.now()}.pdf`);
-      }).catch(err => {
-        alert('Could not render PDF. Please use the Print Bill button instead.');
-      });
-    }
-
-    function openPostcardPreview() {
-      const container = document.getElementById('postcardDishesList');
-      const limit = getActiveLimit();
-      
-      document.querySelectorAll('.postcardRadiusText').forEach(el => el.innerText = `${limit} KM Delivery`);
-      
-      const cleanUrl = window.location.origin + window.location.pathname;
-      const anchor = document.getElementById('postcardWebsiteAnchor');
-      anchor.innerText = cleanUrl;
-      anchor.href = cleanUrl;
-      
-      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(cleanUrl)}`;
-      document.getElementById('postcardQrImg').src = qrApiUrl;
-
-      document.getElementById('postcardCounter').innerText = kitchenSettings.takeawayAddress || 'Counter Pickup Available';
-
-      const heroWrapper = document.getElementById('postcardHeroWrapper');
-      if (activeMenu.length > 0 && activeMenu[0].image) {
-        const featured = activeMenu[0];
-        document.getElementById('postcardHeroImg').src = featured.image;
-        document.getElementById('postcardHeroBadge').innerText = `Chef's Choice • ${featured.category}`;
-        document.getElementById('postcardHeroTitle').innerText = featured.name;
-        document.getElementById('postcardHeroPrice').innerText = `₹${featured.price}`;
-        heroWrapper.classList.remove('hidden');
-      } else {
-        heroWrapper.classList.add('hidden');
-      }
-
-      if (activeMenu.length === 0) {
-        container.innerHTML = '<p class="text-xs text-stone-400 py-3 text-center">No dishes on active menu right now.</p>';
-      } else {
-        container.innerHTML = activeMenu.map(item => `
-          <div class="flex items-center justify-between py-2 border-b border-white/10 gap-3">
-            <div class="flex items-center gap-3">
-              ${item.image ? `<img src="${item.image}" alt="${item.name}" class="w-11 h-11 rounded-xl object-cover border border-white/10 bg-stone-900 flex-shrink-0">` : ''}
-              <div>
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="w-2 h-2 rounded-full ${item.isVeg ? 'bg-emerald-400' : 'bg-rose-500'} flex-shrink-0"></span>
-                  <span class="font-extrabold text-stone-100 text-xs sm:text-sm leading-snug">${item.name}</span>
-                  <span class="text-[9px] text-amber-400 font-bold uppercase bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
-                    ${item.category}
-                  </span>
-                </div>
-                ${item.desc ? `<p class="text-[10px] text-stone-400 mt-0.5 leading-tight">${item.desc}</p>` : ''}
-              </div>
-            </div>
-            <span class="font-black text-white text-sm sm:text-base whitespace-nowrap pl-2">₹${item.price}</span>
-          </div>
-        `).join('');
-      }
-
-      togglePostcardModal(true);
-    }
-
-    function downloadClickablePdf() {
-      const target = document.getElementById('adPostcardTarget');
-      const cleanUrl = window.location.origin + window.location.pathname;
-
-      html2canvas(target, {
-        scale: 2,
-        backgroundColor: '#0c0a09',
-        useCORS: true,
-        logging: false
-      }).then(canvas => {
-        const { jsPDF } = window.jspdf;
-        const imgData = canvas.toDataURL('image/png');
-        
-        const imgWidth = 210;
-        const pageHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        const pdf = new jsPDF('p', 'mm', [imgWidth, pageHeight]);
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, pageHeight);
-
-        const linkY = pageHeight - 35;
-        pdf.link(15, linkY, imgWidth - 30, 25, { url: cleanUrl });
-
-        pdf.save(`RDS-Kitchen-Clickable-Flyer-${Date.now()}.pdf`);
-      }).catch(err => {
-        alert('Could not render PDF. Please try the PNG Image download option.');
-      });
-    }
-
-    function downloadPostcardImage() {
-      const target = document.getElementById('adPostcardTarget');
-      
-      html2canvas(target, {
-        scale: 2,
-        backgroundColor: '#0c0a09',
-        useCORS: true,
-        logging: false,
-        windowWidth: target.scrollWidth,
-        windowHeight: target.scrollHeight
-      }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `RDS-Kitchen-Menu-Postcard-${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }).catch(err => {
-        alert('Could not render image. Please take a screenshot of the preview.');
-      });
-    }
-
     // Modal toggles
     function toggleInvoiceModal(show) { document.getElementById('invoiceModal').classList.toggle('hidden', !show); }
     function togglePostcardModal(show) { document.getElementById('postcardModal').classList.toggle('hidden', !show); }
@@ -2220,6 +1878,7 @@
     function toggleCustomerHistory(show) { document.getElementById('customerHistoryDrawer').classList.toggle('hidden', !show); }
     function toggleCart(show) { document.getElementById('cartDrawer').classList.toggle('hidden', !show); }
 
+    // Synchronous immediate startup
     window.onload = init;
   </script>
 </body>
