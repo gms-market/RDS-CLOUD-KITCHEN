@@ -3,12 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RDS CLOUD KITCHEN | Delivery & Takeaway</title>
+  <title>RDS CLOUD KITCHEN | Delivery, Takeaway & Pre-Orders</title>
   
-  <!-- Tailwind CSS & FontAwesome Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.99); }
+    }
+    .animate-preorder-blink {
+      animation: pulseAlert 1.8s infinite ease-in-out;
+    }
+  </style>
 
   <script>
     tailwind.config = {
@@ -35,7 +44,7 @@
 
       <!-- OWNER ADMIN CONTROLS -->
       <div id="ownerAdminBar" class="hidden flex items-center gap-2">
-        <button onclick="toggleSettingsModal(true)" title="Configure Alert Numbers, GPS, Pickup Address & UPI" class="bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
+        <button onclick="toggleSettingsModal(true)" class="bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
           <i class="fa-solid fa-gear"></i> Settings
         </button>
         <button onclick="toggleCustomerHistory(true)" class="bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
@@ -47,12 +56,11 @@
         <button onclick="toggleDishModal(true)" class="bg-stone-900 hover:bg-black text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
           <i class="fa-solid fa-plus"></i> Add Dish
         </button>
-        <button onclick="logoutOwner()" title="Logout from Owner Mode" class="bg-rose-700 hover:bg-rose-800 text-white px-2 py-1 rounded-full text-xs font-bold transition">
+        <button onclick="logoutOwner()" class="bg-rose-700 hover:bg-rose-800 text-white px-2 py-1 rounded-full text-xs font-bold transition">
           <i class="fa-solid fa-right-from-bracket"></i>
         </button>
       </div>
 
-      <!-- LOCKED STATUS -->
       <div id="lockedIndicator">
         <button onclick="promptOwnerLogin()" class="bg-black/20 hover:bg-black/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-amber-100 flex items-center gap-1 transition">
           <i class="fa-solid fa-lock text-[10px]"></i> Owner Login
@@ -70,7 +78,7 @@
         </div>
         <div>
           <h1 class="text-xl font-black tracking-tight text-stone-900 leading-none">RDS <span class="text-orange-600">CLOUD KITCHEN</span></h1>
-          <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">3.0 KM Delivery & Fresh Takeaway</p>
+          <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">3.0 KM Delivery, Takeaway & Pre-Orders</p>
         </div>
       </div>
 
@@ -102,26 +110,46 @@
       </div>
     </div>
 
-    <!-- SPECIAL OFFER BANNER PANEL -->
+    <!-- BLINKING POP-UP BANNER FOR PRE-ORDER DISHES -->
+    <section id="preorderBlinkBanner" class="hidden animate-preorder-blink rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-purple-700 via-rose-600 to-amber-500 text-white shadow-xl shadow-purple-500/20 flex flex-col md:flex-row items-center justify-between gap-3 border-2 border-amber-300">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-2xl bg-amber-300 text-purple-900 flex items-center justify-center font-black text-xl flex-shrink-0">
+          <i class="fa-solid fa-bell animate-bounce"></i>
+        </div>
+        <div>
+          <span class="bg-white/20 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">Chef's Advance Pre-Order Open</span>
+          <h2 id="preorderAlertHeadline" class="text-base sm:text-lg font-black mt-0.5">Special Batch Ready for Pre-Booking!</h2>
+          <p id="preorderAlertSubtext" class="text-xs text-white/90 font-medium"></p>
+        </div>
+      </div>
+      <button onclick="filterCategory('Pre-Orders')" class="bg-amber-300 hover:bg-amber-400 text-purple-950 font-black text-xs px-5 py-2.5 rounded-xl uppercase tracking-wider shadow active:scale-95 transition whitespace-nowrap">
+        View Pre-Order Menu
+      </button>
+    </section>
+
+    <!-- PROMO PANEL -->
     <section class="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 text-white shadow-xl shadow-orange-500/15 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div class="space-y-1.5 max-w-xl z-10">
         <span class="text-[10px] font-black tracking-widest bg-black/20 backdrop-blur-md px-3 py-1 rounded-full uppercase">
-          Today's Special Offer
+          Fresh Homestyle Cooking
         </span>
-        <h2 class="text-2xl sm:text-3xl font-black leading-tight">Authentic Homestyle Flavors Delivered Hot & Ready</h2>
-        <p class="text-xs sm:text-sm text-white/90 font-medium">Prepared freshly upon order. Fast 3 KM Delivery or Quick Counter Takeaway available!</p>
+        <h2 class="text-2xl sm:text-3xl font-black leading-tight">Limited Daily Portions Cooked Fresh Daily</h2>
+        <p class="text-xs sm:text-sm text-white/90 font-medium">Real-time inventory portion counter. Book live orders or reserve pre-order portions.</p>
       </div>
       <div class="z-10 flex items-center gap-2">
         <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2">
-          <i class="fa-solid fa-bag-shopping text-amber-200"></i> Delivery + Takeaway
+          <i class="fa-solid fa-boxes-stacked text-amber-200"></i> Tracked Portions
         </div>
       </div>
       <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
     </section>
 
-    <!-- CATEGORY PILLS -->
+    <!-- CATEGORY PILLS (Includes Pre-Order Column) -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
       <button onclick="filterCategory('All')" class="cat-pill active-cat px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-stone-900 text-white shadow">All</button>
+      <button onclick="filterCategory('Pre-Orders')" class="cat-pill px-4 py-2 rounded-full text-xs font-extrabold transition whitespace-nowrap bg-purple-100 text-purple-800 border border-purple-300 hover:bg-purple-200 flex items-center gap-1.5">
+        <i class="fa-solid fa-calendar-check text-purple-600"></i> Pre-Orders (<span id="preorderCountBadge">0</span>)
+      </button>
       <button onclick="filterCategory('Starters')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300">Starters</button>
       <button onclick="filterCategory('Main Course')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300">Main Course</button>
       <button onclick="filterCategory('Combos')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300">Combos</button>
@@ -129,36 +157,35 @@
       <button onclick="filterCategory('Dessert')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300">Dessert</button>
     </div>
 
-    <!-- EMPTY MENU STATE -->
+    <!-- EMPTY STATE -->
     <div id="emptyMenuState" class="text-center py-20 bg-white border border-dashed border-orange-200 rounded-3xl p-8 space-y-3 shadow-sm">
       <div class="w-14 h-14 rounded-full bg-orange-50 text-orange-500 mx-auto flex items-center justify-center text-2xl">
         <i class="fa-solid fa-utensils"></i>
       </div>
-      <h3 class="font-extrabold text-stone-800 text-lg">Menu Being Prepared</h3>
-      <p class="text-xs text-stone-500 max-w-sm mx-auto">Today's fresh menu is being updated. Please check back shortly!</p>
+      <h3 class="font-extrabold text-stone-800 text-lg">No Dishes in this Section</h3>
+      <p class="text-xs text-stone-500 max-w-sm mx-auto">Dishes are being updated or portions are sold out. Please select another category!</p>
     </div>
 
     <!-- MENU GRID -->
     <section id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></section>
 
-    <!-- UPDATED LEGAL & OPERATING DISCLAIMER -->
+    <!-- POLICY DISCLAIMER -->
     <section class="bg-amber-100/60 border border-amber-200 rounded-3xl p-5 text-stone-700 text-xs space-y-2.5">
       <div class="flex items-center gap-2 text-stone-900 font-black uppercase text-sm">
         <i class="fa-solid fa-shield-halved text-orange-600"></i>
-        <span>RDS Cloud Kitchen Operating, Delivery & Takeaway Policy</span>
+        <span>RDS Cloud Kitchen Portion, Delivery & Pre-Order Policy</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 leading-relaxed">
-        <p>• <strong>3.0 KM Delivery Radius & Hubs:</strong> Home deliveries are dispatched strictly within our designated 3.0 KM perimeter. If "Fixed Delivery Point" is active, meals will be handed over at the announced common landmark for your safety and speed.</p>
-        <p>• <strong>Self-Pickup / Takeaway:</strong> Self-pickup orders must be collected directly from our designated kitchen counter address within 30 minutes of preparation notification.</p>
-        <p>• <strong>Payments & Settlements:</strong> We accept verified UPI QR / Phone transfer and Cash on Delivery (COD). Please settle UPI payments before handover.</p>
-        <p>• <strong>Food Quality & Allergens:</strong> Cooked in a commercial environment handling dairy, gluten, nuts, and authentic spices. Dispatched in sanitized, food-grade packaging. Consume within 60 minutes.</p>
+        <p>• <strong>Live Portion Depletion:</strong> Item quantity remaining is updated live. When stock reaches 0, the item will immediately display as <strong>SOLD OUT</strong> to prevent overselling.</p>
+        <p>• <strong>Advance Pre-Orders:</strong> Pre-ordered items are prepared exclusively for the scheduled date and time chosen by the chef. Cancellations cannot be accepted once preparation begins.</p>
+        <p>• <strong>3.0 KM Delivery & Takeaway:</strong> Deliveries dispatched within 3 KM. Self-pickup orders can be collected directly at our kitchen counter address.</p>
+        <p>• <strong>Payments:</strong> Orders can be settled via instant UPI QR / Phone transfer or Cash on Delivery/Pickup.</p>
       </div>
     </section>
   </main>
 
-  <!-- FOOTER -->
   <footer class="bg-white border-t border-orange-100 py-6 text-center text-xs text-stone-400">
-    <p>© RDS Cloud Kitchen • 3 KM Hyperlocal Delivery & Fresh Takeaway</p>
+    <p>© RDS Cloud Kitchen • Hyperlocal 3 KM Delivery, Takeaway & Pre-Orders</p>
     <button onclick="promptOwnerLogin()" class="mt-2 text-[11px] text-stone-400 hover:text-orange-600 transition flex items-center justify-center gap-1 mx-auto">
       <i class="fa-solid fa-key text-[10px]"></i> Kitchen Staff Portal
     </button>
@@ -176,7 +203,7 @@
       </div>
       <form onsubmit="handleOwnerLogin(event)" class="space-y-3 text-xs">
         <div>
-          <label class="font-bold text-stone-700 block mb-1">Enter Secret Owner PIN:</label>
+          <label class="font-bold text-stone-700 block mb-1">Enter Secret PIN:</label>
           <input id="ownerPinInput" type="password" placeholder="Default: 1234" required class="w-full p-2.5 border rounded-xl font-bold tracking-widest text-center text-base focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
         </div>
         <button type="submit" class="w-full bg-stone-900 hover:bg-black text-amber-300 font-extrabold py-2.5 rounded-xl shadow transition">
@@ -186,26 +213,26 @@
     </div>
   </div>
 
-  <!-- MODAL: MANUAL DISH ENTRY -->
+  <!-- MODAL: MANUAL DISH ENTRY (WITH QUANTITY & PRE-ORDER CONTROLS) -->
   <div id="dishModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
-        <h2 class="font-extrabold text-stone-900 text-lg">Enter Dish Manually</h2>
+        <h2 class="font-extrabold text-stone-900 text-lg">Add Dish / Set Portions & Pre-Order</h2>
         <button onclick="toggleDishModal(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
       </div>
 
       <form id="dishForm" onsubmit="saveNewDish(event)" class="space-y-4 text-xs">
         <div>
           <label class="font-bold text-stone-700 block mb-1">Dish Name *</label>
-          <input id="formDishName" type="text" placeholder="e.g. Chicken Dum Biryani" required class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none text-stone-900 bg-stone-50">
+          <input id="formDishName" type="text" placeholder="e.g. Mutton Dum Biryani" required class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none text-stone-900 bg-stone-50">
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-2.5">
           <div>
             <label class="font-bold text-stone-700 block mb-1">Category</label>
-            <select id="formCategory" class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
-              <option value="Starters">Starters</option>
+            <select id="formCategory" class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
               <option value="Main Course" selected>Main Course</option>
+              <option value="Starters">Starters</option>
               <option value="Combos">Combos</option>
               <option value="Beverages">Beverages</option>
               <option value="Dessert">Dessert</option>
@@ -213,17 +240,41 @@
           </div>
           <div>
             <label class="font-bold text-stone-700 block mb-1">Price (₹) *</label>
-            <input id="formPrice" type="number" placeholder="220" required class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
+            <input id="formPrice" type="number" placeholder="250" required class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
+          </div>
+          <div>
+            <label class="font-bold text-stone-700 block mb-1">Initial Quantity *</label>
+            <input id="formQuantity" type="number" placeholder="e.g. 15" required min="1" class="w-full p-2.5 border rounded-xl font-black focus:ring-2 focus:ring-orange-500 outline-none bg-orange-50 text-orange-900">
+          </div>
+        </div>
+
+        <!-- PRE-ORDER CONFIGURATION -->
+        <div class="p-3 bg-purple-50 border border-purple-200 rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-black text-purple-900 text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-calendar-plus text-purple-600"></i> Mark as Pre-Order Dish?
+            </span>
+            <input type="checkbox" id="formIsPreorder" onchange="togglePreorderFields(this.checked)" class="w-4 h-4 accent-purple-600">
+          </div>
+          <div id="preorderInputs" class="hidden space-y-2 pt-1 border-t border-purple-200">
+            <div>
+              <label class="block text-[11px] font-bold text-purple-900 mb-0.5">Pre-Order Delivery Date & Time</label>
+              <input id="formPreorderDateTime" type="text" placeholder="e.g. Tomorrow (Sunday) by 1:00 PM" class="w-full p-2 border rounded-xl bg-white text-stone-900 text-xs">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-purple-900 mb-0.5">Pre-Order Special Note / Cutoff</label>
+              <input id="formPreorderNote" type="text" placeholder="e.g. Orders close at 10 PM tonight!" class="w-full p-2 border rounded-xl bg-white text-stone-900 text-xs">
+            </div>
           </div>
         </div>
 
         <div>
           <label class="font-bold text-stone-700 block mb-1">Description</label>
-          <textarea id="formDesc" rows="2" placeholder="Ingredients, spice level, sides..." class="w-full p-3 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900"></textarea>
+          <textarea id="formDesc" rows="2" placeholder="Ingredients, portions, specials included..." class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900"></textarea>
         </div>
 
         <div>
-          <label class="font-bold text-stone-700 block mb-1">Upload Dish Photo (.jpg) *</label>
+          <label class="font-bold text-stone-700 block mb-1">Upload Photo (.jpg) *</label>
           <input id="formImageFile" type="file" accept="image/jpeg,image/jpg,image/png" onchange="previewImage(event)" required class="w-full text-xs text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
           <div id="imagePreviewBox" class="mt-2 relative w-full h-36 rounded-xl overflow-hidden border hidden">
             <img id="imagePreview" src="" alt="Preview" class="w-full h-full object-cover">
@@ -247,106 +298,73 @@
     </div>
   </div>
 
-  <!-- MODAL: KITCHEN SETTINGS (GPS, TAKEAWAY, FIXED POINT, UPI, ALERTS) -->
+  <!-- MODAL: KITCHEN SETTINGS -->
   <div id="settingsModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
         <div class="flex items-center gap-2 text-stone-900 font-extrabold text-base">
           <i class="fa-solid fa-gear text-orange-600"></i>
-          <h2>Kitchen Master Settings</h2>
+          <h2>Kitchen Settings</h2>
         </div>
         <button onclick="toggleSettingsModal(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
       </div>
 
       <form onsubmit="saveKitchenSettings(event)" class="space-y-3.5 text-xs">
-        
-        <!-- Operating Hours -->
         <div class="bg-orange-50 p-3 rounded-2xl border border-orange-200 space-y-1">
           <label class="font-black text-stone-900 block">
-            <i class="fa-solid fa-clock text-orange-600 mr-1"></i> Order Accepting Time *
+            <i class="fa-solid fa-clock text-orange-600 mr-1"></i> Order Accepting Timing *
           </label>
           <input id="setOrderTime" type="text" placeholder="e.g. 11:30 AM – 10:30 PM" required class="w-full p-2.5 border rounded-xl font-bold focus:ring-2 focus:ring-orange-500 outline-none bg-white text-stone-900">
         </div>
 
-        <!-- GPS Coordinates -->
         <div class="p-3 bg-stone-50 border rounded-2xl space-y-2">
-          <p class="font-bold text-stone-800"><i class="fa-solid fa-location-crosshairs text-orange-600 mr-1"></i> Kitchen GPS Origin (3 KM Calculation)</p>
+          <p class="font-bold text-stone-800"><i class="fa-solid fa-location-crosshairs text-orange-600 mr-1"></i> Kitchen GPS Origin</p>
           <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-[11px] text-stone-500 mb-0.5">Latitude</label>
-              <input id="setKitchenLat" type="number" step="any" placeholder="10.7626" required class="w-full p-2 border rounded-xl font-mono text-stone-900 bg-white">
-            </div>
-            <div>
-              <label class="block text-[11px] text-stone-500 mb-0.5">Longitude</label>
-              <input id="setKitchenLng" type="number" step="any" placeholder="78.8139" required class="w-full p-2 border rounded-xl font-mono text-stone-900 bg-white">
-            </div>
+            <input id="setKitchenLat" type="number" step="any" placeholder="Latitude" required class="w-full p-2 border rounded-xl font-mono text-stone-900 bg-white">
+            <input id="setKitchenLng" type="number" step="any" placeholder="Longitude" required class="w-full p-2 border rounded-xl font-mono text-stone-900 bg-white">
           </div>
           <button type="button" onclick="detectCurrentKitchenLocation()" class="text-[11px] text-orange-600 font-bold hover:underline flex items-center gap-1">
-            <i class="fa-solid fa-crosshairs"></i> Use My Current Phone / Device GPS
+            <i class="fa-solid fa-crosshairs"></i> Use Device Current GPS
           </button>
         </div>
 
-        <!-- Takeaway Counter Address -->
         <div class="p-3 bg-stone-50 border rounded-2xl space-y-1">
           <label class="font-bold text-stone-800 block">
-            <i class="fa-solid fa-shop text-orange-600 mr-1"></i> Kitchen Takeaway Address (For Customer Self-Pickup) *
+            <i class="fa-solid fa-shop text-orange-600 mr-1"></i> Takeaway Counter Address *
           </label>
-          <textarea id="setTakeawayAddress" rows="2" placeholder="e.g. Door No. 4B, Trichy Main Road, Thuvakudi, Trichy" required class="w-full p-2 border rounded-xl bg-white text-stone-900"></textarea>
+          <textarea id="setTakeawayAddress" rows="2" placeholder="e.g. Door No. 4B, Main Road, Thuvakudi" required class="w-full p-2 border rounded-xl bg-white text-stone-900"></textarea>
         </div>
 
-        <!-- Fixed Point Delivery Toggle -->
         <div class="p-3 bg-stone-50 border rounded-2xl space-y-2">
           <div class="flex items-center justify-between">
-            <span class="font-bold text-stone-800">Fixed Point Delivery Hub</span>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="setFixedPointToggle" onchange="toggleFixedPointInput(this.checked)" class="sr-only peer">
-              <div class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
-            </label>
+            <span class="font-bold text-stone-800">Fixed Delivery Hub</span>
+            <input type="checkbox" id="setFixedPointToggle" onchange="toggleFixedPointInput(this.checked)" class="w-4 h-4 accent-orange-600">
           </div>
-          <p class="text-[11px] text-stone-500">Enable this if you don't deliver to doorsteps and want customers to collect food at a common landmark.</p>
           <div id="fixedPointField" class="hidden">
-            <input id="setFixedPointDesc" type="text" placeholder="e.g. Deliveries Handed Over at Main Gate / Community Park" class="w-full p-2 border rounded-xl bg-white text-stone-900">
+            <input id="setFixedPointDesc" type="text" placeholder="e.g. Handed over at Main Colony Gate" class="w-full p-2 border rounded-xl bg-white text-stone-900">
           </div>
         </div>
 
-        <!-- Payment Setup (UPI & COD) -->
         <div class="p-3 bg-stone-50 border rounded-2xl space-y-2">
-          <p class="font-bold text-stone-800"><i class="fa-solid fa-wallet text-orange-600 mr-1"></i> UPI Payment Configuration</p>
-          <div>
-            <label class="block text-[11px] text-stone-500 mb-0.5">UPI ID or UPI Phone Number (GPay/PhonePe/Paytm)</label>
-            <input id="setUpiId" type="text" placeholder="e.g. rdskitchen@okaxis or 9876543210@upi" required class="w-full p-2 border rounded-xl bg-white text-stone-900 font-semibold">
-          </div>
-          <div>
-            <label class="block text-[11px] text-stone-500 mb-0.5">Minimum Order Amount (₹)</label>
-            <input id="setMinOrder" type="number" placeholder="100" class="w-full p-2 border rounded-xl bg-white text-stone-900">
-          </div>
+          <p class="font-bold text-stone-800"><i class="fa-solid fa-wallet text-orange-600 mr-1"></i> Payment Configuration</p>
+          <input id="setUpiId" type="text" placeholder="UPI ID / Phone (e.g. 9876543210@upi)" required class="w-full p-2 border rounded-xl bg-white text-stone-900 font-semibold">
+          <input id="setMinOrder" type="number" placeholder="Minimum Order Amount (₹)" class="w-full p-2 border rounded-xl bg-white text-stone-900">
         </div>
 
-        <!-- Notification Alerts -->
         <div class="p-3 bg-stone-50 border rounded-2xl space-y-2">
-          <p class="font-bold text-stone-800"><i class="fa-solid fa-bell text-orange-600 mr-1"></i> Alert Contacts</p>
-          <div>
-            <label class="block text-[11px] text-stone-500 mb-0.5">Kitchen Email</label>
-            <input id="setKitchenEmail" type="email" placeholder="orders@rdskitchen.com" required class="w-full p-2 border rounded-xl bg-white text-stone-900">
-          </div>
-          <div>
-            <label class="block text-[11px] text-stone-500 mb-0.5">Phone 1 (WhatsApp / Calls)</label>
-            <input id="setPhone1" type="tel" placeholder="e.g. 919876543210" required class="w-full p-2 border rounded-xl bg-white text-stone-900">
-          </div>
-          <div>
-            <label class="block text-[11px] text-stone-500 mb-0.5">Phone 2 (Secondary WhatsApp)</label>
-            <input id="setPhone2" type="tel" placeholder="e.g. 919876543211" required class="w-full p-2 border rounded-xl bg-white text-stone-900">
-          </div>
+          <p class="font-bold text-stone-800"><i class="fa-solid fa-bell text-orange-600 mr-1"></i> Notification Contacts</p>
+          <input id="setKitchenEmail" type="email" placeholder="Kitchen Alert Email" required class="w-full p-2 border rounded-xl bg-white text-stone-900">
+          <input id="setPhone1" type="tel" placeholder="WhatsApp Phone 1 (e.g. 919876543210)" required class="w-full p-2 border rounded-xl bg-white text-stone-900">
+          <input id="setPhone2" type="tel" placeholder="WhatsApp Phone 2" required class="w-full p-2 border rounded-xl bg-white text-stone-900">
         </div>
 
-        <!-- Change PIN -->
         <div>
           <label class="font-bold text-stone-700 block mb-1">Change Owner PIN</label>
-          <input id="setOwnerPin" type="password" placeholder="Leave empty to keep current PIN" class="w-full p-2.5 border rounded-xl font-bold tracking-wider bg-stone-50 text-stone-900">
+          <input id="setOwnerPin" type="password" placeholder="Leave blank to keep current PIN" class="w-full p-2.5 border rounded-xl font-bold tracking-wider bg-stone-50 text-stone-900">
         </div>
 
         <button type="submit" class="w-full bg-stone-900 hover:bg-black text-amber-300 font-bold py-3 rounded-xl shadow transition mt-2">
-          Save All Kitchen Settings
+          Save Settings
         </button>
       </form>
     </div>
@@ -363,13 +381,13 @@
           </div>
           <button onclick="toggleHistory(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
         </div>
-        <p class="text-xs text-stone-500">All dishes you add remain saved here. Restore any item back to the menu anytime.</p>
+        <p class="text-xs text-stone-500">All dishes remain archived here. Re-publish anytime and assign new stock numbers.</p>
         <div id="historyList" class="space-y-3"></div>
       </div>
     </div>
   </div>
 
-  <!-- DRAWER: CUSTOMER ORDERS & HISTORY PAGE -->
+  <!-- DRAWER: CUSTOMER ORDERS & HISTORY -->
   <div id="customerHistoryDrawer" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex justify-end">
     <div class="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between p-6 overflow-y-auto">
       <div class="space-y-4">
@@ -380,11 +398,7 @@
           </div>
           <button onclick="toggleCustomerHistory(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
         </div>
-
-        <div>
-          <input id="customerSearchInput" oninput="renderCustomerOrders()" type="text" placeholder="Search customer phone number..." class="w-full p-2.5 border rounded-xl text-xs bg-stone-50 focus:ring-2 focus:ring-orange-500 outline-none">
-        </div>
-
+        <input id="customerSearchInput" oninput="renderCustomerOrders()" type="text" placeholder="Search customer phone number..." class="w-full p-2.5 border rounded-xl text-xs bg-stone-50 focus:ring-2 focus:ring-orange-500 outline-none">
         <div id="customerOrdersList" class="space-y-3"></div>
       </div>
     </div>
@@ -401,10 +415,7 @@
         <div id="cartItemsContainer" class="divide-y max-h-[25vh] overflow-y-auto mt-2"></div>
       </div>
 
-      <!-- CUSTOMER ORDER FULFILLMENT FORM -->
       <div id="cartFooter" class="border-t pt-4 space-y-3 text-xs hidden">
-        
-        <!-- FULFILLMENT MODE: DELIVERY VS TAKEAWAY -->
         <div class="grid grid-cols-2 gap-2 bg-stone-100 p-1 rounded-2xl text-center">
           <button type="button" id="tabDelivery" onclick="setOrderMode('delivery')" class="py-2 rounded-xl font-black text-xs transition bg-white text-orange-600 shadow-sm">
             <i class="fa-solid fa-truck-fast mr-1"></i> Delivery (3 KM)
@@ -414,46 +425,39 @@
           </button>
         </div>
 
-        <!-- FIXED POINT NOTICE IF ACTIVE -->
         <div id="fixedPointBanner" class="hidden p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-stone-800 text-[11px] leading-relaxed">
           <i class="fa-solid fa-circle-info text-orange-600 mr-1"></i>
-          <strong>Fixed Pickup Point Notice:</strong> <span id="fixedPointNoticeText"></span>
+          <strong>Fixed Pickup Point:</strong> <span id="fixedPointNoticeText"></span>
         </div>
 
-        <!-- TAKEAWAY ADDRESS DISPLAY IF IN TAKEAWAY MODE -->
         <div id="takeawayBanner" class="hidden p-2.5 bg-orange-50 border border-orange-200 rounded-xl text-stone-800 text-[11px] leading-relaxed">
           <i class="fa-solid fa-store text-orange-600 mr-1"></i>
-          <strong>Pickup From Kitchen Counter:</strong>
+          <strong>Pickup At Counter:</strong>
           <p id="takeawayCounterText" class="mt-0.5 font-bold"></p>
         </div>
 
         <div class="space-y-2 bg-stone-50 p-3 rounded-2xl border">
           <input id="custName" type="text" placeholder="Your Full Name *" required class="w-full p-2.5 border rounded-xl bg-white text-stone-900 outline-none focus:ring-2 focus:ring-orange-500">
           <input id="custPhone" type="tel" placeholder="Customer Phone Number *" required class="w-full p-2.5 border rounded-xl bg-white text-stone-900 outline-none focus:ring-2 focus:ring-orange-500">
-          
           <div id="addressInputWrap">
-            <textarea id="custAddress" rows="2" placeholder="Delivery Address / Apartment / Landmark *" class="w-full p-2.5 border rounded-xl bg-white text-stone-900 outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+            <textarea id="custAddress" rows="2" placeholder="Delivery Address / Landmark *" class="w-full p-2.5 border rounded-xl bg-white text-stone-900 outline-none focus:ring-2 focus:ring-orange-500"></textarea>
           </div>
         </div>
 
-        <!-- PAYMENT METHOD SELECTION -->
         <div class="space-y-1.5 bg-stone-50 p-3 rounded-2xl border">
           <label class="font-bold text-stone-800 block mb-1">Select Payment Method:</label>
           <div class="grid grid-cols-2 gap-2">
-            <label class="flex items-center gap-2 p-2 border rounded-xl bg-white cursor-pointer hover:border-orange-300">
+            <label class="flex items-center gap-2 p-2 border rounded-xl bg-white cursor-pointer">
               <input type="radio" name="paymentType" value="UPI" checked onchange="togglePaymentBox('UPI')">
               <span class="font-bold text-stone-800">UPI Transfer</span>
             </label>
-            <label class="flex items-center gap-2 p-2 border rounded-xl bg-white cursor-pointer hover:border-orange-300">
+            <label class="flex items-center gap-2 p-2 border rounded-xl bg-white cursor-pointer">
               <input type="radio" name="paymentType" value="COD" onchange="togglePaymentBox('COD')">
               <span class="font-bold text-stone-800">Cash on Hand</span>
             </label>
           </div>
-
-          <!-- UPI INSTRUCTIONS BOX -->
           <div id="upiInfoBox" class="pt-2 text-[11px] text-stone-600 space-y-1 border-t mt-2">
             <p>Pay to Kitchen UPI ID: <strong id="displayUpiId" class="text-stone-900 bg-amber-100 px-1.5 py-0.5 rounded font-mono"></strong></p>
-            <p class="text-[10px] text-stone-500">You can pay via Google Pay, PhonePe, or Paytm during or right after placing your order.</p>
           </div>
         </div>
 
@@ -463,8 +467,8 @@
             <span id="cartSubtotal" class="font-bold">₹0</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-stone-500">Delivery / Handling</span>
-            <span id="deliveryChargeText" class="font-bold text-emerald-600">FREE</span>
+            <span class="text-stone-500">Delivery Fee (Within 3 KM)</span>
+            <span class="font-bold text-emerald-600">FREE</span>
           </div>
           <div class="flex justify-between text-base font-extrabold border-t border-dashed pt-1">
             <span>Grand Total</span>
@@ -482,7 +486,6 @@
   <script>
     const MAX_KM = 3.0;
 
-    // Local Storage Data with defaults
     let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || '[]');
     let historyMenu = JSON.parse(localStorage.getItem('rds_cloud_history_menu') || '[]');
     let customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
@@ -493,7 +496,7 @@
       phone2: '919876543211',
       lat: 10.7626,
       lng: 78.8139,
-      takeawayAddress: 'Door No. 4B, Main Bazaar Road, Thuvakudi, Trichy',
+      takeawayAddress: 'Door No. 4B, Main Road, Thuvakudi, Trichy',
       useFixedPoint: false,
       fixedPointDesc: 'Handover at Main Colony Entrance Gate',
       upiId: 'rdskitchen@okaxis',
@@ -505,7 +508,7 @@
     let cart = {};
     let activeCategory = 'All';
     let base64Image = '';
-    let currentOrderMode = 'delivery'; // 'delivery' or 'takeaway'
+    let currentOrderMode = 'delivery';
 
     function init() {
       applyOrderTimeUI();
@@ -515,6 +518,7 @@
       renderCustomerOrders();
       loadKitchenSettingsForm();
       updateCheckoutModeUI();
+      updatePreorderAlert();
     }
 
     // --- OWNER AUTHENTICATION ---
@@ -532,10 +536,7 @@
     }
 
     function promptOwnerLogin() {
-      if (isOwnerLoggedIn) {
-        alert('Already logged in as Kitchen Owner.');
-        return;
-      }
+      if (isOwnerLoggedIn) return;
       document.getElementById('ownerPinInput').value = '';
       toggleLoginModal(true);
     }
@@ -560,7 +561,7 @@
       isOwnerLoggedIn = false;
       sessionStorage.removeItem('rds_owner_auth');
       updateAuthUI();
-      alert('Logged out. Owner controls are now locked.');
+      alert('Logged out. Owner controls are locked.');
     }
 
     // --- SETTINGS FORM & GPS ---
@@ -574,7 +575,7 @@
 
     function detectCurrentKitchenLocation() {
       if (!navigator.geolocation) {
-        alert('GPS not supported on this browser.');
+        alert('GPS not supported on this device.');
         return;
       }
       navigator.geolocation.getCurrentPosition(
@@ -625,11 +626,35 @@
       localStorage.setItem('rds_kitchen_settings', JSON.stringify(kitchenSettings));
       applyOrderTimeUI();
       updateCheckoutModeUI();
-      alert('All Kitchen Settings (GPS, Takeaway, Fixed Point, UPI, Contacts) Updated!');
+      alert('Kitchen Settings Updated!');
       toggleSettingsModal(false);
     }
 
-    // --- CHECKOUT MODES (DELIVERY VS TAKEAWAY) ---
+    // --- PRE-ORDER BLINKING BANNER UPDATE ---
+    function updatePreorderAlert() {
+      const banner = document.getElementById('preorderBlinkBanner');
+      const headline = document.getElementById('preorderAlertHeadline');
+      const subtext = document.getElementById('preorderAlertSubtext');
+      const badge = document.getElementById('preorderCountBadge');
+
+      const preorderDishes = activeMenu.filter(d => d.isPreorder && d.quantity > 0);
+      badge.innerText = preorderDishes.length;
+
+      if (preorderDishes.length > 0) {
+        banner.classList.remove('hidden');
+        const first = preorderDishes[0];
+        headline.innerText = `Pre-Order Special: ${first.name} (${first.preorderDate || 'Upcoming Batch'})`;
+        subtext.innerText = `${first.quantity} portions left • ${first.preorderNote || 'Reserve yours before slots fill up!'}`;
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function togglePreorderFields(checked) {
+      document.getElementById('preorderInputs').classList.toggle('hidden', !checked);
+    }
+
+    // --- CHECKOUT MODES ---
     function setOrderMode(mode) {
       currentOrderMode = mode;
       const tabDel = document.getElementById('tabDelivery');
@@ -667,7 +692,7 @@
 
         if (kitchenSettings.useFixedPoint) {
           fixedBanner.classList.remove('hidden');
-          document.getElementById('fixedPointNoticeText').innerText = kitchenSettings.fixedPointDesc || 'Handed over at fixed community point.';
+          document.getElementById('fixedPointNoticeText').innerText = kitchenSettings.fixedPointDesc || 'Handed over at designated landmark.';
         } else {
           fixedBanner.classList.add('hidden');
         }
@@ -678,7 +703,7 @@
       document.getElementById('upiInfoBox').classList.toggle('hidden', type !== 'UPI');
     }
 
-    // --- PHOTO UPLOAD & DISH ENTRY ---
+    // --- DISH CREATION & PHOTO ---
     function previewImage(e) {
       const file = e.target.files[0];
       if (file) {
@@ -699,6 +724,10 @@
       const name = document.getElementById('formDishName').value.trim();
       const category = document.getElementById('formCategory').value;
       const price = parseFloat(document.getElementById('formPrice').value);
+      const quantity = parseInt(document.getElementById('formQuantity').value, 10);
+      const isPreorder = document.getElementById('formIsPreorder').checked;
+      const preorderDate = document.getElementById('formPreorderDateTime').value.trim();
+      const preorderNote = document.getElementById('formPreorderNote').value.trim();
       const desc = document.getElementById('formDesc').value.trim();
       const isVeg = document.querySelector('input[name="diet"]:checked').value === 'veg';
 
@@ -710,6 +739,10 @@
       const dish = {
         id: 'DISH-' + Date.now(),
         name, category, price, desc, isVeg,
+        quantity: isNaN(quantity) ? 10 : quantity,
+        isPreorder: isPreorder,
+        preorderDate: preorderDate,
+        preorderNote: preorderNote,
         image: base64Image
       };
 
@@ -721,11 +754,13 @@
 
       document.getElementById('dishForm').reset();
       document.getElementById('imagePreviewBox').classList.add('hidden');
+      document.getElementById('preorderInputs').classList.add('hidden');
       base64Image = '';
       toggleDishModal(false);
 
       updateUI();
       updateHistoryDrawer();
+      updatePreorderAlert();
     }
 
     function removeActiveDish(id) {
@@ -735,16 +770,22 @@
       localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
       updateUI();
       updateCartUI();
+      updatePreorderAlert();
     }
 
     function reAddFromHistory(id) {
       if (!isOwnerLoggedIn) return;
       const item = historyMenu.find(i => i.id === id);
       if (item && !activeMenu.some(i => i.id === id)) {
-        activeMenu.unshift(item);
-        localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
-        updateUI();
-        updateHistoryDrawer();
+        const resetPortions = prompt(`Enter available portions for "${item.name}":`, item.quantity || 10);
+        if (resetPortions !== null) {
+          item.quantity = parseInt(resetPortions, 10) || 10;
+          activeMenu.unshift(item);
+          localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
+          updateUI();
+          updateHistoryDrawer();
+          updatePreorderAlert();
+        }
       }
     }
 
@@ -756,12 +797,13 @@
       localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
       updateUI();
       updateHistoryDrawer();
+      updatePreorderAlert();
     }
 
     function filterCategory(cat) {
       activeCategory = cat;
       document.querySelectorAll('.cat-pill').forEach(btn => {
-        if (btn.innerText === cat) {
+        if (btn.innerText.includes(cat)) {
           btn.className = 'cat-pill active-cat px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-stone-900 text-white shadow';
         } else {
           btn.className = 'cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-white border border-stone-200 text-stone-600 hover:border-orange-300';
@@ -770,10 +812,17 @@
       updateUI();
     }
 
+    // --- MENU GRID WITH LIVE QUANTITY & SOLD OUT STATES ---
     function updateUI() {
       const grid = document.getElementById('menuGrid');
       const empty = document.getElementById('emptyMenuState');
-      const items = activeCategory === 'All' ? activeMenu : activeMenu.filter(i => i.category === activeCategory);
+
+      let items = activeMenu;
+      if (activeCategory === 'Pre-Orders') {
+        items = activeMenu.filter(i => i.isPreorder);
+      } else if (activeCategory !== 'All') {
+        items = activeMenu.filter(i => i.category === activeCategory);
+      }
 
       if (items.length === 0) {
         grid.classList.add('hidden');
@@ -781,44 +830,107 @@
       } else {
         empty.classList.add('hidden');
         grid.classList.remove('hidden');
-        grid.innerHTML = items.map(item => `
-          <div class="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between group">
-            <div>
-              <div class="relative w-full h-48 bg-stone-100 overflow-hidden">
-                <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1.5">
-                  <span class="w-2.5 h-2.5 rounded-full ${item.isVeg ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
-                  <span class="text-[10px] font-black uppercase text-stone-700">${item.isVeg ? 'Pure Veg' : 'Non-Veg'}</span>
+        grid.innerHTML = items.map(item => {
+          const isSoldOut = item.quantity <= 0;
+          return `
+            <div class="bg-white rounded-3xl border ${isSoldOut ? 'border-stone-200 opacity-80' : 'border-orange-100'} overflow-hidden shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between group">
+              <div>
+                <div class="relative w-full h-48 bg-stone-100 overflow-hidden">
+                  <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 ${isSoldOut ? 'grayscale' : ''}">
+                  
+                  <!-- VEG/NON-VEG BADGE -->
+                  <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full ${item.isVeg ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                    <span class="text-[10px] font-black uppercase text-stone-700">${item.isVeg ? 'Veg' : 'Non-Veg'}</span>
+                  </div>
+
+                  <!-- PRE-ORDER BADGE -->
+                  ${item.isPreorder ? `
+                    <div class="absolute top-3 right-3 bg-purple-900/90 text-amber-300 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow">
+                      <i class="fa-solid fa-calendar-check"></i> Pre-Order
+                    </div>
+                  ` : ''}
+
+                  <!-- SOLD OUT OVERLAY -->
+                  ${isSoldOut ? `
+                    <div class="absolute inset-0 bg-stone-900/70 backdrop-blur-[2px] flex items-center justify-center">
+                      <span class="bg-rose-600 text-white font-black text-sm px-4 py-1.5 rounded-xl uppercase tracking-widest shadow-lg border border-rose-400">
+                        SOLD OUT
+                      </span>
+                    </div>
+                  ` : ''}
+
+                  ${isOwnerLoggedIn ? `
+                    <button onclick="removeActiveDish('${item.id}')" title="Remove from menu" class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-stone-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition">
+                      <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                  ` : ''}
                 </div>
-                ${isOwnerLoggedIn ? `
-                  <button onclick="removeActiveDish('${item.id}')" title="Remove from today's menu" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-stone-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition">
-                    <i class="fa-solid fa-xmark text-xs"></i>
+
+                <div class="p-4 space-y-2">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="font-extrabold text-stone-900 text-base group-hover:text-orange-600 transition leading-snug">${item.name}</h3>
+                      <span class="font-black text-stone-900 text-base">₹${item.price}</span>
+                    </div>
+
+                    <!-- QUANTITY REMAINING BADGE -->
+                    <div class="text-right flex flex-col items-end">
+                      <span class="px-2 py-0.5 rounded-md font-black text-[10px] ${item.quantity <= 3 ? 'bg-rose-100 text-rose-700 animate-pulse' : 'bg-amber-100 text-amber-800'}">
+                        ${isSoldOut ? '0 Left' : `${item.quantity} Portions Left`}
+                      </span>
+                      ${isOwnerLoggedIn ? `
+                        <button onclick="editStock('${item.id}')" class="text-[10px] text-orange-600 font-bold hover:underline mt-0.5">Edit Stock</button>
+                      ` : ''}
+                    </div>
+                  </div>
+
+                  <!-- PRE-ORDER DELIVERY SCHEDULE BOX -->
+                  ${item.isPreorder ? `
+                    <div class="p-2 bg-purple-50 rounded-xl border border-purple-200 text-[11px] text-purple-900 leading-tight">
+                      <p><strong><i class="fa-solid fa-truck text-purple-600"></i> Delivery Schedule:</strong> ${item.preorderDate || 'Scheduled Batch'}</p>
+                      ${item.preorderNote ? `<p class="text-[10px] text-purple-700 mt-0.5">${item.preorderNote}</p>` : ''}
+                    </div>
+                  ` : ''}
+
+                  <p class="text-xs text-stone-500 line-clamp-2">${item.desc || ''}</p>
+                </div>
+              </div>
+
+              <!-- CART ACTION BUTTON -->
+              <div class="p-4 pt-0">
+                ${isSoldOut ? `
+                  <button disabled class="w-full bg-stone-200 text-stone-400 font-bold text-xs py-3 rounded-2xl cursor-not-allowed">
+                    DISH SOLD OUT
                   </button>
-                ` : ''}
-              </div>
-              <div class="p-4 space-y-1.5">
-                <div class="flex justify-between items-start">
-                  <h3 class="font-extrabold text-stone-900 text-base group-hover:text-orange-600 transition">${item.name}</h3>
-                  <span class="font-black text-stone-900 text-base">₹${item.price}</span>
-                </div>
-                <p class="text-xs text-stone-500 line-clamp-2">${item.desc || ''}</p>
+                ` : cart[item.id] ? `
+                  <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl p-1">
+                    <button onclick="changeQty('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-white text-orange-600 shadow-sm flex items-center justify-center font-bold hover:bg-orange-100">-</button>
+                    <span class="font-black text-sm text-stone-900">${cart[item.id]}</span>
+                    <button onclick="changeQty('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-orange-500 text-white shadow-sm flex items-center justify-center font-bold hover:bg-orange-600">+</button>
+                  </div>
+                ` : `
+                  <button onclick="changeQty('${item.id}', 1)" class="w-full bg-gradient-to-r from-stone-900 to-stone-800 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs py-3 rounded-2xl shadow transition active:scale-95">
+                    ${item.isPreorder ? 'PRE-ORDER NOW +' : 'ADD TO ORDER +'}
+                  </button>
+                `}
               </div>
             </div>
-            <div class="p-4 pt-0">
-              ${cart[item.id] ? `
-                <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl p-1">
-                  <button onclick="changeQty('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-white text-orange-600 shadow-sm flex items-center justify-center font-bold hover:bg-orange-100">-</button>
-                  <span class="font-black text-sm text-stone-900">${cart[item.id]}</span>
-                  <button onclick="changeQty('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-orange-500 text-white shadow-sm flex items-center justify-center font-bold hover:bg-orange-600">+</button>
-                </div>
-              ` : `
-                <button onclick="changeQty('${item.id}', 1)" class="w-full bg-gradient-to-r from-stone-900 to-stone-800 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs py-3 rounded-2xl shadow transition active:scale-95">
-                  ADD TO ORDER +
-                </button>
-              `}
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
+      }
+    }
+
+    function editStock(id) {
+      if (!isOwnerLoggedIn) return;
+      const item = activeMenu.find(i => i.id === id);
+      if (!item) return;
+      const count = prompt(`Update portion count for "${item.name}":`, item.quantity);
+      if (count !== null) {
+        item.quantity = Math.max(0, parseInt(count, 10) || 0);
+        localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
+        updateUI();
+        updatePreorderAlert();
       }
     }
 
@@ -835,7 +947,7 @@
               <div class="flex items-center gap-3">
                 <img src="${item.image}" class="w-12 h-12 rounded-xl object-cover bg-stone-100 flex-shrink-0">
                 <div>
-                  <p class="font-bold text-xs text-stone-900">${item.name}</p>
+                  <p class="font-bold text-xs text-stone-900">${item.name} ${item.isPreorder ? '<span class="text-purple-600 font-black">[Pre-Order]</span>' : ''}</p>
                   <p class="text-[11px] text-stone-500">₹${item.price} • ${item.category}</p>
                 </div>
               </div>
@@ -843,7 +955,7 @@
                 ${isActive ? `
                   <span class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg">Live</span>
                 ` : `
-                  <button onclick="reAddFromHistory('${item.id}')" title="Add back to menu" class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 flex items-center justify-center">
+                  <button onclick="reAddFromHistory('${item.id}')" title="Re-publish with new quantity" class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 flex items-center justify-center">
                     <i class="fa-solid fa-arrows-rotate text-xs"></i>
                   </button>
                 `}
@@ -858,7 +970,16 @@
     }
 
     function changeQty(id, delta) {
+      const dish = activeMenu.find(i => i.id === id);
+      if (!dish) return;
+
       if (!cart[id]) cart[id] = 0;
+
+      if (delta > 0 && cart[id] + delta > dish.quantity) {
+        alert(`Only ${dish.quantity} portions available for "${dish.name}".`);
+        return;
+      }
+
       cart[id] += delta;
       if (cart[id] <= 0) delete cart[id];
       updateUI();
@@ -898,7 +1019,7 @@
           return `
             <div class="py-3 flex justify-between items-center text-xs">
               <div>
-                <p class="font-bold text-stone-900">${dish.name}</p>
+                <p class="font-bold text-stone-900">${dish.name} ${dish.isPreorder ? '<span class="text-purple-600 font-extrabold text-[10px]">(Pre-Order)</span>' : ''}</p>
                 <p class="text-stone-500">₹${dish.price} × ${qty}</p>
               </div>
               <div class="flex items-center gap-2">
@@ -914,7 +1035,7 @@
       }
     }
 
-    // --- PLACE CUSTOMER ORDER ---
+    // --- PLACE ORDER & DEDUCT QUANTITIES ---
     function placeCustomerOrder() {
       const name = document.getElementById('custName').value.trim();
       const phone = document.getElementById('custPhone').value.trim();
@@ -934,7 +1055,7 @@
       if (currentOrderMode === 'takeaway') {
         address = `SELF-PICKUP AT KITCHEN COUNTER: ${kitchenSettings.takeawayAddress}`;
       } else if (kitchenSettings.useFixedPoint) {
-        address = `[FIXED POINT HUB]: ${kitchenSettings.fixedPointDesc} | Customer Address/Details: ${address}`;
+        address = `[FIXED POINT HUB]: ${kitchenSettings.fixedPointDesc} | Address Details: ${address}`;
       }
 
       const entries = Object.entries(cart);
@@ -943,18 +1064,43 @@
         return;
       }
 
+      // Check inventory availability before committing
+      for (const [id, qty] of entries) {
+        const dish = activeMenu.find(i => i.id === id);
+        if (dish && dish.quantity < qty) {
+          alert(`Sorry! Only ${dish.quantity} portions left for "${dish.name}". Please adjust your order.`);
+          return;
+        }
+      }
+
       let orderItems = [];
       let grandTotal = 0;
+      let hasPreorders = false;
+
       entries.forEach(([id, qty]) => {
-        const dish = activeMenu.find(i => i.id === id) || historyMenu.find(i => i.id === id);
+        const dish = activeMenu.find(i => i.id === id);
         if (dish) {
-          orderItems.push({ name: dish.name, qty, price: dish.price, total: dish.price * qty });
+          // Deduct quantity from live inventory
+          dish.quantity = Math.max(0, dish.quantity - qty);
+          if (dish.isPreorder) hasPreorders = true;
+
+          orderItems.push({
+            name: dish.name,
+            qty,
+            price: dish.price,
+            total: dish.price * qty,
+            isPreorder: dish.isPreorder,
+            preorderDate: dish.preorderDate
+          });
           grandTotal += dish.price * qty;
         }
       });
 
+      // Persist inventory deduction
+      localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
+
       if (kitchenSettings.minOrder > 0 && grandTotal < kitchenSettings.minOrder) {
-        alert(`Minimum order amount is ₹${kitchenSettings.minOrder}. Please add more items.`);
+        alert(`Minimum order amount is ₹${kitchenSettings.minOrder}.`);
         return;
       }
 
@@ -966,6 +1112,7 @@
         placedAt: orderTimestamp,
         date: orderDate,
         mode: currentOrderMode.toUpperCase(),
+        hasPreorders: hasPreorders,
         payment: paymentMethod,
         customer: { name, phone, address },
         items: orderItems,
@@ -975,13 +1122,14 @@
       customerOrders.unshift(newOrder);
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
 
-      const itemSummary = orderItems.map(i => `${i.name} (x${i.qty}) - ₹${i.total}`).join('%0A• ');
+      const itemSummary = orderItems.map(i => `${i.name} ${i.isPreorder ? `(Pre-Order: ${i.preorderDate})` : ''} (x${i.qty}) - ₹${i.total}`).join('%0A• ');
       const messageText = `*NEW ORDER: ${newOrder.orderId}*%0A` +
         `*Order Mode:* ${newOrder.mode}%0A` +
+        `*Contains Pre-Orders:* ${hasPreorders ? 'YES' : 'NO'}%0A` +
         `*Payment Method:* ${paymentMethod}%0A` +
         `*Customer:* ${name}%0A` +
         `*Phone:* ${phone}%0A` +
-        `*Address / Pickup:* ${address}%0A%0A` +
+        `*Fulfillment / Address:* ${address}%0A%0A` +
         `*Items:*%0A• ${itemSummary}%0A%0A` +
         `*Grand Total:* ₹${grandTotal}`;
 
@@ -996,13 +1144,14 @@
       updateCartUI();
       toggleCart(false);
       renderCustomerOrders();
+      updatePreorderAlert();
 
       window.open(whatsappUrl1, '_blank');
       if (kitchenSettings.phone2 && kitchenSettings.phone2 !== kitchenSettings.phone1) {
         window.open(whatsappUrl2, '_blank');
       }
 
-      alert(`Order ${newOrder.orderId} Placed!\nPayment Mode: ${paymentMethod}\nNotifications sent to kitchen.`);
+      alert(`Order ${newOrder.orderId} Placed! Portions updated in kitchen inventory.`);
     }
 
     // --- RENDER CUSTOMER ORDERS ---
@@ -1017,7 +1166,7 @@
       }
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="py-16 text-center text-xs text-stone-400 font-medium">No customer orders recorded yet.</div>`;
+        container.innerHTML = `<div class="py-16 text-center text-xs text-stone-400 font-medium">No customer orders found.</div>`;
         return;
       }
 
@@ -1025,10 +1174,11 @@
         <div class="p-4 border rounded-2xl bg-white shadow-sm space-y-2.5 text-xs">
           <div class="flex justify-between items-start border-b pb-2">
             <div>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="font-extrabold text-stone-900 text-sm">${order.orderId}</span>
-                <span class="px-2 py-0.5 rounded-md font-black text-[10px] ${order.mode === 'TAKEAWAY' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}">${order.mode}</span>
-                <span class="px-2 py-0.5 rounded-md font-black text-[10px] bg-stone-100 text-stone-700">${order.payment || 'COD'}</span>
+                <span class="px-2 py-0.5 rounded font-black text-[10px] ${order.mode === 'TAKEAWAY' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}">${order.mode}</span>
+                ${order.hasPreorders ? `<span class="px-2 py-0.5 rounded font-black text-[10px] bg-purple-100 text-purple-800">PRE-ORDER</span>` : ''}
+                <span class="px-2 py-0.5 rounded font-black text-[10px] bg-stone-100 text-stone-700">${order.payment || 'COD'}</span>
               </div>
               <p class="text-[11px] text-stone-500 font-semibold mt-0.5">${order.date} at ${order.placedAt}</p>
             </div>
@@ -1038,7 +1188,7 @@
           <div class="bg-orange-50/70 p-2.5 rounded-xl space-y-1">
             <p><strong class="text-stone-800">Customer:</strong> ${order.customer.name}</p>
             <p><strong class="text-stone-800">Phone:</strong> <a href="tel:${order.customer.phone}" class="text-orange-600 font-bold underline">${order.customer.phone}</a></p>
-            <p><strong class="text-stone-800">Fulfillment Detail:</strong> ${order.customer.address}</p>
+            <p><strong class="text-stone-800">Fulfillment:</strong> ${order.customer.address}</p>
           </div>
 
           <div>
@@ -1046,7 +1196,7 @@
             <div class="divide-y border-t border-b">
               ${order.items.map(i => `
                 <div class="py-1 flex justify-between text-stone-600">
-                  <span>${i.name} × ${i.qty}</span>
+                  <span>${i.name} ${i.isPreorder ? `(Scheduled: ${i.preorderDate})` : ''} × ${i.qty}</span>
                   <span class="font-bold">₹${i.total}</span>
                 </div>
               `).join('')}
@@ -1056,7 +1206,7 @@
       `).join('');
     }
 
-    // --- DYNAMIC GPS 3 KM CALCULATION ---
+    // --- 3 KM RADIUS VERIFICATION ---
     function checkDeliveryRadius() {
       const alertBox = document.getElementById('locationAlert');
       const icon = document.getElementById('locIcon');
@@ -1086,21 +1236,18 @@
             alertBox.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-900');
             icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
             head.innerText = `Delivery Available! (${dist} KM away)`;
-            sub.innerText = `You are inside our ${MAX_KM} KM cloud kitchen dispatch perimeter.`;
+            sub.innerText = `You are inside our ${MAX_KM} KM cloud kitchen dispatch boundary.`;
           } else {
             alertBox.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-900');
             icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-600"></i>';
             head.innerText = `Outside Delivery Radius (${dist} KM away)`;
-            sub.innerText = `Delivery is restricted to ${MAX_KM} KM. However, you can select "Takeaway" to pick up directly!`;
+            sub.innerText = `Delivery is restricted to ${MAX_KM} KM. However, you can choose "Takeaway" to collect your meal!`;
           }
         },
-        () => {
-          alert('Please allow location permissions on your browser to calculate delivery distance.');
-        }
+        () => alert('Please enable location permissions in your browser.')
       );
     }
 
-    // Modal & Drawer Toggles
     function toggleLoginModal(show) { document.getElementById('loginModal').classList.toggle('hidden', !show); }
     function toggleDishModal(show) { document.getElementById('dishModal').classList.toggle('hidden', !show); }
     function toggleSettingsModal(show) { document.getElementById('settingsModal').classList.toggle('hidden', !show); }
