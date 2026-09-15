@@ -110,7 +110,7 @@
         <button onclick="openDishModalForCreate()" class="bg-stone-900 hover:bg-black text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
           <i class="fa-solid fa-plus"></i> Add Dish
         </button>
-        <button onclick="logoutOwner()" class="bg-rose-700 hover:bg-rose-800 text-white px-2 py-1 rounded-full text-xs font-bold transition flex items-center gap-1">
+        <button onclick="logoutOwner()" class="bg-rose-700 hover:bg-rose-800 text-white px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1">
           <i class="fa-solid fa-right-from-bracket"></i> Logout
         </button>
       </div>
@@ -331,6 +331,28 @@
       </button>
     </div>
   </footer>
+
+  <!-- 🔑 MODAL: OWNER LOGIN (RESTORED WITH HIGH Z-INDEX) -->
+  <div id="loginModal" class="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xs w-full p-6 space-y-4 shadow-2xl border border-orange-100">
+      <div class="flex justify-between items-center border-b pb-2">
+        <div class="flex items-center gap-2 text-stone-900 font-extrabold text-sm">
+          <i class="fa-solid fa-lock text-orange-600"></i>
+          <span>Owner Verification</span>
+        </div>
+        <button type="button" onclick="toggleLoginModal(false)" class="p-1 text-stone-400 hover:text-stone-700 font-bold text-xl leading-none">&times;</button>
+      </div>
+      <form onsubmit="handleOwnerLogin(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-stone-700 block mb-1">Enter Secret Owner PIN:</label>
+          <input id="ownerPinInput" type="password" placeholder="Default: 1234" required autofocus class="w-full p-2.5 border rounded-xl font-bold tracking-widest text-center text-base focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
+        </div>
+        <button type="submit" class="w-full bg-stone-900 hover:bg-black text-amber-300 font-extrabold py-2.5 rounded-xl shadow transition text-xs uppercase tracking-wider">
+          Unlock Controls
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- 🧾 MODAL: OWNER GST / NON-GST INVOICE GENERATOR -->
   <div id="invoiceModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
@@ -623,7 +645,6 @@
     const SITE_ACCESS_PASSWORD = "gmskitchen123";
 
     // --- 🚀 CACHE BUSTING & FRESH MENU SEEDING SYSTEM ---
-    // Change this version string whenever you want to force all client browsers to refresh cached dishes
     const MENU_SCHEMA_VERSION = "v2.0";
 
     const defaultStarterDishes = [
@@ -662,7 +683,6 @@
       }
     ];
 
-    // Check schema version. If version is older or active menu is empty, clear old cache and reseed.
     const currentCachedVersion = localStorage.getItem('rds_menu_version');
     const existingRawMenu = localStorage.getItem('rds_cloud_active_menu');
 
@@ -703,7 +723,6 @@
       location.reload();
     }
 
-    // Load active persistent data
     let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || JSON.stringify(defaultStarterDishes));
     let historyMenu = JSON.parse(localStorage.getItem('rds_cloud_history_menu') || JSON.stringify(defaultStarterDishes));
     let customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
@@ -849,6 +868,7 @@
       updateUI();
     }
 
+    // --- OWNER LOGIN HANDLER ---
     function promptOwnerLogin() {
       if (isOwnerLoggedIn) {
         alert('You are already logged in as Owner. Controls are visible at the top bar.');
@@ -1755,7 +1775,6 @@
       );
     }
 
-    // --- 🧾 INVOICE & GST / NON-GST BILL GENERATOR LOGIC ---
     function openInvoiceModal(orderId) {
       const order = customerOrders.find(o => o.orderId === orderId);
       if (!order) return;
@@ -1911,7 +1930,6 @@
       });
     }
 
-    // --- 📢 ADVERTISING POSTCARD RENDER & DOWNLOAD LOGIC ---
     function openPostcardPreview() {
       const container = document.getElementById('postcardDishesList');
       const limit = getActiveLimit();
