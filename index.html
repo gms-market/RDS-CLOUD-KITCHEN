@@ -8,6 +8,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- html2canvas for instant postcard PNG image generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     @keyframes pulseAlert {
@@ -81,7 +84,7 @@
         <button onclick="toggleHistory(true)" class="bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
           <i class="fa-solid fa-clock-rotate-left"></i> Dishes (<span id="historyCount">0</span>)
         </button>
-        <button onclick="toggleDishModal(true)" class="bg-stone-900 hover:bg-black text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
+        <button onclick="openDishModalForCreate()" class="bg-stone-900 hover:bg-black text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5">
           <i class="fa-solid fa-plus"></i> Add Dish
         </button>
         <button onclick="logoutOwner()" class="bg-rose-700 hover:bg-rose-800 text-white px-2 py-1 rounded-full text-xs font-bold transition">
@@ -111,6 +114,12 @@
       </div>
 
       <div class="flex items-center gap-2 sm:gap-3">
+        <!-- 📢 DOWNLOADABLE ADVERTISING POSTCARD BUTTON -->
+        <button onclick="openPostcardPreview()" title="Download promotional menu postcard" class="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full border border-purple-300 bg-purple-50 text-purple-800 hover:bg-purple-100 transition shadow-sm">
+          <i class="fa-solid fa-image text-purple-600"></i>
+          <span class="hidden md:inline">Ad Postcard</span>
+        </button>
+
         <button onclick="checkDeliveryRadius()" class="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 transition shadow-sm">
           <i class="fa-solid fa-location-dot text-orange-500"></i>
           <span class="hidden sm:inline" id="btnCheckDistanceText">Check 3KM Eligibility</span>
@@ -241,7 +250,7 @@
     <!-- MENU GRID -->
     <section id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></section>
 
-    <!-- 📜 COMPREHENSIVE STATUTORY & OPERATING DISCLAIMER SUITE -->
+    <!-- 📜 STATUTORY & OPERATING DISCLAIMER SUITE -->
     <section class="bg-amber-100/60 border border-amber-200 rounded-3xl p-6 text-stone-700 text-xs space-y-4">
       <div class="flex items-center gap-2 text-stone-900 font-black uppercase text-sm border-b border-amber-200 pb-2">
         <i class="fa-solid fa-shield-halved text-orange-600"></i>
@@ -300,6 +309,90 @@
     </div>
   </footer>
 
+  <!-- 🖼️ MODAL: ADVERTISING POSTCARD PREVIEW & EXPORT -->
+  <div id="postcardModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-stone-900 rounded-3xl max-w-xl w-full p-5 space-y-4 shadow-2xl max-h-[95vh] overflow-y-auto border border-stone-800">
+      <div class="flex justify-between items-center border-b border-stone-800 pb-2 text-white">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-bullhorn text-orange-500"></i>
+          <h2 class="font-extrabold text-sm">Download Advertising Postcard</h2>
+        </div>
+        <button onclick="togglePostcardModal(false)" class="p-1 text-stone-400 hover:text-white font-bold text-lg">&times;</button>
+      </div>
+
+      <!-- CANVAS TARGET POSTCARD (Standard 4:5 social/print format) -->
+      <div class="flex justify-center">
+        <div id="adPostcardTarget" class="w-full bg-gradient-to-br from-stone-900 via-stone-950 to-neutral-900 text-white rounded-2xl p-6 border-4 border-orange-500 space-y-4 shadow-2xl">
+          
+          <!-- Postcard Header -->
+          <div class="flex justify-between items-start border-b border-white/10 pb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center font-black">
+                  <i class="fa-solid fa-utensils text-sm"></i>
+                </span>
+                <h3 class="text-xl font-black tracking-tight text-white">RDS <span class="text-orange-500">CLOUD KITCHEN</span></h3>
+              </div>
+              <p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mt-1">
+                Authentic Homestyle Cooking • <span class="postcardRadiusText">3 KM Delivery</span>
+              </p>
+            </div>
+            <div class="text-right">
+              <span class="bg-orange-500/20 border border-orange-500 text-orange-400 text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
+                Fresh Batch
+              </span>
+            </div>
+          </div>
+
+          <!-- Highlight Banner inside card -->
+          <div class="bg-gradient-to-r from-orange-600 to-amber-600 rounded-xl p-3 text-center shadow">
+            <p class="font-black text-sm uppercase tracking-wide">Delivered Piping Hot to Your Doorstep</p>
+            <p class="text-[11px] font-medium text-amber-100">Breakfast • Lunch • Dinner • Advance Pre-Orders</p>
+          </div>
+
+          <!-- Dynamic Active Dishes Grid inside postcard -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-xs font-black uppercase text-stone-400 border-b border-white/5 pb-1">
+              <span>Today's Featured Menu Items</span>
+              <span>Price</span>
+            </div>
+            <div id="postcardDishesList" class="space-y-1.5 divide-y divide-white/5 max-h-60 overflow-hidden">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+          <!-- Contact & Ordering Info inside card -->
+          <div class="bg-white/5 rounded-xl p-3 grid grid-cols-2 gap-2 text-[10px] border border-white/10">
+            <div>
+              <p class="text-stone-400 font-bold uppercase">To Order on WhatsApp:</p>
+              <p id="postcardPhone1" class="font-extrabold text-amber-300 text-xs mt-0.5"></p>
+              <p id="postcardPhone2" class="font-semibold text-stone-300"></p>
+            </div>
+            <div>
+              <p class="text-stone-400 font-bold uppercase">Payment & Counter:</p>
+              <p class="font-extrabold text-stone-200">UPI / Cash on Delivery</p>
+              <p id="postcardCounter" class="text-stone-400 truncate mt-0.5"></p>
+            </div>
+          </div>
+
+          <div class="text-center text-[9px] text-stone-500 uppercase tracking-widest pt-1 border-t border-white/5">
+            Strict Hygiene • Food-Grade Packaging • Dedicated Cloud Kitchen
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-2">
+        <button onclick="downloadPostcardImage()" class="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3 rounded-xl shadow-lg active:scale-95 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download"></i> Download PNG Postcard
+        </button>
+        <button onclick="togglePostcardModal(false)" class="px-4 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold py-3 rounded-xl text-xs transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: OWNER LOGIN -->
   <div id="loginModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-xs w-full p-6 space-y-4 shadow-2xl">
@@ -322,15 +415,17 @@
     </div>
   </div>
 
-  <!-- MODAL: MANUAL DISH ENTRY -->
+  <!-- MODAL: ADD / EDIT DISH -->
   <div id="dishModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
-        <h2 class="font-extrabold text-stone-900 text-lg">Add Dish / Meal Category</h2>
+        <h2 id="dishModalTitle" class="font-extrabold text-stone-900 text-lg">Add Dish / Meal Category</h2>
         <button onclick="toggleDishModal(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
       </div>
 
-      <form id="dishForm" onsubmit="saveNewDish(event)" class="space-y-4 text-xs">
+      <form id="dishForm" onsubmit="handleDishFormSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="editingDishId" value="">
+
         <div>
           <label class="font-bold text-stone-700 block mb-1">Dish Name *</label>
           <input id="formDishName" type="text" placeholder="e.g. Idli Vada Combo / Ghee Roast / Dum Biryani" required class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none text-stone-900 bg-stone-50">
@@ -350,8 +445,8 @@
             <input id="formPrice" type="number" placeholder="120" required class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
           </div>
           <div>
-            <label class="font-bold text-stone-700 block mb-1">Initial Portions *</label>
-            <input id="formQuantity" type="number" placeholder="e.g. 20" required min="1" class="w-full p-2.5 border rounded-xl font-black focus:ring-2 focus:ring-orange-500 outline-none bg-orange-50 text-orange-900">
+            <label class="font-bold text-stone-700 block mb-1">Portions Left *</label>
+            <input id="formQuantity" type="number" placeholder="e.g. 20" required min="0" class="w-full p-2.5 border rounded-xl font-black focus:ring-2 focus:ring-orange-500 outline-none bg-orange-50 text-orange-900">
           </div>
         </div>
 
@@ -385,8 +480,8 @@
         </div>
 
         <div>
-          <label class="font-bold text-stone-700 block mb-1">Upload Photo (.jpg) *</label>
-          <input id="formImageFile" type="file" accept="image/jpeg,image/jpg,image/png" onchange="previewImage(event)" required class="w-full text-xs text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+          <label class="font-bold text-stone-700 block mb-1">Upload Photo (.jpg) <span id="photoOptionalNote" class="text-stone-400 font-normal"></span></label>
+          <input id="formImageFile" type="file" accept="image/jpeg,image/jpg,image/png" onchange="previewImage(event)" class="w-full text-xs text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
           <div id="imagePreviewBox" class="mt-2 relative w-full h-36 rounded-xl overflow-hidden border hidden">
             <img id="imagePreview" src="" alt="Preview" class="w-full h-full object-cover">
           </div>
@@ -395,14 +490,14 @@
         <div class="flex items-center gap-4 pt-1">
           <span class="font-bold text-stone-700">Food Type:</span>
           <label class="flex items-center gap-1.5 cursor-pointer font-bold text-emerald-700">
-            <input type="radio" name="diet" value="veg"> Pure Veg
+            <input type="radio" name="diet" value="veg" id="dietVeg"> Pure Veg
           </label>
           <label class="flex items-center gap-1.5 cursor-pointer font-bold text-rose-700">
-            <input type="radio" name="diet" value="non-veg" checked> Non-Veg
+            <input type="radio" name="diet" value="non-veg" id="dietNonVeg" checked> Non-Veg
           </label>
         </div>
 
-        <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-extrabold py-3.5 rounded-2xl shadow-md active:scale-95 transition">
+        <button type="submit" id="dishSubmitBtn" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-extrabold py-3.5 rounded-2xl shadow-md active:scale-95 transition">
           Publish Dish
         </button>
       </form>
@@ -422,7 +517,7 @@
 
       <form onsubmit="saveKitchenSettings(event)" class="space-y-3.5 text-xs">
         
-        <!-- 📍 CUSTOM DELIVERY RADIUS (OWNER LIMIT CONTROL) -->
+        <!-- 📍 CUSTOM DELIVERY RADIUS -->
         <div class="p-3 bg-orange-50 border border-orange-200 rounded-2xl space-y-2">
           <label class="font-black text-stone-900 block flex items-center gap-1.5">
             <i class="fa-solid fa-route text-orange-600"></i> Maximum Delivery Radius Limit (KM) *
@@ -685,7 +780,7 @@
       cutoffBreakfast: '09:30',
       cutoffLunch: '13:30',
       cutoffDinner: '21:30',
-      maxDistanceKm: 3.0, // Configurable owner distance limit
+      maxDistanceKm: 3.0,
       surplusActive: false,
       surplusHeadline: 'Fresh Extra Portions Available for Quick Dispatch!',
       surplusMessage: 'Cooked fresh in excess batch. Available to order now until portions finish.',
@@ -769,7 +864,6 @@
       }, 30000);
     }
 
-    // --- APPLY LOCATION LIMIT ACROSS THE WEBPAGE ---
     function applyDistanceUI() {
       const limit = getActiveLimit();
       document.getElementById('topBarDistanceText').innerText = `${limit} KM Delivery`;
@@ -779,6 +873,7 @@
 
       document.querySelectorAll('.disclaimerKmText').forEach(el => el.innerText = `${limit} KM`);
       document.querySelectorAll('.deliveryRadiusLabel').forEach(el => el.innerText = `${limit} KM`);
+      document.querySelectorAll('.postcardRadiusText').forEach(el => el.innerText = `${limit} KM Delivery`);
     }
 
     function updateSurplusBanner() {
@@ -1014,10 +1109,68 @@
       }
     }
 
-    function saveNewDish(e) {
+    // --- DISH CREATION & EDITING LOGIC ---
+    function openDishModalForCreate() {
+      document.getElementById('dishForm').reset();
+      document.getElementById('editingDishId').value = '';
+      document.getElementById('dishModalTitle').innerText = 'Add Dish / Meal Category';
+      document.getElementById('dishSubmitBtn').innerText = 'Publish Dish';
+      document.getElementById('photoOptionalNote').innerText = '*';
+      document.getElementById('formImageFile').setAttribute('required', 'true');
+      document.getElementById('imagePreviewBox').classList.add('hidden');
+      document.getElementById('preorderInputs').classList.add('hidden');
+      document.getElementById('dietNonVeg').checked = true;
+      base64Image = '';
+      toggleDishModal(true);
+    }
+
+    function openDishModalForEdit(id) {
+      if (!isOwnerLoggedIn) return;
+      const item = activeMenu.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('dishForm').reset();
+      document.getElementById('editingDishId').value = item.id;
+      document.getElementById('dishModalTitle').innerText = `Edit: ${item.name}`;
+      document.getElementById('dishSubmitBtn').innerText = 'Update Dish Details';
+      
+      document.getElementById('formDishName').value = item.name || '';
+      document.getElementById('formCategory').value = item.category || 'Lunch';
+      document.getElementById('formPrice').value = item.price || '';
+      document.getElementById('formQuantity').value = item.quantity !== undefined ? item.quantity : 10;
+      document.getElementById('formDesc').value = item.desc || '';
+      
+      if (item.isVeg) {
+        document.getElementById('dietVeg').checked = true;
+      } else {
+        document.getElementById('dietNonVeg').checked = true;
+      }
+
+      const isPre = !!item.isPreorder;
+      document.getElementById('formIsPreorder').checked = isPre;
+      togglePreorderFields(isPre);
+      document.getElementById('formPreorderCutoff').value = item.preorderCutoff || '';
+      document.getElementById('formPreorderDeliveryTime').value = item.preorderDeliveryTime || '';
+      document.getElementById('formPreorderNote').value = item.preorderNote || '';
+
+      document.getElementById('photoOptionalNote').innerText = '(leave empty to keep current photo)';
+      document.getElementById('formImageFile').removeAttribute('required');
+      base64Image = item.image || '';
+      if (base64Image) {
+        document.getElementById('imagePreview').src = base64Image;
+        document.getElementById('imagePreviewBox').classList.remove('hidden');
+      } else {
+        document.getElementById('imagePreviewBox').classList.add('hidden');
+      }
+
+      toggleDishModal(true);
+    }
+
+    function handleDishFormSubmit(e) {
       e.preventDefault();
       if (!isOwnerLoggedIn) return;
 
+      const editId = document.getElementById('editingDishId').value.trim();
       const name = document.getElementById('formDishName').value.trim();
       const category = document.getElementById('formCategory').value;
       const price = parseFloat(document.getElementById('formPrice').value);
@@ -1039,19 +1192,37 @@
         return;
       }
 
-      const dish = {
-        id: 'DISH-' + Date.now(),
-        name, category, price, desc, isVeg,
-        quantity: isNaN(quantity) ? 10 : quantity,
-        isPreorder: isPreorder,
-        preorderCutoff: preorderCutoff,
-        preorderDeliveryTime: preorderDeliveryTime,
-        preorderNote: preorderNote,
-        image: base64Image
-      };
+      if (editId) {
+        const dishIndex = activeMenu.findIndex(i => i.id === editId);
+        if (dishIndex > -1) {
+          activeMenu[dishIndex] = {
+            ...activeMenu[dishIndex],
+            name, category, price, desc, isVeg,
+            quantity: isNaN(quantity) ? 0 : quantity,
+            isPreorder, preorderCutoff, preorderDeliveryTime, preorderNote,
+            image: base64Image
+          };
+        }
 
-      activeMenu.unshift(dish);
-      historyMenu = [dish, ...historyMenu.filter(i => i.name.toLowerCase() !== name.toLowerCase())];
+        const histIndex = historyMenu.findIndex(i => i.id === editId);
+        if (histIndex > -1) {
+          historyMenu[histIndex] = { ...activeMenu[dishIndex] };
+        }
+      } else {
+        const dish = {
+          id: 'DISH-' + Date.now(),
+          name, category, price, desc, isVeg,
+          quantity: isNaN(quantity) ? 10 : quantity,
+          isPreorder: isPreorder,
+          preorderCutoff: preorderCutoff,
+          preorderDeliveryTime: preorderDeliveryTime,
+          preorderNote: preorderNote,
+          image: base64Image
+        };
+
+        activeMenu.unshift(dish);
+        historyMenu = [dish, ...historyMenu.filter(i => i.name.toLowerCase() !== name.toLowerCase())];
+      }
 
       localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
       localStorage.setItem('rds_cloud_history_menu', JSON.stringify(historyMenu));
@@ -1192,9 +1363,14 @@
                   ` : ''}
 
                   ${isOwnerLoggedIn ? `
-                    <button onclick="removeActiveDish('${item.id}')" title="Remove from menu" class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-stone-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition">
-                      <i class="fa-solid fa-xmark text-xs"></i>
-                    </button>
+                    <div class="absolute bottom-3 right-3 flex items-center gap-1.5">
+                      <button onclick="openDishModalForEdit('${item.id}')" title="Edit this dish" class="w-8 h-8 rounded-full bg-stone-900/90 hover:bg-orange-600 text-amber-300 flex items-center justify-center transition shadow">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                      </button>
+                      <button onclick="removeActiveDish('${item.id}')" title="Remove from menu" class="w-8 h-8 rounded-full bg-stone-900/90 hover:bg-rose-600 text-white flex items-center justify-center transition shadow">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                      </button>
+                    </div>
                   ` : ''}
                 </div>
 
@@ -1210,7 +1386,7 @@
                         ${isSoldOut ? '0 Left' : `${item.quantity} Portions Left`}
                       </span>
                       ${isOwnerLoggedIn ? `
-                        <button onclick="editStock('${item.id}')" class="text-[10px] text-orange-600 font-bold hover:underline mt-0.5">Edit Stock</button>
+                        <button onclick="editStock('${item.id}')" class="text-[10px] text-orange-600 font-bold hover:underline mt-0.5">Quick Stock</button>
                       ` : ''}
                     </div>
                   </div>
@@ -1292,6 +1468,9 @@
               <div class="flex items-center gap-1.5">
                 ${isActive ? `
                   <span class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg">Live</span>
+                  <button onclick="openDishModalForEdit('${item.id}'); toggleHistory(false);" title="Edit this dish" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-700 hover:bg-orange-100 hover:text-orange-600 flex items-center justify-center">
+                    <i class="fa-solid fa-pen text-xs"></i>
+                  </button>
                 ` : `
                   <button onclick="reAddFromHistory('${item.id}')" title="Re-publish dish" class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 flex items-center justify-center">
                     <i class="fa-solid fa-arrows-rotate text-xs"></i>
@@ -1561,7 +1740,6 @@
       `).join('');
     }
 
-    // --- DYNAMIC LOCATION CHECK USING OWNER'S CONFIGURED RADIUS ---
     function checkDeliveryRadius() {
       const alertBox = document.getElementById('locationAlert');
       const icon = document.getElementById('locIcon');
@@ -1604,6 +1782,51 @@
       );
     }
 
+    // --- 📢 ADVERTISING POSTCARD RENDER & DOWNLOAD LOGIC ---
+    function openPostcardPreview() {
+      const container = document.getElementById('postcardDishesList');
+      const limit = getActiveLimit();
+      
+      document.querySelectorAll('.postcardRadiusText').forEach(el => el.innerText = `${limit} KM Delivery`);
+      document.getElementById('postcardPhone1').innerText = kitchenSettings.phone1 || 'WhatsApp Available';
+      document.getElementById('postcardPhone2').innerText = kitchenSettings.phone2 ? `Alt: ${kitchenSettings.phone2}` : '';
+      document.getElementById('postcardCounter').innerText = kitchenSettings.takeawayAddress || 'Counter Pickup Available';
+
+      if (activeMenu.length === 0) {
+        container.innerHTML = '<p class="text-xs text-stone-400 py-3 text-center">No dishes on active menu right now.</p>';
+      } else {
+        container.innerHTML = activeMenu.slice(0, 7).map(item => `
+          <div class="flex justify-between items-center py-1 text-xs">
+            <div class="flex items-center gap-1.5 truncate">
+              <span class="w-2 h-2 rounded-full ${item.isVeg ? 'bg-emerald-400' : 'bg-rose-500'} flex-shrink-0"></span>
+              <span class="font-bold text-stone-100 truncate">${item.name}</span>
+              <span class="text-[9px] text-amber-400 font-bold uppercase">(${item.category})</span>
+            </div>
+            <span class="font-black text-white pl-2">₹${item.price}</span>
+          </div>
+        `).join('');
+      }
+
+      togglePostcardModal(true);
+    }
+
+    function downloadPostcardImage() {
+      const target = document.getElementById('adPostcardTarget');
+      html2canvas(target, {
+        scale: 2, // High resolution output
+        backgroundColor: '#0c0a09',
+        useCORS: true
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `RDS-Kitchen-Menu-Postcard-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }).catch(err => {
+        alert('Could not render image. Please try again or take a screenshot.');
+      });
+    }
+
+    function togglePostcardModal(show) { document.getElementById('postcardModal').classList.toggle('hidden', !show); }
     function toggleLoginModal(show) { document.getElementById('loginModal').classList.toggle('hidden', !show); }
     function toggleDishModal(show) { document.getElementById('dishModal').classList.toggle('hidden', !show); }
     function toggleSettingsModal(show) { document.getElementById('settingsModal').classList.toggle('hidden', !show); }
