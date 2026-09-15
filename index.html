@@ -34,7 +34,7 @@
 </head>
 <body class="bg-gradient-to-b from-amber-50/70 via-white to-orange-50/40 text-stone-800 min-h-screen flex flex-col font-sans">
 
-  <!-- 🔒 SITE-WIDE GATEKEEPER PASSWORD SCREEN -->
+  <!-- 🔒 SITE ACCESS GATEKEEPER -->
   <div id="siteGateScreen" class="fixed inset-0 z-[100] bg-stone-950 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-7 space-y-5 shadow-2xl text-center border border-orange-100">
       <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl mx-auto shadow-lg shadow-orange-500/30">
@@ -42,7 +42,7 @@
       </div>
       <div>
         <h1 class="text-xl font-black text-stone-900 tracking-tight">RDS CLOUD KITCHEN</h1>
-        <p class="text-xs text-stone-500 mt-1">Please enter password to enter the kitchen store.</p>
+        <p class="text-xs text-stone-500 mt-1">Please enter password to access kitchen menu.</p>
       </div>
       <form onsubmit="verifySitePassword(event)" class="space-y-3">
         <input id="sitePasswordInput" type="password" placeholder="Enter Access Password" required class="w-full p-3 border-2 border-orange-100 rounded-2xl font-bold tracking-wider text-center focus:border-orange-500 focus:outline-none bg-stone-50 text-stone-900 text-sm">
@@ -122,7 +122,7 @@
   <!-- MAIN CONTAINER -->
   <main class="max-w-6xl mx-auto px-4 py-6 space-y-6 flex-grow w-full">
 
-    <!-- LOCATION STATUS NOTIFICATION -->
+    <!-- LOCATION STATUS -->
     <div id="locationAlert" class="hidden p-4 rounded-2xl border flex items-start gap-3 shadow-sm transition-all duration-300">
       <div id="locIcon" class="mt-0.5 text-lg"></div>
       <div class="text-xs">
@@ -155,11 +155,11 @@
           Fresh Homestyle Cooking
         </span>
         <h2 class="text-2xl sm:text-3xl font-black leading-tight">Limited Daily Portions Cooked Fresh Daily</h2>
-        <p class="text-xs sm:text-sm text-white/90 font-medium">Real-time portion counter. Book live orders or reserve pre-order portions.</p>
+        <p class="text-xs sm:text-sm text-white/90 font-medium">Real-time portion counters and automatic pre-order cutoff schedules.</p>
       </div>
       <div class="z-10 flex items-center gap-2">
         <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2">
-          <i class="fa-solid fa-boxes-stacked text-amber-200"></i> Tracked Portions
+          <i class="fa-solid fa-boxes-stacked text-amber-200"></i> Automated Cutoffs
         </div>
       </div>
       <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -184,7 +184,7 @@
         <i class="fa-solid fa-utensils"></i>
       </div>
       <h3 class="font-extrabold text-stone-800 text-lg">No Dishes in this Section</h3>
-      <p class="text-xs text-stone-500 max-w-sm mx-auto">Dishes are being prepared or portions are finished. Please check back shortly!</p>
+      <p class="text-xs text-stone-500 max-w-sm mx-auto">Dishes are being updated or pre-orders are closed. Please select another category!</p>
     </div>
 
     <!-- MENU GRID -->
@@ -197,10 +197,10 @@
         <span>RDS Cloud Kitchen Portion, Delivery & Pre-Order Policy</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 leading-relaxed">
-        <p>• <strong>Live Portion Depletion:</strong> Remaining portions update in real-time. When reaching 0, dishes automatically show <strong>SOLD OUT</strong>.</p>
-        <p>• <strong>Advance Pre-Orders:</strong> Pre-order items are cooked exclusively for the listed date and time schedule.</p>
-        <p>• <strong>3.0 KM Delivery & Takeaway:</strong> Dispatched within 3 KM radius. Takeaway orders collected directly from kitchen counter.</p>
-        <p>• <strong>Payments:</strong> Pay through instant UPI transfer or Cash on Delivery/Pickup.</p>
+        <p>• <strong>Automatic Cutoff Expiration:</strong> Pre-orders shut down automatically the minute the designated booking deadline passes, regardless of portions remaining.</p>
+        <p>• <strong>Live Inventory:</strong> Portions deplete in real-time. When portions hit 0, the item marks as <strong>SOLD OUT</strong>.</p>
+        <p>• <strong>3.0 KM Delivery & Takeaway:</strong> Dispatched strictly within 3 KM radius. Takeaway orders collected directly from kitchen counter.</p>
+        <p>• <strong>Payments:</strong> Settle via verified UPI transfer or Cash on Delivery/Pickup.</p>
       </div>
     </section>
   </main>
@@ -240,18 +240,18 @@
     </div>
   </div>
 
-  <!-- MODAL: MANUAL DISH ENTRY -->
+  <!-- MODAL: MANUAL DISH ENTRY (WITH EXACT DATE & TIME CUTOFFS) -->
   <div id="dishModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
-        <h2 class="font-extrabold text-stone-900 text-lg">Add Dish / Set Portions & Pre-Order</h2>
+        <h2 class="font-extrabold text-stone-900 text-lg">Add Dish / Set Portions & Cutoffs</h2>
         <button onclick="toggleDishModal(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
       </div>
 
       <form id="dishForm" onsubmit="saveNewDish(event)" class="space-y-4 text-xs">
         <div>
           <label class="font-bold text-stone-700 block mb-1">Dish Name *</label>
-          <input id="formDishName" type="text" placeholder="e.g. Mutton Dum Biryani" required class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none text-stone-900 bg-stone-50">
+          <input id="formDishName" type="text" placeholder="e.g. Traditional Dum Biryani" required class="w-full p-2.5 border rounded-xl font-medium focus:ring-2 focus:ring-orange-500 outline-none text-stone-900 bg-stone-50">
         </div>
 
         <div class="grid grid-cols-3 gap-2.5">
@@ -275,7 +275,7 @@
           </div>
         </div>
 
-        <!-- PRE-ORDER CONFIGURATION -->
+        <!-- PRE-ORDER CONFIGURATION WITH SYSTEM TIMESTAMPS -->
         <div class="p-3 bg-purple-50 border border-purple-200 rounded-2xl space-y-2">
           <div class="flex items-center justify-between">
             <span class="font-black text-purple-900 text-xs flex items-center gap-1.5">
@@ -285,12 +285,19 @@
           </div>
           <div id="preorderInputs" class="hidden space-y-2 pt-1 border-t border-purple-200">
             <div>
-              <label class="block text-[11px] font-bold text-purple-900 mb-0.5">Pre-Order Delivery Date & Time</label>
-              <input id="formPreorderDateTime" type="text" placeholder="e.g. Tomorrow (Sunday) by 1:00 PM" class="w-full p-2 border rounded-xl bg-white text-stone-900 text-xs">
+              <label class="block text-[11px] font-bold text-purple-900 mb-0.5">Pre-Order Order Cutoff Deadline (When Booking Ends) *</label>
+              <!-- Exact deadline when ordering must stop -->
+              <input id="formPreorderCutoff" type="datetime-local" class="w-full p-2 border rounded-xl bg-white text-stone-900 text-xs font-semibold">
+              <p class="text-[10px] text-purple-700 mt-0.5">At this exact moment, the dish will automatically close for orders.</p>
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-purple-900 mb-0.5">Pre-Order Special Note / Cutoff</label>
-              <input id="formPreorderNote" type="text" placeholder="e.g. Orders close at 10 PM tonight!" class="w-full p-2 border rounded-xl bg-white text-stone-900 text-xs">
+              <label class="block text-[11px] font-bold text-purple-900 mb-0.5">Scheduled Delivery / Pickup Date & Time *</label>
+              <!-- When customer receives food -->
+              <input id="formPreorderDeliveryTime" type="datetime-local" class="w-full p-2 border rounded-xl bg-white text-stone-900 text-xs font-semibold">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-purple-900 mb-0.5">Pre-Order Special Note</label>
+              <input id="formPreorderNote" type="text" placeholder="e.g. Weekend special cooked fresh on Sunday lunch!" class="w-full p-2 border rounded-xl bg-white text-stone-900 text-xs">
             </div>
           </div>
         </div>
@@ -408,7 +415,7 @@
           </div>
           <button onclick="toggleHistory(false)" class="p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
         </div>
-        <p class="text-xs text-stone-500">All dishes remain archived here. Re-publish anytime and assign new stock numbers.</p>
+        <p class="text-xs text-stone-500">All dishes remain archived here. Re-publish anytime with new portions & deadlines.</p>
         <div id="historyList" class="space-y-3"></div>
       </div>
     </div>
@@ -514,7 +521,7 @@
     const MAX_KM = 3.0;
     const SITE_ACCESS_PASSWORD = "gmskitchen123";
 
-    // --- GATEKEEPER ACCESS VERIFICATION ---
+    // --- GATEKEEPER VERIFICATION ---
     function checkSiteAccess() {
       const isUnlocked = sessionStorage.getItem("rds_site_unlocked") === "true";
       const gateScreen = document.getElementById("siteGateScreen");
@@ -571,6 +578,20 @@
     let base64Image = '';
     let currentOrderMode = 'delivery';
 
+    // Format ISO datetime string to readable display
+    function formatDateTime(isoStr) {
+      if (!isoStr) return '';
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return isoStr;
+      return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Helper: Checks if preorder deadline has passed
+    function isPreorderCutoffExpired(item) {
+      if (!item.isPreorder || !item.preorderCutoff) return false;
+      return new Date() > new Date(item.preorderCutoff);
+    }
+
     function init() {
       checkSiteAccess();
       applyOrderTimeUI();
@@ -581,6 +602,12 @@
       loadKitchenSettingsForm();
       updateCheckoutModeUI();
       updatePreorderAlert();
+
+      // Refresh every 30 seconds to automatically lock expired cutoff times
+      setInterval(() => {
+        updateUI();
+        updatePreorderAlert();
+      }, 30000);
     }
 
     // --- OWNER AUTHENTICATION ---
@@ -699,14 +726,15 @@
       const subtext = document.getElementById('preorderAlertSubtext');
       const badge = document.getElementById('preorderCountBadge');
 
-      const preorderDishes = activeMenu.filter(d => d.isPreorder && d.quantity > 0);
-      badge.innerText = preorderDishes.length;
+      // Only count preorders that have stock AND whose cutoff has NOT expired
+      const validPreorders = activeMenu.filter(d => d.isPreorder && d.quantity > 0 && !isPreorderCutoffExpired(d));
+      badge.innerText = validPreorders.length;
 
-      if (preorderDishes.length > 0) {
+      if (validPreorders.length > 0) {
         banner.classList.remove('hidden');
-        const first = preorderDishes[0];
-        headline.innerText = `Pre-Order Special: ${first.name} (${first.preorderDate || 'Upcoming Batch'})`;
-        subtext.innerText = `${first.quantity} portions left • ${first.preorderNote || 'Reserve yours before slots fill up!'}`;
+        const first = validPreorders[0];
+        headline.innerText = `Pre-Order Special: ${first.name}`;
+        subtext.innerText = `${first.quantity} portions left • Order cutoff: ${formatDateTime(first.preorderCutoff)} • Delivery: ${formatDateTime(first.preorderDeliveryTime)}`;
       } else {
         banner.classList.add('hidden');
       }
@@ -788,7 +816,8 @@
       const price = parseFloat(document.getElementById('formPrice').value);
       const quantity = parseInt(document.getElementById('formQuantity').value, 10);
       const isPreorder = document.getElementById('formIsPreorder').checked;
-      const preorderDate = document.getElementById('formPreorderDateTime').value.trim();
+      const preorderCutoff = document.getElementById('formPreorderCutoff').value;
+      const preorderDeliveryTime = document.getElementById('formPreorderDeliveryTime').value;
       const preorderNote = document.getElementById('formPreorderNote').value.trim();
       const desc = document.getElementById('formDesc').value.trim();
       const isVeg = document.querySelector('input[name="diet"]:checked').value === 'veg';
@@ -798,12 +827,18 @@
         return;
       }
 
+      if (isPreorder && (!preorderCutoff || !preorderDeliveryTime)) {
+        alert('Please set both the Booking Cutoff Deadline and the Delivery Date/Time.');
+        return;
+      }
+
       const dish = {
         id: 'DISH-' + Date.now(),
         name, category, price, desc, isVeg,
         quantity: isNaN(quantity) ? 10 : quantity,
         isPreorder: isPreorder,
-        preorderDate: preorderDate,
+        preorderCutoff: preorderCutoff,
+        preorderDeliveryTime: preorderDeliveryTime,
         preorderNote: preorderNote,
         image: base64Image
       };
@@ -842,6 +877,11 @@
         const resetPortions = prompt(`Enter available portions for "${item.name}":`, item.quantity || 10);
         if (resetPortions !== null) {
           item.quantity = parseInt(resetPortions, 10) || 10;
+          
+          if (item.isPreorder) {
+            alert("This is a pre-order dish. Please ensure its cutoff date & time is updated.");
+          }
+
           activeMenu.unshift(item);
           localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
           updateUI();
@@ -874,7 +914,7 @@
       updateUI();
     }
 
-    // --- MENU GRID ---
+    // --- MENU GRID WITH CUTOFF & SOLD OUT AUTOMATION ---
     function updateUI() {
       const grid = document.getElementById('menuGrid');
       const empty = document.getElementById('emptyMenuState');
@@ -893,12 +933,15 @@
         empty.classList.add('hidden');
         grid.classList.remove('hidden');
         grid.innerHTML = items.map(item => {
+          const isExpired = isPreorderCutoffExpired(item);
           const isSoldOut = item.quantity <= 0;
+          const isUnavailable = isSoldOut || isExpired;
+
           return `
-            <div class="bg-white rounded-3xl border ${isSoldOut ? 'border-stone-200 opacity-80' : 'border-orange-100'} overflow-hidden shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between group">
+            <div class="bg-white rounded-3xl border ${isUnavailable ? 'border-stone-200 opacity-85' : 'border-orange-100'} overflow-hidden shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between group">
               <div>
                 <div class="relative w-full h-48 bg-stone-100 overflow-hidden">
-                  <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 ${isSoldOut ? 'grayscale' : ''}">
+                  <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 ${isUnavailable ? 'grayscale' : ''}">
                   
                   <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1.5">
                     <span class="w-2.5 h-2.5 rounded-full ${item.isVeg ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
@@ -911,9 +954,16 @@
                     </div>
                   ` : ''}
 
-                  ${isSoldOut ? `
-                    <div class="absolute inset-0 bg-stone-900/70 backdrop-blur-[2px] flex items-center justify-center">
-                      <span class="bg-rose-600 text-white font-black text-sm px-4 py-1.5 rounded-xl uppercase tracking-widest shadow-lg border border-rose-400">
+                  <!-- AUTOMATIC STATUS OVERLAYS -->
+                  ${isExpired ? `
+                    <div class="absolute inset-0 bg-stone-900/75 backdrop-blur-[2px] flex items-center justify-center p-3 text-center">
+                      <span class="bg-stone-800 text-amber-300 font-black text-xs px-3.5 py-2 rounded-xl uppercase tracking-wider shadow-lg border border-amber-400">
+                        <i class="fa-solid fa-hourglass-end mr-1"></i> PRE-ORDERS CLOSED
+                      </span>
+                    </div>
+                  ` : isSoldOut ? `
+                    <div class="absolute inset-0 bg-stone-900/75 backdrop-blur-[2px] flex items-center justify-center">
+                      <span class="bg-rose-600 text-white font-black text-xs px-4 py-2 rounded-xl uppercase tracking-widest shadow-lg border border-rose-400">
                         SOLD OUT
                       </span>
                     </div>
@@ -943,10 +993,12 @@
                     </div>
                   </div>
 
+                  <!-- PRE-ORDER TIMINGS INFO -->
                   ${item.isPreorder ? `
-                    <div class="p-2 bg-purple-50 rounded-xl border border-purple-200 text-[11px] text-purple-900 leading-tight">
-                      <p><strong><i class="fa-solid fa-truck text-purple-600"></i> Delivery Schedule:</strong> ${item.preorderDate || 'Scheduled Batch'}</p>
-                      ${item.preorderNote ? `<p class="text-[10px] text-purple-700 mt-0.5">${item.preorderNote}</p>` : ''}
+                    <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-200 text-[11px] text-purple-950 space-y-1">
+                      <p><strong><i class="fa-solid fa-hourglass-half text-rose-600"></i> Booking Deadline:</strong> ${formatDateTime(item.preorderCutoff)}</p>
+                      <p><strong><i class="fa-solid fa-truck-fast text-purple-700"></i> Delivery / Pickup:</strong> ${formatDateTime(item.preorderDeliveryTime)}</p>
+                      ${item.preorderNote ? `<p class="text-[10px] text-purple-700 font-medium">${item.preorderNote}</p>` : ''}
                     </div>
                   ` : ''}
 
@@ -954,8 +1006,13 @@
                 </div>
               </div>
 
+              <!-- BUTTON STATE -->
               <div class="p-4 pt-0">
-                ${isSoldOut ? `
+                ${isExpired ? `
+                  <button disabled class="w-full bg-stone-200 text-stone-400 font-bold text-xs py-3 rounded-2xl cursor-not-allowed">
+                    BOOKING CLOSED (TIME OVER)
+                  </button>
+                ` : isSoldOut ? `
                   <button disabled class="w-full bg-stone-200 text-stone-400 font-bold text-xs py-3 rounded-2xl cursor-not-allowed">
                     DISH SOLD OUT
                   </button>
@@ -1011,7 +1068,7 @@
                 ${isActive ? `
                   <span class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg">Live</span>
                 ` : `
-                  <button onclick="reAddFromHistory('${item.id}')" title="Re-publish with new quantity" class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 flex items-center justify-center">
+                  <button onclick="reAddFromHistory('${item.id}')" title="Re-publish dish" class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 flex items-center justify-center">
                     <i class="fa-solid fa-arrows-rotate text-xs"></i>
                   </button>
                 `}
@@ -1028,6 +1085,11 @@
     function changeQty(id, delta) {
       const dish = activeMenu.find(i => i.id === id);
       if (!dish) return;
+
+      if (isPreorderCutoffExpired(dish)) {
+        alert(`Sorry, booking deadline for "${dish.name}" has already ended.`);
+        return;
+      }
 
       if (!cart[id]) cart[id] = 0;
 
@@ -1120,11 +1182,18 @@
         return;
       }
 
+      // Check for expired preorders and portion limits before checkout
       for (const [id, qty] of entries) {
         const dish = activeMenu.find(i => i.id === id);
-        if (dish && dish.quantity < qty) {
-          alert(`Sorry! Only ${dish.quantity} portions left for "${dish.name}".`);
-          return;
+        if (dish) {
+          if (isPreorderCutoffExpired(dish)) {
+            alert(`The pre-order deadline for "${dish.name}" expired while you were shopping.`);
+            return;
+          }
+          if (dish.quantity < qty) {
+            alert(`Sorry! Only ${dish.quantity} portions left for "${dish.name}".`);
+            return;
+          }
         }
       }
 
@@ -1144,7 +1213,7 @@
             price: dish.price,
             total: dish.price * qty,
             isPreorder: dish.isPreorder,
-            preorderDate: dish.preorderDate
+            preorderDeliveryTime: formatDateTime(dish.preorderDeliveryTime)
           });
           grandTotal += dish.price * qty;
         }
@@ -1175,10 +1244,10 @@
       customerOrders.unshift(newOrder);
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
 
-      const itemSummary = orderItems.map(i => `${i.name} ${i.isPreorder ? `(Pre-Order: ${i.preorderDate})` : ''} (x${i.qty}) - ₹${i.total}`).join('%0A• ');
+      const itemSummary = orderItems.map(i => `${i.name} ${i.isPreorder ? `(Delivery: ${i.preorderDeliveryTime})` : ''} (x${i.qty}) - ₹${i.total}`).join('%0A• ');
       const messageText = `*NEW ORDER: ${newOrder.orderId}*%0A` +
         `*Order Mode:* ${newOrder.mode}%0A` +
-        `*Contains Pre-Orders:* ${hasPreorders ? 'YES' : 'NO'}%0A` +
+        `*Pre-Order Included:* ${hasPreorders ? 'YES' : 'NO'}%0A` +
         `*Payment Method:* ${paymentMethod}%0A` +
         `*Customer:* ${name}%0A` +
         `*Phone:* ${phone}%0A` +
@@ -1204,7 +1273,7 @@
         window.open(whatsappUrl2, '_blank');
       }
 
-      alert(`Order ${newOrder.orderId} Placed! Portions updated in kitchen inventory.`);
+      alert(`Order ${newOrder.orderId} placed! Inventory updated.`);
     }
 
     // --- RENDER CUSTOMER ORDERS ---
@@ -1249,7 +1318,7 @@
             <div class="divide-y border-t border-b">
               ${order.items.map(i => `
                 <div class="py-1 flex justify-between text-stone-600">
-                  <span>${i.name} ${i.isPreorder ? `(Scheduled: ${i.preorderDate})` : ''} × ${i.qty}</span>
+                  <span>${i.name} ${i.isPreorder ? `(Delivery: ${i.preorderDeliveryTime})` : ''} × ${i.qty}</span>
                   <span class="font-bold">₹${i.total}</span>
                 </div>
               `).join('')}
