@@ -320,7 +320,7 @@
         <button onclick="togglePostcardModal(false)" class="p-1 text-stone-400 hover:text-white font-bold text-lg">&times;</button>
       </div>
 
-      <!-- CANVAS TARGET POSTCARD (Standard 4:5 social/print format) -->
+      <!-- CANVAS TARGET POSTCARD -->
       <div class="flex justify-center">
         <div id="adPostcardTarget" class="w-full bg-gradient-to-br from-stone-900 via-stone-950 to-neutral-900 text-white rounded-2xl p-6 border-4 border-orange-500 space-y-4 shadow-2xl">
           
@@ -361,22 +361,29 @@
             </div>
           </div>
 
-          <!-- Contact & Ordering Info inside card -->
-          <div class="bg-white/5 rounded-xl p-3 grid grid-cols-2 gap-2 text-[10px] border border-white/10">
+          <!-- 🌐 WEBSITE ADDRESS PROMPT (REPLACED WHATSAPP PROMPT) -->
+          <div class="bg-white/5 rounded-xl p-3 space-y-2 border border-white/10">
             <div>
-              <p class="text-stone-400 font-bold uppercase">To Order on WhatsApp:</p>
-              <p id="postcardPhone1" class="font-extrabold text-amber-300 text-xs mt-0.5"></p>
-              <p id="postcardPhone2" class="font-semibold text-stone-300"></p>
+              <p class="text-stone-400 font-bold uppercase text-[10px] flex items-center gap-1.5">
+                <i class="fa-solid fa-globe text-orange-400"></i> Order Online Directly On Our Website:
+              </p>
+              <p id="postcardWebsiteUrl" class="font-black text-amber-300 text-xs sm:text-sm tracking-wide break-all mt-1 underline decoration-amber-400"></p>
             </div>
-            <div>
-              <p class="text-stone-400 font-bold uppercase">Payment & Counter:</p>
-              <p class="font-extrabold text-stone-200">UPI / Cash on Delivery</p>
-              <p id="postcardCounter" class="text-stone-400 truncate mt-0.5"></p>
+
+            <div class="grid grid-cols-2 gap-2 text-[10px] border-t border-white/10 pt-2">
+              <div>
+                <p class="text-stone-400 font-bold uppercase">Settlement:</p>
+                <p class="font-extrabold text-stone-200">UPI / Cash on Delivery</p>
+              </div>
+              <div>
+                <p class="text-stone-400 font-bold uppercase">Self-Pickup Counter:</p>
+                <p id="postcardCounter" class="text-stone-300 truncate"></p>
+              </div>
             </div>
           </div>
 
           <div class="text-center text-[9px] text-stone-500 uppercase tracking-widest pt-1 border-t border-white/5">
-            Strict Hygiene • Food-Grade Packaging • Dedicated Cloud Kitchen
+            Strict Hygiene • Clean Packaging • Dedicated Cloud Kitchen
           </div>
         </div>
       </div>
@@ -390,28 +397,6 @@
           Close
         </button>
       </div>
-    </div>
-  </div>
-
-  <!-- MODAL: OWNER LOGIN -->
-  <div id="loginModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-xs w-full p-6 space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center border-b pb-2">
-        <div class="flex items-center gap-2 text-stone-900 font-extrabold text-sm">
-          <i class="fa-solid fa-lock text-orange-600"></i>
-          <span>Owner Verification</span>
-        </div>
-        <button onclick="toggleLoginModal(false)" class="p-1 text-stone-400 hover:text-stone-700 font-bold text-lg">&times;</button>
-      </div>
-      <form onsubmit="handleOwnerLogin(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="font-bold text-stone-700 block mb-1">Enter Secret PIN:</label>
-          <input id="ownerPinInput" type="password" placeholder="Default: 1234" required class="w-full p-2.5 border rounded-xl font-bold tracking-widest text-center text-base focus:ring-2 focus:ring-orange-500 outline-none bg-stone-50 text-stone-900">
-        </div>
-        <button type="submit" class="w-full bg-stone-900 hover:bg-black text-amber-300 font-extrabold py-2.5 rounded-xl shadow transition">
-          Unlock Controls
-        </button>
-      </form>
     </div>
   </div>
 
@@ -1362,6 +1347,7 @@
                     </div>
                   ` : ''}
 
+                  <!-- OWNER EDIT & DELETE BUTTONS -->
                   ${isOwnerLoggedIn ? `
                     <div class="absolute bottom-3 right-3 flex items-center gap-1.5">
                       <button onclick="openDishModalForEdit('${item.id}')" title="Edit this dish" class="w-8 h-8 rounded-full bg-stone-900/90 hover:bg-orange-600 text-amber-300 flex items-center justify-center transition shadow">
@@ -1788,8 +1774,10 @@
       const limit = getActiveLimit();
       
       document.querySelectorAll('.postcardRadiusText').forEach(el => el.innerText = `${limit} KM Delivery`);
-      document.getElementById('postcardPhone1').innerText = kitchenSettings.phone1 || 'WhatsApp Available';
-      document.getElementById('postcardPhone2').innerText = kitchenSettings.phone2 ? `Alt: ${kitchenSettings.phone2}` : '';
+      
+      // Clean web URL for the postcard (e.g. your GitHub Pages live address)
+      const cleanUrl = window.location.origin + window.location.pathname;
+      document.getElementById('postcardWebsiteUrl').innerText = cleanUrl;
       document.getElementById('postcardCounter').innerText = kitchenSettings.takeawayAddress || 'Counter Pickup Available';
 
       if (activeMenu.length === 0) {
@@ -1813,7 +1801,7 @@
     function downloadPostcardImage() {
       const target = document.getElementById('adPostcardTarget');
       html2canvas(target, {
-        scale: 2, // High resolution output
+        scale: 2, // High-res output
         backgroundColor: '#0c0a09',
         useCORS: true
       }).then(canvas => {
@@ -1822,7 +1810,7 @@
         link.href = canvas.toDataURL('image/png');
         link.click();
       }).catch(err => {
-        alert('Could not render image. Please try again or take a screenshot.');
+        alert('Could not render image. Please take a screenshot of the preview.');
       });
     }
 
