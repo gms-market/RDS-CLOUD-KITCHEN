@@ -9,8 +9,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- html2canvas for postcard export -->
+  <!-- html2canvas & jsPDF for Image and Clickable PDF Generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     @keyframes pulseAlert {
@@ -146,7 +147,7 @@
       </div>
     </div>
 
-    <!-- ⚡ EXTRA / SURPLUS PORTIONS FLASH ANNOUNCEMENT -->
+    <!-- ⚡ SURPLUS FLASH ANNOUNCEMENT -->
     <section id="surplusFlashBanner" class="hidden animate-surplus-flash rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-red-600 via-orange-600 to-amber-500 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-3 border-2 border-yellow-300">
       <div class="flex items-center gap-3.5">
         <div class="w-11 h-11 rounded-2xl bg-yellow-300 text-red-950 flex items-center justify-center font-black text-2xl flex-shrink-0 shadow-md">
@@ -170,7 +171,7 @@
       </button>
     </section>
 
-    <!-- BLINKING POP-UP BANNER FOR PRE-ORDER DISHES -->
+    <!-- BLINKING PRE-ORDER BANNER -->
     <section id="preorderBlinkBanner" class="hidden animate-preorder-blink rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-purple-700 via-rose-600 to-amber-500 text-white shadow-xl shadow-purple-500/20 flex flex-col md:flex-row items-center justify-between gap-3 border-2 border-amber-300">
       <div class="flex items-center gap-3.5">
         <div class="w-10 h-10 rounded-2xl bg-amber-300 text-purple-900 flex items-center justify-center font-black text-xl flex-shrink-0">
@@ -308,7 +309,7 @@
     </div>
   </footer>
 
-  <!-- 🖼️ MODAL: ADVERTISING POSTCARD PREVIEW & EXPORT (NO CUTOFFS, FULL DISH LIST WITH IMAGES) -->
+  <!-- 🖼️ MODAL: ADVERTISING POSTCARD PREVIEW & EXPORT -->
   <div id="postcardModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
     <div class="bg-stone-950 rounded-3xl max-w-2xl w-full p-4 sm:p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border border-stone-800">
       <div class="flex justify-between items-center border-b border-stone-800 pb-3 text-white">
@@ -319,7 +320,7 @@
         <button onclick="togglePostcardModal(false)" class="p-1 text-stone-400 hover:text-white font-bold text-xl leading-none">&times;</button>
       </div>
 
-      <!-- CANVAS TARGET POSTCARD (Dyna-flow container: full dishes rendered without clipping) -->
+      <!-- CANVAS TARGET POSTCARD (Dyna-flow container) -->
       <div class="flex justify-center">
         <div id="adPostcardTarget" class="w-full max-w-xl bg-stone-950 text-white rounded-3xl p-6 sm:p-8 border-4 border-orange-500 space-y-5 shadow-2xl">
           
@@ -357,7 +358,7 @@
             <p class="text-xs font-semibold text-amber-100 mt-0.5">Breakfast • Lunch • Dinner • Advance Pre-Orders</p>
           </div>
 
-          <!-- Full Active Dishes List (Clean layout without overflow hidden or truncation) -->
+          <!-- Full Active Dishes List -->
           <div class="space-y-3">
             <div class="flex justify-between items-center text-xs font-black uppercase text-stone-400 border-b border-white/10 pb-1.5">
               <span>Today's Active Menu Items</span>
@@ -368,13 +369,22 @@
             </div>
           </div>
 
-          <!-- Website URL Prompt -->
-          <div class="bg-white/5 rounded-2xl p-4 space-y-2.5 border border-white/10">
-            <div>
-              <p class="text-stone-400 font-bold uppercase text-[10px] flex items-center gap-1.5">
-                <i class="fa-solid fa-globe text-orange-400"></i> Order Online Directly On Our Website:
-              </p>
-              <p id="postcardWebsiteUrl" class="font-black text-amber-300 text-xs sm:text-sm tracking-wide break-all mt-1 underline decoration-amber-400 leading-snug"></p>
+          <!-- Website URL Prompt + Scan-to-Open QR Code -->
+          <div class="bg-white/5 rounded-2xl p-4 space-y-3 border border-white/10">
+            <div class="flex items-center justify-between gap-3">
+              <div class="space-y-1">
+                <p class="text-stone-400 font-bold uppercase text-[10px] flex items-center gap-1.5">
+                  <i class="fa-solid fa-globe text-orange-400"></i> Tap Link or Scan QR to Order:
+                </p>
+                <a id="postcardWebsiteAnchor" href="#" target="_blank" class="font-black text-amber-300 text-xs sm:text-sm tracking-wide break-all underline decoration-amber-400 leading-snug block hover:text-amber-200"></a>
+                <p class="text-[10px] text-stone-400">Opens store menu instantly in your mobile browser.</p>
+              </div>
+
+              <!-- High-contrast QR code for instant scan from phone camera -->
+              <div class="flex flex-col items-center bg-white p-1.5 rounded-xl flex-shrink-0 shadow">
+                <img id="postcardQrImg" src="" alt="Scan to Order" class="w-16 h-16 sm:w-20 sm:h-20 object-contain">
+                <span class="text-[8px] font-black text-stone-900 uppercase tracking-tighter mt-0.5">Scan to Order</span>
+              </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3 text-[10px] border-t border-white/10 pt-2.5">
@@ -396,12 +406,12 @@
       </div>
 
       <!-- Export Buttons -->
-      <div class="flex gap-2 pt-1">
-        <button onclick="downloadPostcardImage()" class="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
-          <i class="fa-solid fa-download"></i> Save Full Postcard (PNG)
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+        <button onclick="downloadClickablePdf()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <i class="fa-solid fa-file-pdf"></i> Download Clickable PDF Flyer
         </button>
-        <button onclick="togglePostcardModal(false)" class="px-5 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold py-3.5 rounded-2xl text-xs transition">
-          Close
+        <button onclick="downloadPostcardImage()" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <i class="fa-solid fa-image"></i> Download Image Postcard (PNG)
         </button>
       </div>
     </div>
@@ -1782,7 +1792,14 @@
       
       // Clean, full website address
       const cleanUrl = window.location.origin + window.location.pathname;
-      document.getElementById('postcardWebsiteUrl').innerText = cleanUrl;
+      const anchor = document.getElementById('postcardWebsiteAnchor');
+      anchor.innerText = cleanUrl;
+      anchor.href = cleanUrl;
+      
+      // Generate QR Code that directly navigates to the web address when scanned
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(cleanUrl)}`;
+      document.getElementById('postcardQrImg').src = qrApiUrl;
+
       document.getElementById('postcardCounter').innerText = kitchenSettings.takeawayAddress || 'Counter Pickup Available';
 
       // 1. Render Featured Hero Image from first dish
@@ -1825,12 +1842,42 @@
       togglePostcardModal(true);
     }
 
+    // Download High-Resolution Clickable PDF Flyer
+    function downloadClickablePdf() {
+      const target = document.getElementById('adPostcardTarget');
+      const cleanUrl = window.location.origin + window.location.pathname;
+
+      html2canvas(target, {
+        scale: 2,
+        backgroundColor: '#0c0a09',
+        useCORS: true,
+        logging: false
+      }).then(canvas => {
+        const { jsPDF } = window.jspdf;
+        const imgData = canvas.toDataURL('image/png');
+        
+        const imgWidth = 210; // A4 standard width (mm)
+        const pageHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        const pdf = new jsPDF('p', 'mm', [imgWidth, pageHeight]);
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, pageHeight);
+
+        // Embed an active clickable hyperlink over the bottom website prompt
+        const linkY = pageHeight - 32;
+        pdf.link(15, linkY, imgWidth - 30, 25, { url: cleanUrl });
+
+        pdf.save(`RDS-Kitchen-Clickable-Flyer-${Date.now()}.pdf`);
+      }).catch(err => {
+        alert('Could not render PDF. Please try the PNG Image download option.');
+      });
+    }
+
+    // Download PNG Image
     function downloadPostcardImage() {
       const target = document.getElementById('adPostcardTarget');
       
-      // Ensure canvas captures full height without clipping
       html2canvas(target, {
-        scale: 2, // High resolution output
+        scale: 2,
         backgroundColor: '#0c0a09',
         useCORS: true,
         logging: false,
