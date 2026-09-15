@@ -110,7 +110,7 @@
         <button type="button" onclick="openDishModalForCreate()" class="cursor-pointer bg-stone-900 hover:bg-black text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-plus"></i> Add Dish
         </button>
-        <button type="button" onclick="logoutOwner()" class="cursor-pointer bg-rose-700 hover:bg-rose-800 text-white px-2.5 py-1 rounded-full text-xs font-bold transition shadow-sm">
+        <button type="button" onclick="logoutOwner()" class="cursor-pointer bg-rose-700 hover:bg-rose-800 text-white px-2 py-1 rounded-full text-xs font-bold transition shadow-sm">
           <i class="fa-solid fa-right-from-bracket"></i> Logout
         </button>
       </div>
@@ -816,52 +816,6 @@
 
   <script>
     const SITE_ACCESS_PASSWORD = "gmskitchen123";
-    const MENU_SCHEMA_VERSION = "v2.1";
-
-    const defaultStarterDishes = [
-      {
-        id: 'DISH-101',
-        name: 'Ghee Roast Dosa Combo',
-        category: 'Breakfast',
-        price: 110,
-        desc: 'Crispy golden ghee roast served with fresh coconut chutney, tomato chutney, and piping hot sambar.',
-        isVeg: true,
-        quantity: 20,
-        isPreorder: false,
-        image: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=800&q=80'
-      },
-      {
-        id: 'DISH-102',
-        name: 'Special Chicken Dum Biryani',
-        category: 'Lunch',
-        price: 240,
-        desc: 'Slow-cooked aromatic basmati rice layered with tender marinated chicken, served with raita and brinjal gravy.',
-        isVeg: false,
-        quantity: 15,
-        isPreorder: false,
-        image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=800&q=80'
-      },
-      {
-        id: 'DISH-103',
-        name: 'South Indian Parotta Meal',
-        category: 'Dinner',
-        price: 180,
-        desc: 'Flaky layered Malabar parottas served with rich homestyle chicken salna and onion salad.',
-        isVeg: false,
-        quantity: 25,
-        isPreorder: false,
-        image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80'
-      }
-    ];
-
-    const currentCachedVersion = localStorage.getItem('rds_menu_version');
-    const existingRawMenu = localStorage.getItem('rds_cloud_active_menu');
-
-    if (currentCachedVersion !== MENU_SCHEMA_VERSION || !existingRawMenu || existingRawMenu === '[]') {
-      localStorage.setItem('rds_cloud_active_menu', JSON.stringify(defaultStarterDishes));
-      localStorage.setItem('rds_cloud_history_menu', JSON.stringify(defaultStarterDishes));
-      localStorage.setItem('rds_menu_version', MENU_SCHEMA_VERSION);
-    }
 
     function checkSiteAccess() {
       const isUnlocked = sessionStorage.getItem("rds_site_unlocked") === "true";
@@ -894,8 +848,9 @@
       location.reload();
     }
 
-    let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || JSON.stringify(defaultStarterDishes));
-    let historyMenu = JSON.parse(localStorage.getItem('rds_cloud_history_menu') || JSON.stringify(defaultStarterDishes));
+    // Persistent Storage initialization with empty defaults if none exist
+    let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || '[]');
+    let historyMenu = JSON.parse(localStorage.getItem('rds_cloud_history_menu') || '[]');
     let customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
     let kitchenSettings = JSON.parse(localStorage.getItem('rds_kitchen_settings') || JSON.stringify({
       orderTime: '07:00 AM – 10:30 PM',
@@ -1080,8 +1035,8 @@
     function applyOrderTimeUI() {
       document.getElementById('topBarOrderTime').innerText = kitchenSettings.orderTime || '07:00 AM – 10:30 PM';
       document.getElementById('displayCutoffBreakfast').innerText = formatTime12(kitchenSettings.cutoffBreakfast || '09:30');
-      document.getElementById('displayCutoffLunch').innerText = formatTime12(kitchenSettings.cutoffLunch || '01:30 PM');
-      document.getElementById('displayCutoffDinner').innerText = formatTime12(kitchenSettings.cutoffDinner || '09:30 PM');
+      document.getElementById('displayCutoffLunch').innerText = formatTime12(kitchenSettings.cutoffLunch || '13:30');
+      document.getElementById('displayCutoffDinner').innerText = formatTime12(kitchenSettings.cutoffDinner || '21:30');
     }
 
     function toggleFixedPointInput(checked) {
