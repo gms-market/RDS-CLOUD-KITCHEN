@@ -190,7 +190,7 @@
         </div>
         <div>
           <span class="bg-black/30 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider text-blue-200">Tomorrow's Special Preview</span>
-          <h2 class="text-base sm:text-lg font-black mt-1">Tomorrow's Menu Announced!</h2>
+          <h2 id="nextDayHeadline" class="text-base sm:text-lg font-black mt-1">Tomorrow's Menu Announced!</h2>
           <p id="nextDaySub" class="text-xs text-white/95 font-medium mt-0.5"></p>
         </div>
       </div>
@@ -362,14 +362,14 @@
     </div>
   </div>
 
-  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER -->
+  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER (WITH AUTO CLIPBOARD PASTE) -->
   <div id="importOrderModal" class="fixed inset-0 z-[135] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border text-stone-900 text-xs">
       <div class="flex justify-between items-center border-b pb-2">
         <h2 class="font-black text-sm"><i class="fa-solid fa-file-import text-emerald-600 mr-1"></i> Ingest WhatsApp Order</h2>
         <button onclick="toggleImportModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
       </div>
-      <p class="text-stone-500">Copy the order message from WhatsApp. You can tap "Paste from Clipboard" or paste below to register it into your active orders.</p>
+      <p class="text-stone-500">Copy the order message from WhatsApp. Tap "Paste from Clipboard" or paste below to register it into your active orders.</p>
       
       <button type="button" onclick="pasteFromClipboardDirect()" class="cursor-pointer w-full bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold py-2 rounded-xl flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-paste"></i> Paste from Clipboard
@@ -573,7 +573,6 @@
       }
     }
 
-    // MANDATORY UPFRONT LOCATION CHECK (TRIGGERS AS SOON AS USER ENTERS)
     function checkCustomerLocationGate() {
       const verified = sessionStorage.getItem("rds_loc_verified");
       if (!verified) {
@@ -610,7 +609,7 @@
           
           setTimeout(() => {
             document.getElementById("mandatoryLocationModal").classList.add("hidden");
-          }, 1500);
+          }, 1400);
         } else {
           statusBox.classList.add("bg-rose-50", "text-rose-900");
           statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> You are <strong>${dist} KM</strong> away. Outside our 3.0 KM delivery limit.<br>Fulfillment switched to Takeaway / Hub Handover.`;
@@ -984,19 +983,19 @@
     }
 
     function formatOrderWhatsAppText(o) {
-      const itemSummary = o.items.map(i => `${i.name} (x${i.qty}) - ₹${i.total}`).join('%0A• ');
-      return `*NEW ORDER: ${o.orderId}*%0A*Customer:* ${o.customer.name}%0A*Phone:* ${o.customer.phone}%0A*Fulfillment / Place:* ${o.customer.address}%0A*Payment:* ${o.payment}%0A*Items:*%0A• ${itemSummary}%0A*Total:* ₹${o.total}%0A*Status:* ${o.status}`;
+      const itemSummary = o.items.map(i => `• ${i.name} (x${i.qty}) - ₹${i.total}`).join('\n');
+      return `*NEW ORDER: ${o.orderId}*\n*Customer:* ${o.customer.name}\n*Phone:* ${o.customer.phone}\n*Fulfillment / Place:* ${o.customer.address}\n*Payment:* ${o.payment}\n*Items:*\n${itemSummary}\n*Total:* ₹${o.total}\n*Status:* ${o.status}`;
     }
 
     function sendOrderToPrimaryWhatsApp() {
       if (!lastPlacedOrder) return;
-      const msg = formatOrderWhatsAppText(lastPlacedOrder);
+      const msg = encodeURIComponent(formatOrderWhatsAppText(lastPlacedOrder));
       window.open(`https://wa.me/${PRIMARY_PHONE}?text=${msg}`, '_blank');
     }
 
     function sendOrderToSecondaryWhatsApp() {
       if (!lastPlacedOrder) return;
-      const msg = formatOrderWhatsAppText(lastPlacedOrder);
+      const msg = encodeURIComponent(formatOrderWhatsAppText(lastPlacedOrder));
       window.open(`https://wa.me/${SECONDARY_PHONE}?text=${msg}`, '_blank');
     }
 
@@ -1027,57 +1026,63 @@
       }
     }
 
+    // ROBUST & ACCURATE PARSER
     function processImportedWhatsAppOrder() {
-      const text = document.getElementById('importOrderText').value.trim();
-      if (!text) {
+      const rawText = document.getElementById('importOrderText').value.trim();
+      if (!rawText) {
         alert("Please paste the WhatsApp order text.");
         return;
       }
 
       try {
-        const orderIdMatch = text.match(/NEW ORDER:\s*(RDS-[0-9]+)/i);
-        const nameMatch = text.match(/Customer:\s*(.*?)(?=\n|\*)/i);
-        const phoneMatch = text.match(/Phone:\s*([0-9+]+)/i);
-        const addressMatch = text.match(/Fulfillment \/ Place:\s*(.*?)(?=\n|\*Payment)/i);
-        const paymentMatch = text.match(/Payment:\s*(.*?)(?=\n|\*Items)/i);
-        const totalMatch = text.match(/Total:\s*₹?\s*([0-9.]+)/i);
+        const cleanText = rawText.replace(/\*/g, '').replace(/₹/g, '').replace(/\r/g, '');
+        const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
 
-        const orderId = orderIdMatch ? orderIdMatch[1].trim() : 'RDS-' + Math.floor(100000 + Math.random() * 900000);
-        const name = nameMatch ? nameMatch[1].trim() : 'WhatsApp Customer';
-        const phone = phoneMatch ? phoneMatch[1].trim() : PRIMARY_PHONE;
-        const address = addressMatch ? addressMatch[1].trim() : 'Delivery / Counter Pickup';
-        const payment = paymentMatch ? paymentMatch[1].trim() : 'COD';
-        const total = totalMatch ? parseFloat(totalMatch[1]) : 0;
-
-        const lines = text.split('\n');
+        let orderId = 'RDS-' + Math.floor(100000 + Math.random() * 900000);
+        let name = '';
+        let phone = '';
+        let address = 'Shop Pickup / Counter';
+        let payment = 'COD';
+        let grandTotal = 0;
         const items = [];
-        lines.forEach(l => {
-          if (l.trim().startsWith('•') || l.trim().startsWith('-')) {
-            const clean = l.replace(/[•-]/g, '').trim();
-            const itemMatch = clean.match(/(.*?)\s*\(x(\d+)\)\s*-\s*₹?(\d+)/i);
-            if (itemMatch) {
-              items.push({
-                name: itemMatch[1].trim(),
-                qty: parseInt(itemMatch[2]),
-                price: parseFloat(itemMatch[3]) / parseInt(itemMatch[2]),
-                total: parseFloat(itemMatch[3])
-              });
-            } else {
-              items.push({ name: clean, qty: 1, price: total, total });
+
+        for (let line of lines) {
+          if (/^NEW ORDER:/i.test(line)) {
+            const match = line.match(/^NEW ORDER:\s*(RDS-[0-9]+)/i);
+            if (match) orderId = match[1].trim();
+          } else if (/^Customer:/i.test(line)) {
+            name = line.replace(/^Customer:\s*/i, '').trim();
+          } else if (/^Phone:/i.test(line)) {
+            phone = line.replace(/^Phone:\s*/i, '').replace(/\D/g, '').trim();
+          } else if (/^(Fulfillment \/ Place|Fulfillment|Address):/i.test(line)) {
+            address = line.replace(/^(Fulfillment \/ Place|Fulfillment|Address):\s*/i, '').trim();
+          } else if (/^Payment:/i.test(line)) {
+            payment = line.replace(/^Payment:\s*/i, '').trim();
+          } else if (/^Total:/i.test(line)) {
+            const totalMatch = line.match(/[0-9.]+/);
+            if (totalMatch) grandTotal = parseFloat(totalMatch[0]);
+          } else if (line.startsWith('•') || line.startsWith('-')) {
+            const itemLine = line.replace(/^[•\-]\s*/, '').trim();
+            const parsed = itemLine.match(/^(.*?)\s*\(x(\d+)\)\s*(?:[-–:]\s*)?([0-9.]+)/i);
+            if (parsed) {
+              const itemName = parsed[1].trim();
+              const qty = parseInt(parsed[2], 10);
+              const totalLinePrice = parseFloat(parsed[3]);
+              const unitRate = qty > 0 ? (totalLinePrice / qty) : totalLinePrice;
+              items.push({ name: itemName, qty: qty, price: unitRate, total: totalLinePrice });
             }
           }
-        });
-
-        if (items.length === 0) {
-          items.push({ name: 'Assorted Meal Package', qty: 1, price: total, total });
         }
 
-        const exists = customerOrders.find(o => o.orderId === orderId);
-        if (exists) {
-          alert(`Order ${orderId} already exists in your records.`);
-          toggleImportModal(false);
-          return;
+        const calculatedSum = items.reduce((sum, item) => sum + item.total, 0);
+        if (calculatedSum > 0 && grandTotal === 0) {
+          grandTotal = calculatedSum;
         }
+
+        if (!name) name = "WhatsApp Customer";
+        if (!phone) phone = "Not Provided";
+
+        customerOrders = customerOrders.filter(o => o.orderId !== orderId);
 
         const importedOrder = {
           orderId,
@@ -1087,16 +1092,17 @@
           payment,
           customer: { name, phone, address },
           items,
-          total
+          total: grandTotal
         };
 
         customerOrders.unshift(importedOrder);
         localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
+        
         renderCustomerOrders();
         toggleImportModal(false);
-        alert(`Order ${orderId} ingested successfully! You can now accept, reject, or generate a bill for it.`);
+        alert(`Order ${orderId} imported successfully for ${name} (Total: ₹${grandTotal})!`);
       } catch (err) {
-        alert("Could not parse WhatsApp message format. Please make sure you copied the whole message.");
+        alert("Error parsing WhatsApp text. Please make sure you copied the whole message.");
       }
     }
 
