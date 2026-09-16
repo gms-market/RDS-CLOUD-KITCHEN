@@ -300,9 +300,15 @@
           <div class="flex items-center gap-2 text-stone-900 font-extrabold text-base"><i class="fa-solid fa-basket-shopping text-orange-600"></i><h2>Your Food Cart</h2></div>
           <button type="button" onclick="toggleCart(false)" class="cursor-pointer p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
         </div>
-        <div class="bg-stone-100 p-1 rounded-2xl grid grid-cols-2 gap-1 text-xs font-extrabold text-center">
-          <button type="button" id="tabDelivery" onclick="setOrderMode('delivery')" class="py-2 rounded-xl transition bg-white text-orange-600 shadow-sm cursor-pointer">Delivery (Max 3 KM)</button>
-          <button type="button" id="tabTakeaway" onclick="setOrderMode('takeaway')" class="py-2 rounded-xl transition text-stone-600 hover:text-stone-900 cursor-pointer">Takeaway</button>
+        
+        <!-- FULFILLMENT MODE SWITCH (PROPERLY MUTED/DISABLED TOGGLE) -->
+        <div class="bg-stone-100 p-1.5 rounded-2xl grid grid-cols-2 gap-1 text-xs font-extrabold text-center">
+          <button type="button" id="tabDelivery" onclick="setOrderMode('delivery')" class="py-2.5 rounded-xl transition cursor-pointer">
+            Delivery (Max 3 KM)
+          </button>
+          <button type="button" id="tabTakeaway" onclick="setOrderMode('takeaway')" class="py-2.5 rounded-xl transition cursor-pointer">
+            Takeaway
+          </button>
         </div>
 
         <div id="takeawayBanner" class="hidden p-3 bg-blue-50 border border-blue-200 rounded-2xl text-xs space-y-1">
@@ -491,7 +497,6 @@
           <input id="setNextDayText" type="text" placeholder="Tomorrow's Special menu..." class="w-full p-2 border rounded-xl bg-white">
         </div>
 
-        <!-- 🔐 CHANGE OWNER PASSWORD (ENFORCING VALIDATION CRITERIA) -->
         <div class="p-3 bg-stone-50 border rounded-2xl space-y-1.5">
           <label class="font-bold text-stone-800 block">Change Owner Password</label>
           <input id="setOwnerPin" type="password" placeholder="Enter new password" class="w-full p-2.5 border rounded-xl font-bold bg-white text-stone-900 text-xs">
@@ -1057,7 +1062,7 @@
       const phone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
       let address = document.getElementById('custAddress').value.trim();
       const payment = document.querySelector('input[name="paymentType"]:checked').value;
-      const isTakeaway = document.getElementById('tabTakeaway').className.includes('bg-white');
+      const isTakeaway = document.getElementById('tabTakeaway').dataset.active === "true";
 
       if (!name || cleanPhone.length < 10) {
         alert('Please enter your Name and a valid 10-digit mobile number.');
@@ -1543,21 +1548,45 @@
     function toggleInvoiceModal(show) { document.getElementById('invoiceModal').classList.toggle('hidden', !show); }
     function togglePostcardModal(show) { document.getElementById('postcardModal').classList.toggle('hidden', !show); }
     
+    // STRICT FULFILLMENT MODE SWITCHING (DISABLING DELIVERY BUTTON WHEN TAKEAWAY IS SELECTED)
     function setOrderMode(mode) {
-      document.getElementById('tabDelivery').className = mode === 'delivery' ? 'py-2 rounded-xl bg-white text-orange-600 shadow-sm' : 'py-2 rounded-xl text-stone-600';
-      document.getElementById('tabTakeaway').className = mode === 'takeaway' ? 'py-2 rounded-xl bg-white text-orange-600 shadow-sm' : 'py-2 rounded-xl text-stone-600';
-      document.getElementById('takeawayBanner').classList.toggle('hidden', mode !== 'takeaway');
-      
-      const fixedBanner = document.getElementById('fixedPointBanner');
-      if (kitchenSettings.useFixedPoint && mode === 'delivery') {
-        fixedBanner.classList.remove('hidden');
-        document.getElementById('fixedPointNoticeText').innerText = kitchenSettings.fixedPointDesc || 'Handed over at designated hub.';
-        document.getElementById('addressInputWrap').classList.remove('hidden');
-        document.getElementById('custAddress').placeholder = 'Add gate/room notes (optional)...';
+      const delBtn = document.getElementById('tabDelivery');
+      const takeBtn = document.getElementById('tabTakeaway');
+
+      if (mode === 'takeaway') {
+        // Highlight Takeaway
+        takeBtn.className = 'py-2.5 rounded-xl bg-white text-orange-600 shadow-sm font-extrabold cursor-default pointer-events-none';
+        takeBtn.dataset.active = "true";
+
+        // Mute Delivery tab completely
+        delBtn.className = 'py-2.5 rounded-xl text-stone-400 bg-stone-100 font-semibold cursor-pointer hover:text-stone-700';
+        delBtn.dataset.active = "false";
+
+        document.getElementById('takeawayBanner').classList.remove('hidden');
+        document.getElementById('fixedPointBanner').classList.add('hidden');
+        document.getElementById('addressInputWrap').classList.add('hidden');
       } else {
-        fixedBanner.classList.add('hidden');
-        document.getElementById('addressInputWrap').classList.toggle('hidden', mode === 'takeaway');
-        document.getElementById('custAddress').placeholder = 'House No, Street, Landmark...';
+        // Highlight Delivery
+        delBtn.className = 'py-2.5 rounded-xl bg-white text-orange-600 shadow-sm font-extrabold cursor-default pointer-events-none';
+        delBtn.dataset.active = "true";
+
+        // Mute Takeaway tab
+        takeBtn.className = 'py-2.5 rounded-xl text-stone-400 bg-stone-100 font-semibold cursor-pointer hover:text-stone-700';
+        takeBtn.dataset.active = "false";
+
+        document.getElementById('takeawayBanner').classList.add('hidden');
+        
+        const fixedBanner = document.getElementById('fixedPointBanner');
+        if (kitchenSettings.useFixedPoint) {
+          fixedBanner.classList.remove('hidden');
+          document.getElementById('fixedPointNoticeText').innerText = kitchenSettings.fixedPointDesc || 'Handed over at designated hub.';
+          document.getElementById('addressInputWrap').classList.remove('hidden');
+          document.getElementById('custAddress').placeholder = 'Add gate/room notes (optional)...';
+        } else {
+          fixedBanner.classList.add('hidden');
+          document.getElementById('addressInputWrap').classList.remove('hidden');
+          document.getElementById('custAddress').placeholder = 'House/Flat No, Landmark...';
+        }
       }
     }
     
@@ -1571,6 +1600,7 @@
         document.getElementById('fixedPointBanner').classList.remove('hidden');
         document.getElementById('fixedPointNoticeText').innerText = kitchenSettings.fixedPointDesc;
       }
+      setOrderMode('delivery');
     }
 
     window.onload = init;
