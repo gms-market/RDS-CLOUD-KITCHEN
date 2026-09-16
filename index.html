@@ -1221,6 +1221,7 @@
       }
     }
 
+    // 🔒 PROCESS IMPORT WITH STRICT DUPLICATE PREVENTION & POPUP WARNING
     function processImportedWhatsAppOrder() {
       const rawText = document.getElementById('importOrderText').value.trim();
       if (!rawText) {
@@ -1232,7 +1233,7 @@
         const cleanText = rawText.replace(/\*/g, '').replace(/₹/g, '').replace(/\r/g, '');
         const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
 
-        let orderId = 'RDS-' + Math.floor(100000 + Math.random() * 900000);
+        let orderId = '';
         let name = '';
         let phone = '';
         let address = TAKEAWAY_FIXED_ADDRESS;
@@ -1268,6 +1269,18 @@
           }
         }
 
+        if (!orderId) {
+          orderId = 'RDS-' + Math.floor(100000 + Math.random() * 900000);
+        }
+
+        // ⚠️ STRICT DUPLICATE VALIDATION CHECK (BEFORE PORTION DEDUCTION)
+        const isDuplicate = customerOrders.some(o => o.orderId.toLowerCase() === orderId.toLowerCase());
+        if (isDuplicate) {
+          alert(`⚠️ DUPLICATE ORDER WARNING!\n\nOrder [${orderId}] has ALREADY been ingested into the kitchen queue!\n\nRe-ingesting this order is blocked to prevent double-deducting menu portions.`);
+          toggleImportModal(false);
+          return;
+        }
+
         const calculatedSum = items.reduce((sum, item) => sum + item.total, 0);
         if (calculatedSum > 0 && grandTotal === 0) {
           grandTotal = calculatedSum;
@@ -1276,8 +1289,7 @@
         if (!name) name = "WhatsApp Customer";
         if (!phone) phone = "Not Provided";
 
-        customerOrders = customerOrders.filter(o => o.orderId !== orderId);
-
+        // Auto-deduct portions ONLY for authentic, newly registered orders
         autoDeductOrderPortions(items);
 
         const importedOrder = {
@@ -1297,7 +1309,7 @@
         
         renderCustomerOrders();
         toggleImportModal(false);
-        alert(`Order ${orderId} imported! (Portions automatically deducted from inventory)`);
+        alert(`Order ${orderId} successfully registered for ${name}! Portions deducted from stock.`);
       } catch (err) {
         alert("Error parsing WhatsApp text. Please make sure you copied the whole message.");
       }
@@ -1373,7 +1385,6 @@
       window.open(`https://wa.me/${targetPhone}?text=${cancelMsg}`, '_blank');
     }
 
-    // OWNER ORDER MANAGEMENT
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase().trim();
@@ -1492,7 +1503,6 @@
       });
     }
 
-    // FULL MENU POSTCARD GENERATOR
     function openPostcardPreview() {
       const cleanUrl = window.location.origin + window.location.pathname;
       document.getElementById('postcardWebsiteAnchor').innerText = cleanUrl;
@@ -1550,18 +1560,15 @@
     function toggleInvoiceModal(show) { document.getElementById('invoiceModal').classList.toggle('hidden', !show); }
     function togglePostcardModal(show) { document.getElementById('postcardModal').classList.toggle('hidden', !show); }
     
-    // HARD DISABLED ATTRIBUTE IMPLEMENTATION
     function setOrderMode(mode) {
       const delBtn = document.getElementById('tabDelivery');
       const takeBtn = document.getElementById('tabTakeaway');
 
       if (mode === 'takeaway') {
-        // Highlight Takeaway
         takeBtn.className = 'py-2.5 rounded-xl bg-white text-orange-600 shadow-sm font-extrabold cursor-default';
         takeBtn.dataset.active = "true";
         takeBtn.disabled = false;
 
-        // HARD DISABLE Delivery button
         delBtn.className = 'py-2.5 rounded-xl text-stone-400 bg-stone-100 font-semibold cursor-not-allowed opacity-40 pointer-events-none select-none';
         delBtn.dataset.active = "false";
         delBtn.disabled = true;
@@ -1570,12 +1577,10 @@
         document.getElementById('fixedPointBanner').classList.add('hidden');
         document.getElementById('addressInputWrap').classList.add('hidden');
       } else {
-        // Highlight Delivery
         delBtn.className = 'py-2.5 rounded-xl bg-white text-orange-600 shadow-sm font-extrabold cursor-default';
         delBtn.dataset.active = "true";
         delBtn.disabled = false;
 
-        // HARD DISABLE Takeaway button
         takeBtn.className = 'py-2.5 rounded-xl text-stone-400 bg-stone-100 font-semibold cursor-not-allowed opacity-40 pointer-events-none select-none';
         takeBtn.dataset.active = "false";
         takeBtn.disabled = true;
