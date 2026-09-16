@@ -100,7 +100,7 @@
 
       <div id="ownerAdminBar" class="hidden flex items-center gap-2 flex-wrap">
         <button type="button" onclick="toggleStockModal(true)" class="cursor-pointer bg-amber-500 hover:bg-amber-600 text-stone-950 px-2.5 py-1 rounded-full text-xs font-black transition flex items-center gap-1 shadow-sm">
-          <i class="fa-solid fa-boxes-stacked"></i> Stock / Portions
+          <i class="fa-solid fa-boxes-stacked"></i> Auto Portions Track
         </button>
         <button type="button" onclick="promptImportOrder()" class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white px-2.5 py-1 rounded-full text-xs font-extrabold transition flex items-center gap-1 shadow-sm">
           <i class="fa-solid fa-file-import"></i> Ingest WhatsApp Order
@@ -253,7 +253,7 @@
       <p class="text-xs text-stone-500 max-w-sm mx-auto">Syncing live dishes directly from Google Sheets.</p>
     </div>
 
-    <!-- MENU GRID (PORTIONS HIDDEN FROM CUSTOMERS) -->
+    <!-- MENU GRID -->
     <section id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></section>
 
     <!-- STATUTORY DISCLAIMER SUITE -->
@@ -370,14 +370,14 @@
     </div>
   </div>
 
-  <!-- 📦 3. OWNER PORTIONS & STOCK POSITION MANAGER MODAL -->
+  <!-- 📦 3. OWNER PORTIONS & STOCK POSITION MANAGER MODAL (AUTOMATED RECORD) -->
   <div id="stockManagerModal" class="fixed inset-0 z-[140] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl border text-stone-900 text-xs max-h-[90vh] flex flex-col justify-between">
       <div>
         <div class="flex justify-between items-center border-b pb-3">
           <div>
-            <h2 class="font-black text-base"><i class="fa-solid fa-boxes-stacked text-amber-500 mr-1.5"></i> Live Menu Portions Position</h2>
-            <p class="text-[11px] text-stone-500">Track and adjust remaining portions. Customers cannot see these quantities.</p>
+            <h2 class="font-black text-base"><i class="fa-solid fa-boxes-stacked text-amber-500 mr-1.5"></i> Live Menu Portions Status (Auto Calculated)</h2>
+            <p class="text-[11px] text-stone-500">Portions deduct on order ingest and restock automatically on cancellation.</p>
           </div>
           <button onclick="toggleStockModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
         </div>
@@ -388,8 +388,8 @@
                 <th class="py-2">Dish</th>
                 <th>Category</th>
                 <th>Price</th>
-                <th class="text-center">Portions Left</th>
-                <th class="text-right">Actions</th>
+                <th class="text-center">Active Portions</th>
+                <th class="text-right">Stock Status</th>
               </tr>
             </thead>
             <tbody id="stockManagerTableBody" class="divide-y divide-stone-100"></tbody>
@@ -406,16 +406,16 @@
   <div id="cancelOrderModal" class="fixed inset-0 z-[145] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border text-stone-900 text-xs">
       <div class="flex justify-between items-center border-b pb-2">
-        <h2 class="font-black text-sm text-rose-600"><i class="fa-solid fa-ban mr-1"></i> Cancel Order with Remark</h2>
+        <h2 class="font-black text-sm text-rose-600"><i class="fa-solid fa-ban mr-1"></i> Cancel / Reject with Remark</h2>
         <button onclick="toggleCancelModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
       </div>
-      <p class="text-stone-500">Specify why this order is being cancelled (e.g., portion stock depleted, kitchen overload):</p>
+      <p class="text-stone-500">Specify why this order is being cancelled (portions will automatically be returned to stock):</p>
       
       <textarea id="cancelRemarkInput" rows="3" placeholder="Enter cancellation remark / reason..." class="w-full p-3 border rounded-2xl bg-stone-50 font-medium text-xs"></textarea>
       
       <div class="space-y-1.5">
         <button type="button" onclick="confirmOwnerCancellation()" class="cursor-pointer w-full bg-rose-600 hover:bg-rose-700 text-white font-black py-2.5 rounded-xl uppercase">
-          Confirm Cancellation & Notify via WhatsApp
+          Confirm Cancellation & Restock Portions
         </button>
         <button type="button" onclick="toggleCancelModal(false)" class="cursor-pointer w-full bg-stone-100 text-stone-700 font-bold py-2 rounded-xl uppercase">
           Back
@@ -440,7 +440,7 @@
       <textarea id="importOrderText" rows="6" placeholder="Paste full WhatsApp order text here..." class="w-full p-3 border rounded-2xl bg-stone-50 font-mono text-[11px]"></textarea>
       
       <button type="button" onclick="processImportedWhatsAppOrder()" class="cursor-pointer w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl uppercase">
-        Ingest & Add to Queue
+        Ingest & Auto-Deduct Portions
       </button>
     </div>
   </div>
@@ -544,9 +544,8 @@
           <p id="invCustAddress" class="break-words mt-0.5"></p>
         </div>
 
-        <!-- REMARKS ROW -->
         <div id="invRemarkRow" class="hidden p-2 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800">
-          <strong>Remark / Note:</strong> <span id="invRemarkText"></span>
+          <strong>Remark / Reason:</strong> <span id="invRemarkText"></span>
         </div>
 
         <table class="w-full text-left text-[11px]">
@@ -617,7 +616,6 @@
     const UPI_NUMBER = "8667737440";
     const UPI_ADDRESS = "8667737440@upi";
 
-    // ONE-CLICK KITCHEN DIRECTIONS
     function openKitchenGoogleMaps() {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${SHOP_LAT},${SHOP_LNG}`;
       window.open(url, '_blank');
@@ -767,6 +765,45 @@
       }
     }
 
+    // AUTO-RESTOCK FUNCTION FOR CANCELLED/REJECTED ORDERS
+    function autoRestockOrderPortions(order) {
+      if (!order || !order.items || order.items.length === 0) return;
+      let updated = false;
+
+      order.items.forEach(orderItem => {
+        // Match dish by name or id
+        const dish = activeMenu.find(d => d.name.trim().toLowerCase() === orderItem.name.trim().toLowerCase());
+        if (dish) {
+          dish.quantity = (dish.quantity || 0) + (orderItem.qty || 1);
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
+        renderStockManager();
+      }
+    }
+
+    // AUTO-DEDUCT FUNCTION FOR INGESTED ORDERS
+    function autoDeductOrderPortions(orderItems) {
+      if (!orderItems || orderItems.length === 0) return;
+      let updated = false;
+
+      orderItems.forEach(orderItem => {
+        const dish = activeMenu.find(d => d.name.trim().toLowerCase() === orderItem.name.trim().toLowerCase());
+        if (dish) {
+          dish.quantity = Math.max(0, (dish.quantity || 0) - (orderItem.qty || 1));
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
+        renderStockManager();
+      }
+    }
+
     function fetchGoogleSheet() {
       const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/1hLHDIINJidqJjw4vi9BxvIVAMf9tcpOlCiWAZe-9UfY/export?format=csv`;
       Papa.parse(SHEET_CSV_URL, {
@@ -775,7 +812,6 @@
         skipEmptyLines: true,
         complete: function(results) {
           if (results.data && results.data.length > 0) {
-            // Merge sheet with any local portion updates
             const storedMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || '[]');
             activeMenu = results.data.map((row, i) => {
               const id = row.id || `DISH-${i+1}`;
@@ -877,7 +913,6 @@
       updateUI();
     }
 
-    // UPDATE UI (PORTIONS HIDDEN FROM CUSTOMER)
     function updateUI() {
       const banner = document.getElementById('surplusFlashBanner');
       if (kitchenSettings.surplusActive) {
@@ -1027,14 +1062,13 @@
       Object.entries(cart).forEach(([id, qty]) => {
         const dish = activeMenu.find(i => i.id === id);
         if (dish) {
-          // Deduct portions in owner's live inventory
-          dish.quantity = Math.max(0, (dish.quantity || 0) - qty);
           orderItems.push({ name: dish.name, qty, price: dish.price, total: dish.price * qty });
           grandTotal += dish.price * qty;
         }
       });
 
-      localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
+      // Auto-deduct portions upon order placement
+      autoDeductOrderPortions(orderItems);
 
       const newOrder = {
         orderId: 'RDS-' + Math.floor(100000 + Math.random() * 900000),
@@ -1081,7 +1115,7 @@
       document.getElementById('orderSuccessModal').classList.add('hidden');
     }
 
-    // 📦 OWNER LIVE PORTIONS TRACKER
+    // 📦 OWNER LIVE PORTIONS TRACKER (AUTOMATED)
     function toggleStockModal(show) {
       if (show) renderStockManager();
       document.getElementById('stockManagerModal').classList.toggle('hidden', !show);
@@ -1094,42 +1128,27 @@
         return;
       }
       tbody.innerHTML = activeMenu.map(d => {
-        const isZero = (d.quantity || 0) <= 0;
+        const count = d.quantity !== undefined ? d.quantity : 10;
+        const isZero = count <= 0;
         return `
           <tr class="py-2 hover:bg-stone-50">
             <td class="py-2.5 font-bold text-stone-900">${d.name}</td>
             <td class="text-stone-500">${d.category}</td>
             <td class="font-bold">₹${d.price}</td>
             <td class="text-center font-black ${isZero ? 'text-rose-600 bg-rose-50 rounded-lg' : 'text-stone-800'}">
-              ${d.quantity || 0} ${isZero ? '(Depleted)' : ''}
+              ${count} Portions
             </td>
-            <td class="text-right space-x-1 whitespace-nowrap">
-              <button onclick="adjustDishPortions('${d.id}', -1)" class="w-6 h-6 rounded bg-stone-200 hover:bg-stone-300 font-bold">-</button>
-              <button onclick="adjustDishPortions('${d.id}', 1)" class="w-6 h-6 rounded bg-stone-200 hover:bg-stone-300 font-bold">+</button>
-              <button onclick="setDishPortionsZero('${d.id}')" class="px-2 py-0.5 rounded bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[10px]">Zero</button>
+            <td class="text-right whitespace-nowrap">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${isZero ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">
+                ${isZero ? 'Sold Out / 0 Left' : 'Available'}
+              </span>
             </td>
           </tr>
         `;
       }).join('');
     }
 
-    function adjustDishPortions(id, delta) {
-      const dish = activeMenu.find(d => d.id === id);
-      if (!dish) return;
-      dish.quantity = Math.max(0, (dish.quantity || 0) + delta);
-      localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
-      renderStockManager();
-    }
-
-    function setDishPortionsZero(id) {
-      const dish = activeMenu.find(d => d.id === id);
-      if (!dish) return;
-      dish.quantity = 0;
-      localStorage.setItem('rds_cloud_active_menu', JSON.stringify(activeMenu));
-      renderStockManager();
-    }
-
-    // ❌ OWNER CANCELLATION WITH REMARK
+    // ❌ OWNER CANCELLATION (WITH AUTO-RESTOCK)
     function openCancelRemarkModal(orderId) {
       orderToCancelId = orderId;
       document.getElementById('cancelRemarkInput').value = 'Item portions depleted / Kitchen out of stock';
@@ -1149,13 +1168,16 @@
       order.status = 'Cancelled';
       order.remark = remark;
 
+      // Automatically credit portions back to stock
+      autoRestockOrderPortions(order);
+
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
       renderCustomerOrders();
       toggleCancelModal(false);
 
       const cancelNotify = `*ORDER CANCELLED*%0A*Order ID:* ${order.orderId}%0AHello ${order.customer.name}, your order has been cancelled by RDS Cloud Kitchen.%0A*Reason / Remark:* ${remark}%0APlease contact our helpline for replacement suggestions.`;
       window.open(`https://wa.me/${order.customer.phone}?text=${cancelNotify}`, '_blank');
-      alert(`Order ${order.orderId} cancelled with remark: "${remark}"`);
+      alert(`Order ${order.orderId} cancelled & portions automatically restored to stock!`);
     }
 
     function promptImportOrder() {
@@ -1237,6 +1259,9 @@
 
         customerOrders = customerOrders.filter(o => o.orderId !== orderId);
 
+        // Auto-deduct portions for newly ingested order
+        autoDeductOrderPortions(items);
+
         const importedOrder = {
           orderId,
           date: new Date().toLocaleDateString(),
@@ -1254,7 +1279,7 @@
         
         renderCustomerOrders();
         toggleImportModal(false);
-        alert(`Order ${orderId} imported successfully for ${name} (Total: ₹${grandTotal})!`);
+        alert(`Order ${orderId} imported! (Portions automatically deducted from inventory)`);
       } catch (err) {
         alert("Error parsing WhatsApp text. Please make sure you copied the whole message.");
       }
