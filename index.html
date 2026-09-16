@@ -46,7 +46,7 @@
 </head>
 <body class="bg-gradient-to-b from-amber-50/70 via-white to-orange-50/40 text-stone-800 min-h-screen flex flex-col font-sans">
 
-  <!-- 🔒 SITE ACCESS GATEKEEPER -->
+  <!-- 🔒 1. SITE ACCESS GATEKEEPER -->
   <div id="siteGateScreen" class="fixed inset-0 z-[200] bg-stone-950 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-7 space-y-5 shadow-2xl text-center border border-orange-100">
       <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl mx-auto shadow-lg shadow-orange-500/30">
@@ -66,6 +66,30 @@
     </div>
   </div>
 
+  <!-- 📍 2. MANDATORY UPFRONT LOCATION CHECK MODAL -->
+  <div id="mandatoryLocationModal" class="fixed inset-0 z-[190] bg-stone-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center border border-orange-100">
+      <div class="w-14 h-14 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-2xl mx-auto shadow-sm">
+        <i class="fa-solid fa-location-dot animate-bounce"></i>
+      </div>
+      <div>
+        <h2 class="text-lg font-black text-stone-900">Delivery Range Check</h2>
+        <p class="text-xs text-stone-500 mt-1">We deliver exclusively within a strict <strong>3.0 KM fixed radius</strong> from our kitchen in Thuvakudi.</p>
+      </div>
+
+      <div id="locModalStatus" class="hidden p-3 rounded-2xl text-xs font-bold"></div>
+
+      <div class="space-y-2 pt-1">
+        <button id="btnDetectGps" type="button" onclick="performMandatoryGpsCheck()" class="cursor-pointer w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-black py-3.5 rounded-2xl shadow-md active:scale-95 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <i class="fa-solid fa-crosshairs"></i> Check My Location (GPS)
+        </button>
+        <button type="button" onclick="bypassToTakeaway()" class="cursor-pointer w-full bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-3 rounded-2xl text-xs uppercase tracking-wider">
+          I will order Takeaway / Pickup
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOP BAR -->
   <div class="bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 text-white text-xs font-semibold py-2 px-4 shadow-sm">
     <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
@@ -75,6 +99,9 @@
       </div>
 
       <div id="ownerAdminBar" class="hidden flex items-center gap-2">
+        <button type="button" onclick="promptImportOrder()" class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white px-2.5 py-1 rounded-full text-xs font-extrabold transition flex items-center gap-1 shadow-sm">
+          <i class="fa-solid fa-file-import"></i> Ingest WhatsApp Order
+        </button>
         <button type="button" onclick="toggleSettingsModal(true)" class="cursor-pointer bg-white/25 hover:bg-white/40 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-gear"></i> Settings
         </button>
@@ -113,9 +140,9 @@
           <span class="hidden md:inline">Full Menu Postcard</span>
         </button>
 
-        <button onclick="checkDeliveryRadius()" class="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 transition shadow-sm cursor-pointer">
+        <button onclick="promptLocationCheckAgain()" class="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 transition shadow-sm cursor-pointer">
           <i class="fa-solid fa-location-dot text-orange-500"></i>
-          <span class="hidden sm:inline">Check 3KM Eligibility</span>
+          <span id="navLocationStatusText">Check 3KM Range</span>
         </button>
 
         <button onclick="toggleCart(true)" class="relative flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white px-4 py-2 rounded-full font-bold shadow-md shadow-orange-500/20 active:scale-95 transition cursor-pointer">
@@ -307,7 +334,7 @@
     </div>
   </div>
 
-  <!-- ✅ ORDER SUCCESS MODAL WITH DIRECT GROUP & HELPLINE ACTIONS -->
+  <!-- ✅ ORDER SUCCESS MODAL -->
   <div id="orderSuccessModal" class="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-4 shadow-2xl text-center border text-stone-900">
       <div class="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
@@ -316,22 +343,43 @@
       <div>
         <h2 class="text-xl font-black">Order Registered!</h2>
         <p id="successOrderIdText" class="text-xs text-orange-600 font-extrabold mt-1"></p>
-        <p class="text-xs text-stone-500 mt-2">Your order has been recorded into the kitchen queue. Use the actions below to dispatch to our official WhatsApp order desk.</p>
+        <p class="text-xs text-stone-500 mt-2">Your order has been recorded. Tap below to send the pre-filled bill directly to our primary kitchen WhatsApp.</p>
       </div>
 
       <div class="space-y-2 pt-1">
-        <button type="button" onclick="openWhatsAppGroup()" class="cursor-pointer w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl shadow flex items-center justify-center gap-2 text-xs uppercase">
-          <i class="fa-brands fa-whatsapp text-lg"></i> Post to WhatsApp Group
+        <button type="button" onclick="sendOrderToPrimaryWhatsApp()" class="cursor-pointer w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl shadow flex items-center justify-center gap-2 text-xs uppercase">
+          <i class="fa-brands fa-whatsapp text-lg"></i> Send Directly to Kitchen (+91 8667737440)
         </button>
 
-        <button type="button" onclick="sendOrderToPrimaryWhatsApp()" class="cursor-pointer w-full bg-stone-900 hover:bg-black text-amber-300 font-black py-3 rounded-2xl shadow flex items-center justify-center gap-2 text-xs uppercase">
-          <i class="fa-solid fa-paper-plane"></i> Send Direct to Kitchen (+91 8667737440)
+        <button type="button" onclick="sendOrderToSecondaryWhatsApp()" class="cursor-pointer w-full bg-stone-900 hover:bg-black text-amber-300 font-black py-2.5 rounded-2xl shadow flex items-center justify-center gap-2 text-xs uppercase">
+          <i class="fa-brands fa-whatsapp"></i> Backup Helpline (+91 8838377634)
         </button>
 
         <button type="button" onclick="closeSuccessModal()" class="cursor-pointer w-full bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-2.5 rounded-2xl text-xs uppercase">
           Close & Return
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER -->
+  <div id="importOrderModal" class="fixed inset-0 z-[135] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border text-stone-900 text-xs">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h2 class="font-black text-sm"><i class="fa-solid fa-file-import text-emerald-600 mr-1"></i> Ingest WhatsApp Order</h2>
+        <button onclick="toggleImportModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
+      </div>
+      <p class="text-stone-500">Copy the order message from WhatsApp. You can tap "Paste from Clipboard" or paste below to register it into your active orders.</p>
+      
+      <button type="button" onclick="pasteFromClipboardDirect()" class="cursor-pointer w-full bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold py-2 rounded-xl flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-paste"></i> Paste from Clipboard
+      </button>
+
+      <textarea id="importOrderText" rows="6" placeholder="Paste full WhatsApp order text here..." class="w-full p-3 border rounded-2xl bg-stone-50 font-mono text-[11px]"></textarea>
+      
+      <button type="button" onclick="processImportedWhatsAppOrder()" class="cursor-pointer w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl uppercase">
+        Ingest & Add to Queue
+      </button>
     </div>
   </div>
 
@@ -351,8 +399,6 @@
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto text-xs">
       <div class="flex justify-between items-center border-b pb-3"><h2 class="font-extrabold text-base"><i class="fa-solid fa-gear text-orange-600 mr-1.5"></i> Kitchen Settings</h2><button onclick="toggleSettingsModal(false)" class="cursor-pointer text-xl font-bold">&times;</button></div>
       <form onsubmit="saveKitchenSettings(event)" class="space-y-3.5">
-        
-        <!-- GST BILLING SETUP -->
         <div class="p-3 bg-emerald-50 border rounded-2xl space-y-2">
           <div class="flex items-center justify-between"><span class="font-black text-emerald-950 text-sm"><i class="fa-solid fa-receipt text-emerald-600 mr-1"></i> Enable GST Invoices?</span><input type="checkbox" id="setGstEnabled" class="w-4 h-4 accent-emerald-600 cursor-pointer"></div>
           <div class="grid grid-cols-2 gap-2">
@@ -361,14 +407,12 @@
           </div>
         </div>
 
-        <!-- FIXED 3KM & SHOP GPS INFO -->
         <div class="p-3 bg-orange-50 border rounded-2xl space-y-1">
           <p class="font-black text-stone-900"><i class="fa-solid fa-location-crosshairs text-orange-600 mr-1"></i> Default Fixed Range & Location</p>
           <p class="text-[11px] text-stone-600">Fixed Radius: <strong>3.0 KM</strong></p>
           <p class="text-[11px] text-stone-600">Kitchen GPS: <strong>10.781662, 78.816360</strong> (Thuvakudi, Trichy)</p>
         </div>
 
-        <!-- FIXED DELIVERY HUB SETUP -->
         <div class="p-3 bg-stone-50 border rounded-2xl space-y-2">
           <div class="flex items-center justify-between"><span class="font-bold text-stone-800">Enable Fixed Delivery Hub?</span><input type="checkbox" id="setFixedPointToggle" onchange="toggleFixedPointInput(this.checked)" class="w-4 h-4 accent-orange-600 cursor-pointer"></div>
           <div id="fixedPointField" class="hidden">
@@ -376,7 +420,6 @@
           </div>
         </div>
 
-        <!-- SURPLUS & PREVIEW -->
         <div class="p-3 bg-red-50 border rounded-2xl space-y-2">
           <div class="flex items-center justify-between"><span class="font-black text-red-950"><i class="fa-solid fa-bolt text-red-600 mr-1"></i> Surplus Banner Active?</span><input type="checkbox" id="setSurplusActive" class="w-4 h-4 accent-red-600 cursor-pointer"></div>
           <input id="setSurplusMessage" type="text" placeholder="Surplus offer message..." class="w-full p-2 border rounded-xl bg-white">
@@ -386,7 +429,6 @@
           <input id="setNextDayText" type="text" placeholder="Tomorrow's Special menu..." class="w-full p-2 border rounded-xl bg-white">
         </div>
 
-        <!-- CHANGE OWNER PASSWORD -->
         <div class="p-3 bg-stone-50 border rounded-2xl space-y-1">
           <label class="font-bold text-stone-800 block">Change Owner PIN</label>
           <input id="setOwnerPin" type="password" placeholder="Leave blank to keep current PIN" class="w-full p-2.5 border rounded-xl font-bold tracking-wider bg-white text-stone-900">
@@ -459,7 +501,7 @@
     </div>
   </div>
 
-  <!-- 🖼️ POSTCARD MODAL (SHOWING ALL MENU DETAILS WITH PHOTOS) -->
+  <!-- 🖼️ POSTCARD MODAL -->
   <div id="postcardModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
     <div class="bg-stone-950 rounded-3xl max-w-2xl w-full p-5 space-y-4 shadow-2xl border border-stone-800 text-white max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-stone-800 pb-3">
@@ -476,7 +518,6 @@
             <span class="bg-orange-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-full">Fresh Daily</span>
           </div>
 
-          <!-- ALL MENU ITEMS WITH PHOTOS -->
           <div id="postcardAllMenuContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[380px] overflow-y-auto pr-1"></div>
 
           <div class="bg-white/5 rounded-2xl p-4 flex items-center justify-between gap-3 border border-white/10">
@@ -499,19 +540,19 @@
   <script>
     const SITE_ACCESS_PASSWORD = "gmskitchen123";
 
-    // FIXED DEFAULTS
+    // FIXED CONSTANTS
     const FIXED_RADIUS_KM = 3.0;
     const SHOP_LAT = 10.781662;
     const SHOP_LNG = 78.816360;
     const PRIMARY_PHONE = "918667737440";
     const SECONDARY_PHONE = "918838377634";
-    const WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/FBnCoSpwCJ7LQkoY73NuG3";
     const UPI_NUMBER = "8667737440";
     const UPI_ADDRESS = "8667737440@upi";
 
     function checkSiteAccess() {
       if (localStorage.getItem("rds_site_unlocked") === "true") {
         document.getElementById("siteGateScreen").classList.add("hidden");
+        checkCustomerLocationGate();
       }
     }
 
@@ -525,14 +566,92 @@
         localStorage.setItem("rds_site_unlocked", "true");
         document.getElementById("siteGateScreen").classList.add("hidden");
         if (err) err.classList.add("hidden");
+        checkCustomerLocationGate();
       } else {
         if (err) err.classList.remove("hidden");
         if (input) input.value = "";
       }
     }
 
+    // MANDATORY UPFRONT LOCATION CHECK (TRIGGERS AS SOON AS USER ENTERS)
+    function checkCustomerLocationGate() {
+      const verified = sessionStorage.getItem("rds_loc_verified");
+      if (!verified) {
+        document.getElementById("mandatoryLocationModal").classList.remove("hidden");
+      }
+    }
+
+    function promptLocationCheckAgain() {
+      document.getElementById("mandatoryLocationModal").classList.remove("hidden");
+    }
+
+    function performMandatoryGpsCheck() {
+      const statusBox = document.getElementById("locModalStatus");
+      statusBox.classList.remove("hidden", "bg-emerald-50", "text-emerald-900", "bg-rose-50", "text-rose-900");
+      statusBox.innerText = "Detecting your current GPS location...";
+
+      if (!navigator.geolocation) {
+        statusBox.classList.add("bg-rose-50", "text-rose-900");
+        statusBox.innerText = "GPS not supported on your browser. Please choose Takeaway.";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(pos => {
+        const dist = calculateHaversineKm(SHOP_LAT, SHOP_LNG, pos.coords.latitude, pos.coords.longitude);
+        
+        if (dist <= FIXED_RADIUS_KM) {
+          statusBox.classList.add("bg-emerald-50", "text-emerald-900");
+          statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Great! You are <strong>${dist} KM</strong> away (Within 3.0 KM Delivery Limit).`;
+          
+          sessionStorage.setItem("rds_loc_verified", "delivery");
+          isUserDistanceVerified = true;
+          document.getElementById("navLocationStatusText").innerText = `Within 3KM (${dist}KM)`;
+          setOrderMode('delivery');
+          
+          setTimeout(() => {
+            document.getElementById("mandatoryLocationModal").classList.add("hidden");
+          }, 1500);
+        } else {
+          statusBox.classList.add("bg-rose-50", "text-rose-900");
+          statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> You are <strong>${dist} KM</strong> away. Outside our 3.0 KM delivery limit.<br>Fulfillment switched to Takeaway / Hub Handover.`;
+          
+          sessionStorage.setItem("rds_loc_verified", "takeaway");
+          isUserDistanceVerified = false;
+          document.getElementById("navLocationStatusText").innerText = `Takeaway Only (${dist}KM)`;
+          setOrderMode('takeaway');
+
+          setTimeout(() => {
+            document.getElementById("mandatoryLocationModal").classList.add("hidden");
+          }, 2200);
+        }
+      }, () => {
+        statusBox.classList.add("bg-rose-50", "text-rose-900");
+        statusBox.innerText = "GPS access denied. Please choose Takeaway or allow location permissions.";
+      });
+    }
+
+    function bypassToTakeaway() {
+      sessionStorage.setItem("rds_loc_verified", "takeaway");
+      isUserDistanceVerified = false;
+      document.getElementById("navLocationStatusText").innerText = "Takeaway Selected";
+      setOrderMode('takeaway');
+      document.getElementById("mandatoryLocationModal").classList.add("hidden");
+    }
+
+    function calculateHaversineKm(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return Number((R * c).toFixed(2));
+    }
+
     function lockPage() {
       localStorage.removeItem("rds_site_unlocked");
+      sessionStorage.removeItem("rds_loc_verified");
       location.reload();
     }
 
@@ -814,16 +933,8 @@
       const isTakeaway = document.getElementById('tabTakeaway').className.includes('bg-white');
 
       if (!name || cleanPhone.length < 10) {
-        alert('Please enter a valid 10-digit mobile number.');
+        alert('Please enter your Name and a valid 10-digit mobile number.');
         return;
-      }
-
-      if (!isTakeaway && !isUserDistanceVerified) {
-        const proceed = confirm("Notice: You haven't checked if you are within our fixed 3.0 KM delivery limit. If you are outside 3KM, you must choose Takeaway. Would you like to check eligibility now?");
-        if (proceed) {
-          checkDeliveryRadius();
-          return;
-        }
       }
 
       if (isTakeaway) {
@@ -877,25 +988,119 @@
       return `*NEW ORDER: ${o.orderId}*%0A*Customer:* ${o.customer.name}%0A*Phone:* ${o.customer.phone}%0A*Fulfillment / Place:* ${o.customer.address}%0A*Payment:* ${o.payment}%0A*Items:*%0A• ${itemSummary}%0A*Total:* ₹${o.total}%0A*Status:* ${o.status}`;
     }
 
-    function openWhatsAppGroup() {
-      if (!lastPlacedOrder) return;
-      const text = formatOrderWhatsAppText(lastPlacedOrder);
-      navigator.clipboard.writeText(decodeURIComponent(text.replace(/%0A/g, '\n'))).catch(() => {});
-      alert("Order message copied to clipboard! Paste it directly into the RDS Cloud Kitchen WhatsApp Group now.");
-      window.open(WHATSAPP_GROUP_LINK, '_blank');
-    }
-
     function sendOrderToPrimaryWhatsApp() {
       if (!lastPlacedOrder) return;
       const msg = formatOrderWhatsAppText(lastPlacedOrder);
       window.open(`https://wa.me/${PRIMARY_PHONE}?text=${msg}`, '_blank');
     }
 
+    function sendOrderToSecondaryWhatsApp() {
+      if (!lastPlacedOrder) return;
+      const msg = formatOrderWhatsAppText(lastPlacedOrder);
+      window.open(`https://wa.me/${SECONDARY_PHONE}?text=${msg}`, '_blank');
+    }
+
     function closeSuccessModal() {
       document.getElementById('orderSuccessModal').classList.add('hidden');
     }
 
-    // CUSTOMER PORTAL (CANCEL OPTION ONLY BEFORE ACCEPTANCE VIA GIVEN NUMBERS)
+    // 📥 OWNER IMPORT / INGEST ORDERS ARRIVING ON WHATSAPP
+    function promptImportOrder() {
+      document.getElementById('importOrderText').value = '';
+      toggleImportModal(true);
+    }
+
+    function toggleImportModal(show) {
+      document.getElementById('importOrderModal').classList.toggle('hidden', !show);
+    }
+
+    async function pasteFromClipboardDirect() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('importOrderText').value = text;
+        } else {
+          alert("Clipboard is empty. Please copy the WhatsApp order message first.");
+        }
+      } catch (err) {
+        alert("Please paste manually into the box below (Clipboard permission denied).");
+      }
+    }
+
+    function processImportedWhatsAppOrder() {
+      const text = document.getElementById('importOrderText').value.trim();
+      if (!text) {
+        alert("Please paste the WhatsApp order text.");
+        return;
+      }
+
+      try {
+        const orderIdMatch = text.match(/NEW ORDER:\s*(RDS-[0-9]+)/i);
+        const nameMatch = text.match(/Customer:\s*(.*?)(?=\n|\*)/i);
+        const phoneMatch = text.match(/Phone:\s*([0-9+]+)/i);
+        const addressMatch = text.match(/Fulfillment \/ Place:\s*(.*?)(?=\n|\*Payment)/i);
+        const paymentMatch = text.match(/Payment:\s*(.*?)(?=\n|\*Items)/i);
+        const totalMatch = text.match(/Total:\s*₹?\s*([0-9.]+)/i);
+
+        const orderId = orderIdMatch ? orderIdMatch[1].trim() : 'RDS-' + Math.floor(100000 + Math.random() * 900000);
+        const name = nameMatch ? nameMatch[1].trim() : 'WhatsApp Customer';
+        const phone = phoneMatch ? phoneMatch[1].trim() : PRIMARY_PHONE;
+        const address = addressMatch ? addressMatch[1].trim() : 'Delivery / Counter Pickup';
+        const payment = paymentMatch ? paymentMatch[1].trim() : 'COD';
+        const total = totalMatch ? parseFloat(totalMatch[1]) : 0;
+
+        const lines = text.split('\n');
+        const items = [];
+        lines.forEach(l => {
+          if (l.trim().startsWith('•') || l.trim().startsWith('-')) {
+            const clean = l.replace(/[•-]/g, '').trim();
+            const itemMatch = clean.match(/(.*?)\s*\(x(\d+)\)\s*-\s*₹?(\d+)/i);
+            if (itemMatch) {
+              items.push({
+                name: itemMatch[1].trim(),
+                qty: parseInt(itemMatch[2]),
+                price: parseFloat(itemMatch[3]) / parseInt(itemMatch[2]),
+                total: parseFloat(itemMatch[3])
+              });
+            } else {
+              items.push({ name: clean, qty: 1, price: total, total });
+            }
+          }
+        });
+
+        if (items.length === 0) {
+          items.push({ name: 'Assorted Meal Package', qty: 1, price: total, total });
+        }
+
+        const exists = customerOrders.find(o => o.orderId === orderId);
+        if (exists) {
+          alert(`Order ${orderId} already exists in your records.`);
+          toggleImportModal(false);
+          return;
+        }
+
+        const importedOrder = {
+          orderId,
+          date: new Date().toLocaleDateString(),
+          placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          status: 'Pending Acceptance',
+          payment,
+          customer: { name, phone, address },
+          items,
+          total
+        };
+
+        customerOrders.unshift(importedOrder);
+        localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
+        renderCustomerOrders();
+        toggleImportModal(false);
+        alert(`Order ${orderId} ingested successfully! You can now accept, reject, or generate a bill for it.`);
+      } catch (err) {
+        alert("Could not parse WhatsApp message format. Please make sure you copied the whole message.");
+      }
+    }
+
+    // CUSTOMER PORTAL TRACKER
     function renderFrontUserOrders() {
       const phoneInput = document.getElementById('frontUserPhoneInput').value.trim().replace(/\D/g, '');
       const container = document.getElementById('frontUserOrdersList');
@@ -960,7 +1165,7 @@
       window.open(`https://wa.me/${targetPhone}?text=${cancelMsg}`, '_blank');
     }
 
-    // OWNER ORDER MANAGEMENT (ACCEPT / CANCEL)
+    // OWNER ORDER MANAGEMENT
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase().trim();
@@ -970,7 +1175,7 @@
       if (search) filtered = customerOrders.filter(o => o.customer.phone.toLowerCase().includes(search) || o.customer.name.toLowerCase().includes(search));
 
       if (filtered.length === 0) {
-        container.innerHTML = '<div class="py-10 text-center text-xs text-stone-400">No orders saved yet.</div>';
+        container.innerHTML = '<div class="py-10 text-center text-xs text-stone-400">No orders saved yet. Use the "Ingest WhatsApp Order" button at the top to paste any incoming WhatsApp message.</div>';
         return;
       }
 
@@ -994,7 +1199,6 @@
             <p><strong>Place / Address:</strong> ${o.customer.address}</p>
           </div>
 
-          <!-- ACCEPT & CANCEL CONTROLS -->
           <div class="flex gap-2 pt-1">
             ${o.status === 'Pending Acceptance' ? `
               <button onclick="ownerAcceptOrder('${o.orderId}')" class="cursor-pointer flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2 rounded-xl text-[10px] uppercase">
@@ -1082,7 +1286,7 @@
       });
     }
 
-    // FULL MENU POSTCARD GENERATOR WITH PHOTOS
+    // FULL MENU POSTCARD GENERATOR
     function openPostcardPreview() {
       const cleanUrl = window.location.origin + window.location.pathname;
       document.getElementById('postcardWebsiteAnchor').innerText = cleanUrl;
@@ -1124,44 +1328,6 @@
         link.download = `RDS-Kitchen-Postcard.png`;
         link.href = canvas.toDataURL('png');
         link.click();
-      });
-    }
-
-    // STRICT 3.0 KM HAVERSINE GPS CALCULATION AGAINST SHOP 10.781662, 78.816360
-    function checkDeliveryRadius() {
-      if (!navigator.geolocation) { alert('GPS not supported on your device.'); return; }
-      navigator.geolocation.getCurrentPosition(pos => {
-        const lat1 = SHOP_LAT;
-        const lon1 = SHOP_LNG;
-        const lat2 = pos.coords.latitude;
-        const lon2 = pos.coords.longitude;
-        
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const dist = Number((R * c).toFixed(2));
-
-        const alertBox = document.getElementById('locationAlert');
-        alertBox.classList.remove('hidden', 'bg-emerald-50', 'bg-rose-50');
-
-        if (dist <= FIXED_RADIUS_KM) {
-          isUserDistanceVerified = true;
-          alertBox.classList.add('bg-emerald-50', 'text-emerald-900');
-          document.getElementById('locHeading').innerText = `Delivery Available! You are ${dist} KM from our kitchen.`;
-          document.getElementById('locSub').innerText = `You are within our stipulated 3.0 KM delivery radius.`;
-        } else {
-          isUserDistanceVerified = false;
-          alertBox.classList.add('bg-rose-50', 'text-rose-900');
-          document.getElementById('locHeading').innerText = `Outside 3.0 KM Radius (${dist} KM away)`;
-          document.getElementById('locSub').innerText = `Direct door delivery is unavailable at your distance. Please select Takeaway or choose a Fixed Hub delivery point.`;
-          setOrderMode('takeaway');
-        }
-      }, () => {
-        alert("Please allow device GPS location access to verify your 3.0 KM delivery eligibility.");
       });
     }
 
