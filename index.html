@@ -301,12 +301,12 @@
           <button type="button" onclick="toggleCart(false)" class="cursor-pointer p-1 text-stone-400 hover:text-stone-700 text-xl font-bold">&times;</button>
         </div>
         
-        <!-- FULFILLMENT MODE SWITCH (PROPERLY MUTED/DISABLED TOGGLE) -->
+        <!-- FULFILLMENT MODE SWITCH (STRICT NATIVE DISABLED BUTTON IMPLEMENTATION) -->
         <div class="bg-stone-100 p-1.5 rounded-2xl grid grid-cols-2 gap-1 text-xs font-extrabold text-center">
-          <button type="button" id="tabDelivery" onclick="setOrderMode('delivery')" class="py-2.5 rounded-xl transition cursor-pointer">
+          <button type="button" id="tabDelivery" onclick="setOrderMode('delivery')" class="py-2.5 rounded-xl transition">
             Delivery (Max 3 KM)
           </button>
-          <button type="button" id="tabTakeaway" onclick="setOrderMode('takeaway')" class="py-2.5 rounded-xl transition cursor-pointer">
+          <button type="button" id="tabTakeaway" onclick="setOrderMode('takeaway')" class="py-2.5 rounded-xl transition">
             Takeaway
           </button>
         </div>
@@ -1373,6 +1373,7 @@
       window.open(`https://wa.me/${targetPhone}?text=${cancelMsg}`, '_blank');
     }
 
+    // OWNER ORDER MANAGEMENT
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase().trim();
@@ -1491,6 +1492,7 @@
       });
     }
 
+    // FULL MENU POSTCARD GENERATOR
     function openPostcardPreview() {
       const cleanUrl = window.location.origin + window.location.pathname;
       document.getElementById('postcardWebsiteAnchor').innerText = cleanUrl;
@@ -1548,31 +1550,35 @@
     function toggleInvoiceModal(show) { document.getElementById('invoiceModal').classList.toggle('hidden', !show); }
     function togglePostcardModal(show) { document.getElementById('postcardModal').classList.toggle('hidden', !show); }
     
-    // STRICT FULFILLMENT MODE SWITCHING (DISABLING DELIVERY BUTTON WHEN TAKEAWAY IS SELECTED)
+    // HARD DISABLED ATTRIBUTE IMPLEMENTATION
     function setOrderMode(mode) {
       const delBtn = document.getElementById('tabDelivery');
       const takeBtn = document.getElementById('tabTakeaway');
 
       if (mode === 'takeaway') {
         // Highlight Takeaway
-        takeBtn.className = 'py-2.5 rounded-xl bg-white text-orange-600 shadow-sm font-extrabold cursor-default pointer-events-none';
+        takeBtn.className = 'py-2.5 rounded-xl bg-white text-orange-600 shadow-sm font-extrabold cursor-default';
         takeBtn.dataset.active = "true";
+        takeBtn.disabled = false;
 
-        // Mute Delivery tab completely
-        delBtn.className = 'py-2.5 rounded-xl text-stone-400 bg-stone-100 font-semibold cursor-pointer hover:text-stone-700';
+        // HARD DISABLE Delivery button
+        delBtn.className = 'py-2.5 rounded-xl text-stone-400 bg-stone-100 font-semibold cursor-not-allowed opacity-40 pointer-events-none select-none';
         delBtn.dataset.active = "false";
+        delBtn.disabled = true;
 
         document.getElementById('takeawayBanner').classList.remove('hidden');
         document.getElementById('fixedPointBanner').classList.add('hidden');
         document.getElementById('addressInputWrap').classList.add('hidden');
       } else {
         // Highlight Delivery
-        delBtn.className = 'py-2.5 rounded-xl bg-white text-orange-600 shadow-sm font-extrabold cursor-default pointer-events-none';
+        delBtn.className = 'py-2.5 rounded-xl bg-white text-orange-600 shadow-sm font-extrabold cursor-default';
         delBtn.dataset.active = "true";
+        delBtn.disabled = false;
 
-        // Mute Takeaway tab
-        takeBtn.className = 'py-2.5 rounded-xl text-stone-400 bg-stone-100 font-semibold cursor-pointer hover:text-stone-700';
+        // HARD DISABLE Takeaway button
+        takeBtn.className = 'py-2.5 rounded-xl text-stone-400 bg-stone-100 font-semibold cursor-not-allowed opacity-40 pointer-events-none select-none';
         takeBtn.dataset.active = "false";
+        takeBtn.disabled = true;
 
         document.getElementById('takeawayBanner').classList.add('hidden');
         
