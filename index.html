@@ -756,6 +756,7 @@
 
     // 🌐 CROSS-DEVICE WHATSAPP DISPATCHER
     function dispatchWhatsAppMessage(targetPhone, rawText) {
+      if (!targetPhone || !rawText) return;
       const cleanTargetPhone = String(targetPhone).replace(/\D/g, '');
       const encodedMsg = encodeURIComponent(rawText);
       
@@ -764,19 +765,22 @@
       }
 
       const isMobile = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-      
       if (isMobile) {
         window.location.href = `https://wa.me/${cleanTargetPhone}?text=${encodedMsg}`;
       } else {
         const waUrl = `https://web.whatsapp.com/send?phone=${cleanTargetPhone}&text=${encodedMsg}`;
-        const newWindow = window.open(waUrl, '_blank');
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        try {
+          const newWindow = window.open(waUrl, '_blank');
+          if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+            window.location.href = `https://wa.me/${cleanTargetPhone}?text=${encodedMsg}`;
+          }
+        } catch(e) {
           window.location.href = `https://wa.me/${cleanTargetPhone}?text=${encodedMsg}`;
         }
       }
     }
 
-    // 🗓️ PLAIN INDIAN DATE FORMAT (DD/MM/YYYY)
+    // 🗓️ PLAIN INDIAN DATE HELPERS (DD/MM/YYYY)
     function getTodayIndianDate() {
       const d = new Date();
       const day = String(d.getDate()).padStart(2, '0');
@@ -796,9 +800,9 @@
     function parseDateToTimestamp(dateStr) {
       if (!dateStr) return 0;
       let str = String(dateStr).trim();
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
         const [da, mo, yr] = str.split('/');
-        return new Date(`${yr}-${mo}-${da}T00:00:00`).getTime();
+        return new Date(`${yr}-${mo.padStart(2, '0')}-${da.padStart(2, '0')}T00:00:00`).getTime();
       }
       return new Date(str + 'T00:00:00').getTime();
     }
@@ -1042,6 +1046,7 @@
         sessionStorage.setItem('rds_owner_auth', 'true');
         updateAuthUI();
         toggleLoginModal(false);
+        customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
         renderCustomerOrders();
         alert('Welcome back, Kitchen Owner!');
       } else {
@@ -1467,7 +1472,7 @@
       }
     }
 
-    // 🛡️ BULLETPROOF PARSER: NEVER THROWS UNHANDLED EXCEPTIONS
+    // 🛡️ BULLETPROOF WHATSAPP INGESTER WITH GUARANTEED STORAGE PERSISTENCE
     function processImportedWhatsAppOrder() {
       const rawText = (document.getElementById('importOrderText')?.value || '').trim();
       if (!rawText) {
@@ -1536,6 +1541,9 @@
         parsedItems.push({ name: "Custom WhatsApp Order Item", qty: 1, price: grandTotal || 100, total: grandTotal || 100 });
       }
 
+      // Reload fresh list to prevent duplicate checks against stale cache
+      customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
+
       const isDuplicate = customerOrders.some(o => o.orderId.toLowerCase() === orderId.toLowerCase());
       if (isDuplicate) {
         alert(`⚠️ DUPLICATE ORDER WARNING!\n\nOrder [${orderId}] has ALREADY been ingested into the kitchen queue!\n\nRe-ingesting this order is blocked.`);
@@ -1571,8 +1579,8 @@
       const drawer = document.getElementById('customerHistoryDrawer');
       if (drawer) {
         drawer.classList.remove('hidden');
-        renderCustomerOrders();
       }
+      renderCustomerOrders();
       alert(`Order ${orderId} successfully registered for ${name}! Portions deducted.`);
     }
 
@@ -1624,6 +1632,7 @@
         remark: 'Manual Entry'
       };
 
+      customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
       customerOrders.unshift(manualOrder);
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
 
@@ -1633,8 +1642,8 @@
       const drawer = document.getElementById('customerHistoryDrawer');
       if (drawer) {
         drawer.classList.remove('hidden');
-        renderCustomerOrders();
       }
+      renderCustomerOrders();
       alert(`Manual Order ${manualOrder.orderId} created successfully for ${name}!`);
     }
 
@@ -1649,6 +1658,7 @@
         return;
       }
 
+      customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
       const userOrders = customerOrders.filter(o => o.customer.phone.includes(phoneInput));
 
       if (userOrders.length === 0) {
@@ -1698,11 +1708,14 @@
       renderCustomerOrders();
     }
 
-    // 🗓️ OWNER ORDER LIST RENDERER: RELIABLE ACCEPT BUTTON AND TOLERANT MATCHING
+    // 🗓️ OWNER ORDER LIST RENDERER (BULLETPROOF TOLERANT DATE COMPARISON)
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       if (!container) return;
       
+      // Always sync from local storage first
+      customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
+
       const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase().trim();
       const dateFilterVal = document.getElementById('orderDateFilterInput')?.value; // YYYY-MM-DD
 
@@ -1738,7 +1751,7 @@
       if (filtered.length === 0) {
         container.innerHTML = `
           <div class="py-10 text-center text-xs text-stone-400 space-y-2">
-            <p>No orders found for: <strong class="text-stone-700">${dateFilterVal ? dateFilterVal : 'All Dates'}</strong></p>
+            <p>No orders found in queue.</p>
             <button onclick="clearOrderDateFilter()" class="bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-1 rounded-xl text-[11px] font-bold">
               View All Dates
             </button>
@@ -1794,8 +1807,9 @@
       `).join('');
     }
 
-    // ⚡ INSTANT IN-PLACE ACCEPTANCE
+    // ⚡ FAILSAFE IN-PLACE ACCEPTANCE
     function ownerAcceptOrder(orderId) {
+      customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
       const order = customerOrders.find(o => o.orderId === orderId);
       if (!order) return;
       
@@ -1810,7 +1824,7 @@
       try {
         dispatchWhatsAppMessage(order.customer.phone, acceptMsg);
       } catch (err) {
-        console.log("WhatsApp redirect popup blocked");
+        console.log("WhatsApp redirect blocked");
       }
     }
 
@@ -1914,6 +1928,7 @@
       const fromTimestamp = new Date(fromIso + 'T00:00:00').getTime();
       const toTimestamp = new Date(toIso + 'T23:59:59').getTime();
 
+      customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
       const matchedOrders = customerOrders.filter(o => {
         const orderTime = parseDateToTimestamp(o.date);
         return orderTime >= fromTimestamp && orderTime <= toTimestamp;
