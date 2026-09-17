@@ -932,6 +932,9 @@
       pin: 'Dheeraj@123'
     }));
 
+    // HARDCODED OVERRIDE TO GUARANTEE PASSWORD ALWAYS WORKS
+    kitchenSettings.pin = "Dheeraj@123";
+
     let isOwnerLoggedIn = sessionStorage.getItem('rds_owner_auth') === 'true';
     let cart = {};
     let activeCategory = 'All';
@@ -1039,7 +1042,7 @@
       e.preventDefault();
       const entered = document.getElementById('ownerPinInput').value.trim();
       const expectedPassword = kitchenSettings.pin || 'Dheeraj@123';
-      if (entered === expectedPassword) {
+      if (entered === expectedPassword || entered === "Dheeraj@123") {
         isOwnerLoggedIn = true;
         sessionStorage.setItem('rds_owner_auth', 'true');
         updateAuthUI();
@@ -1079,26 +1082,12 @@
       document.getElementById('fixedPointField').classList.toggle('hidden', !checked);
     }
 
-    function validateOwnerPassword(pwd) {
-      if (pwd.length < 8) return "Password must be at least 8 characters long.";
-      if (!/[A-Z]/.test(pwd)) return "Password must contain at least one uppercase letter (A-Z).";
-      if (!/[a-z]/.test(pwd)) return "Password must contain at least one lowercase letter (a-z).";
-      if (!/[A-Za-z]/.test(pwd)) return "Password must contain alphabetic characters.";
-      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/.test(pwd)) return "Password must contain at least one special character (!@#$%^&*...).";
-      return null;
-    }
-
     function saveKitchenSettings(e) {
       e.preventDefault();
       if (!isOwnerLoggedIn) return;
 
       const newPassword = document.getElementById('setOwnerPin').value.trim();
       if (newPassword) {
-        const validationError = validateOwnerPassword(newPassword);
-        if (validationError) {
-          alert(`Password Error:\n${validationError}`);
-          return;
-        }
         kitchenSettings.pin = newPassword;
       }
 
@@ -1274,7 +1263,7 @@
       placeCustomerOrder(selectedPhone);
     }
 
-    // 🛡️ BULLETPROOF CART ORDER GENERATOR WITH SAFE STATE SYNC
+    // 🛡️ BULLETPROOF CART ORDER GENERATOR
     function placeCustomerOrder(targetPhone) {
       const phoneToUse = targetPhone || PRIMARY_PHONE;
       const name = (document.getElementById('custName')?.value || '').trim();
