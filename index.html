@@ -90,12 +90,12 @@
     </div>
   </div>
 
-  <!-- TOP BAR -->
+  <!-- TOP BAR (UPDATED OPERATING HOURS) -->
   <div class="bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 text-white text-xs font-semibold py-2 px-4 shadow-sm">
     <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-clock text-amber-200 animate-pulse"></i>
-        <span>Operating Timing: <strong class="underline decoration-amber-300">00:30 hrs – 22:00 hrs</strong> | <span>Fixed 3.0 KM Delivery Range</span></span>
+        <span>Operating Timing: <strong class="underline decoration-amber-300">08:00 hrs – 21:00 hrs</strong> | <span>Fixed 3.0 KM Delivery Range</span></span>
       </div>
 
       <div id="ownerAdminBar" class="hidden flex items-center gap-2 flex-wrap">
@@ -614,6 +614,39 @@
     const UPI_NUMBER = "8667737440";
     const UPI_ADDRESS = "8667737440@upi";
 
+    // 🗓️ INDIAN DATE FORMATTER (DD/MM/YYYY)
+    function formatIndianDate(inputDate) {
+      if (!inputDate) return "";
+      if (typeof inputDate === "string" && inputDate.includes("/")) {
+        const parts = inputDate.split("/");
+        if (parts.length === 3) {
+          // If already in DD/MM/YYYY with 4-digit year, preserve it
+          if (parts[0].length <= 2 && parts[1].length <= 2 && parts[2].length === 4) {
+            const p1 = parseInt(parts[0], 10);
+            const p2 = parseInt(parts[1], 10);
+            // If first part is day and second is month
+            if (p1 <= 31 && p2 <= 12) {
+              return `${String(p1).padStart(2, '0')}/${String(p2).padStart(2, '0')}/${parts[2]}`;
+            }
+          }
+        }
+      }
+      const d = new Date(inputDate);
+      if (isNaN(d.getTime())) return inputDate;
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
+    function getTodayIndianDate() {
+      const d = new Date();
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
     function openKitchenGoogleMaps() {
       const url = `https://www.google.com/maps/dir/?api=1&destination=${SHOP_LAT},${SHOP_LNG}`;
       window.open(url, '_blank');
@@ -1071,6 +1104,7 @@
       }
     }
 
+    // ⚡ 1-STEP ORDER PLACEMENT: DEDUCTS PORTIONS, SAVES WITH DD/MM/YYYY, AND DISPATCHES TO WHATSAPP
     function placeCustomerOrderToTarget(target) {
       const selectedPhone = target === 'secondary' ? SECONDARY_PHONE : PRIMARY_PHONE;
       placeCustomerOrder(selectedPhone);
@@ -1111,12 +1145,12 @@
         }
       });
 
-      // Single-cut portion deduction
+      // Deduct portions exactly once
       autoDeductOrderPortions(orderItems);
 
       const newOrder = {
         orderId: 'RDS-' + Math.floor(100000 + Math.random() * 900000),
-        date: new Date().toLocaleDateString(),
+        date: getTodayIndianDate(), // Stored strictly in DD/MM/YYYY
         placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'Pending Acceptance',
         payment, customer: { name, phone, address }, items: orderItems, total: grandTotal,
@@ -1143,7 +1177,7 @@
 
     function formatOrderWhatsAppText(o) {
       const itemSummary = o.items.map(i => `• ${i.name} (x${i.qty}) - ₹${i.total}`).join('\n');
-      return `*NEW ORDER: ${o.orderId}*\n*Customer:* ${o.customer.name}\n*Phone:* ${o.customer.phone}\n*Fulfillment / Place:* ${o.customer.address}\n*Payment:* ${o.payment}\n*Items:*\n${itemSummary}\n*Total:* ₹${o.total}\n*Status:* ${o.status}`;
+      return `*NEW ORDER: ${o.orderId}*\n*Customer:* ${o.customer.name}\n*Phone:* ${o.customer.phone}\n*Date:* ${formatIndianDate(o.date)}\n*Fulfillment / Place:* ${o.customer.address}\n*Payment:* ${o.payment}\n*Items:*\n${itemSummary}\n*Total:* ₹${o.total}\n*Status:* ${o.status}`;
     }
 
     function resendOrderToWhatsApp(orderId, targetPhone) {
@@ -1307,7 +1341,7 @@
 
         const importedOrder = {
           orderId,
-          date: new Date().toLocaleDateString(),
+          date: getTodayIndianDate(),
           placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: 'Pending Acceptance',
           payment,
@@ -1351,7 +1385,7 @@
             <div class="flex justify-between items-center">
               <div>
                 <p class="font-black text-stone-900">${o.orderId} • <span class="text-orange-600">₹${o.total}</span></p>
-                <p class="text-[11px] text-stone-500">${o.date} at ${o.placedAt} (${o.payment})</p>
+                <p class="text-[11px] text-stone-500">${formatIndianDate(o.date)} at ${o.placedAt} (${o.payment})</p>
                 <p class="text-[11px] font-bold mt-0.5">Status: <span class="${o.status === 'Accepted' ? 'text-emerald-700' : o.status === 'Cancelled' ? 'text-rose-700' : 'text-amber-700'}">${o.status}</span></p>
               </div>
               <div class="flex items-center gap-1.5">
@@ -1424,7 +1458,7 @@
           <div class="flex justify-between items-center border-b pb-2">
             <div>
               <span class="font-extrabold text-stone-900 text-sm">${o.orderId}</span>
-              <p class="text-[10px] text-stone-500">${o.date} at ${o.placedAt}</p>
+              <p class="text-[10px] text-stone-500">${formatIndianDate(o.date)} at ${o.placedAt}</p>
               <span class="inline-block mt-0.5 px-2 py-0.5 text-[10px] font-black uppercase rounded ${o.status === 'Accepted' ? 'bg-emerald-100 text-emerald-800' : o.status === 'Cancelled' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}">
                 ${o.status}
               </span>
@@ -1475,6 +1509,7 @@
       document.getElementById('invoiceModal').classList.remove('hidden');
     }
 
+    // 🧾 INVOICE SHEET (INDIAN DD/MM/YYYY FORMAT)
     function renderInvoiceSheet() {
       if (!currentInvoiceOrder) return;
       const o = currentInvoiceOrder;
@@ -1483,7 +1518,7 @@
 
       document.getElementById('invGstin').innerText = kitchenSettings.gstin ? `GSTIN: ${kitchenSettings.gstin}` : 'RETAIL CASH BILL';
       document.getElementById('invOrderId').innerText = o.orderId;
-      document.getElementById('invDateTime').innerText = `${o.date} ${o.placedAt}`;
+      document.getElementById('invDateTime').innerText = `${formatIndianDate(o.date)} ${o.placedAt}`;
       document.getElementById('invOrderStatus').innerText = o.status;
       document.getElementById('invCustName').innerText = o.customer.name;
       document.getElementById('invCustPhone').innerText = o.customer.phone;
