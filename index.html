@@ -420,6 +420,7 @@
           <h1 class="text-lg font-black text-stone-950 tracking-tight">RDS CLOUD KITCHEN</h1>
           <p class="text-xs font-bold text-stone-600">INVENTORY, SALES & FULFILLMENT AUDIT LEDGER</p>
           <p id="reportPeriodText" class="text-[11px] font-bold text-orange-700"></p>
+          <p id="reportFssaiGstLine" class="text-[10px] font-bold text-stone-700"></p>
           <p class="text-[10px] text-stone-400">Generated On: <span id="reportGeneratedTimestamp"></span> • Kitchen Phone: +91 8667737440</p>
         </div>
 
@@ -567,11 +568,28 @@
     </div>
   </div>
 
-  <!-- ⚙️ SETTINGS MODAL -->
+  <!-- ⚙️ SETTINGS MODAL (WITH FSSAI & GST CONTROLS) -->
   <div id="settingsModal" class="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto text-xs">
       <div class="flex justify-between items-center border-b pb-3"><h2 class="font-extrabold text-base"><i class="fa-solid fa-gear text-orange-600 mr-1.5"></i> Kitchen Settings</h2><button onclick="toggleSettingsModal(false)" class="cursor-pointer text-xl font-bold">&times;</button></div>
       <form onsubmit="saveKitchenSettings(event)" class="space-y-3.5">
+        
+        <!-- 🌾 FSSAI LICENSE SETTINGS -->
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-black text-amber-950 text-sm flex items-center gap-1.5">
+              <i class="fa-solid fa-stamp text-amber-600"></i> Enable FSSAI License Display?
+            </span>
+            <input type="checkbox" id="setFssaiEnabled" class="w-4 h-4 accent-amber-600 cursor-pointer">
+          </div>
+          <div>
+            <label class="block font-bold mb-0.5 text-stone-700">14-Digit FSSAI License Number</label>
+            <input id="setFssaiNo" type="text" placeholder="e.g. 12423000000000" maxlength="14" class="w-full p-2 border rounded-xl font-bold bg-white text-stone-900">
+            <p class="text-[10px] text-stone-500 mt-0.5">Displayed on bills, reports, and the menu postcard.</p>
+          </div>
+        </div>
+
+        <!-- 🧾 GST BILLING SETTINGS -->
         <div class="p-3 bg-emerald-50 border rounded-2xl space-y-2">
           <div class="flex items-center justify-between"><span class="font-black text-emerald-950 text-sm"><i class="fa-solid fa-receipt text-emerald-600 mr-1"></i> Enable GST Invoices?</span><input type="checkbox" id="setGstEnabled" class="w-4 h-4 accent-emerald-600 cursor-pointer"></div>
           <div class="grid grid-cols-2 gap-2">
@@ -622,7 +640,6 @@
           <button onclick="toggleCustomerHistory(false)" class="cursor-pointer text-xl font-bold">&times;</button>
         </div>
 
-        <!-- 📅 DATE PICKER FILTER: DEFAULTS TO TODAY -->
         <div class="bg-amber-50/80 border border-amber-200 p-3 rounded-2xl space-y-2">
           <div class="flex items-center justify-between">
             <span class="font-bold text-stone-800 text-xs flex items-center gap-1.5">
@@ -647,7 +664,7 @@
     </div>
   </div>
 
-  <!-- 🧾 INVOICE MODAL -->
+  <!-- 🧾 INVOICE MODAL (WITH FSSAI SUPPORT) -->
   <div id="invoiceModal" class="fixed inset-0 z-[130] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border text-stone-900">
       <div class="flex justify-between items-center border-b pb-3">
@@ -655,8 +672,10 @@
         <button onclick="toggleInvoiceModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
       </div>
       <div id="invoicePrintTarget" class="bg-white p-5 border font-mono text-xs space-y-3 shadow-sm">
-        <div class="text-center border-b border-dashed pb-3 font-sans">
-          <h3 class="text-lg font-black">RDS CLOUD KITCHEN</h3>
+        <div class="text-center border-b border-dashed pb-3 font-sans space-y-0.5">
+          <h3 class="text-lg font-black text-stone-900">RDS CLOUD KITCHEN</h3>
+          <p class="text-[11px] font-bold text-stone-700">232/6, Ezhil Nagar, Near Gas Godown • Ph: +91 8667737440</p>
+          <p id="invFssaiNo" class="text-[11px] font-bold text-amber-800 hidden"></p>
           <p id="invGstin" class="text-[11px] font-bold text-stone-800"></p>
         </div>
         <div class="grid grid-cols-2 gap-2 text-[11px] border-b border-dashed pb-2">
@@ -699,38 +718,63 @@
     </div>
   </div>
 
-  <!-- 🖼️ POSTCARD MODAL -->
+  <!-- 🖼️ POSTCARD MODAL (HIGH CLARITY CAPTURE CONTAINER) -->
   <div id="postcardModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
-    <div class="bg-stone-950 rounded-3xl max-w-2xl w-full p-5 space-y-4 shadow-2xl border border-stone-800 text-white max-h-[92vh] overflow-y-auto">
+    <div class="bg-stone-900 rounded-3xl max-w-2xl w-full p-5 space-y-4 shadow-2xl border border-stone-800 text-white max-h-[95vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-stone-800 pb-3">
         <h2 class="font-extrabold text-sm sm:text-base"><i class="fa-solid fa-bullhorn text-orange-500 mr-1.5"></i> RDS Cloud Kitchen Menu Flyer</h2>
         <button onclick="togglePostcardModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
       </div>
-      <div class="flex justify-center">
-        <div id="adPostcardTarget" class="w-full bg-stone-950 text-white rounded-3xl p-5 border-4 border-orange-500 space-y-4 shadow-2xl">
-          <div class="flex justify-between items-center border-b border-white/10 pb-3">
+      
+      <div class="flex justify-center overflow-x-auto p-1">
+        <!-- FIXED 680px CANVAS TARGET FOR ULTRA-SHARP CAPTURE -->
+        <div id="adPostcardTarget" style="width: 680px; max-width: 680px; background-color: #0c0a09; color: #ffffff; border: 4px solid #ea580c; border-radius: 24px; padding: 24px; font-family: 'Plus Jakarta Sans', sans-serif;">
+          
+          <!-- POSTCARD HEADER -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #292524; padding-bottom: 14px; margin-bottom: 16px;">
             <div>
-              <h3 class="text-xl font-black">RDS CLOUD KITCHEN</h3>
-              <p class="text-[11px] font-bold text-amber-400 uppercase">Homestyle Delicacies • 3.0 KM Range • 232/6, Ezhil Nagar</p>
+              <h3 style="font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin: 0; color: #ffffff;">RDS CLOUD KITCHEN</h3>
+              <p style="font-size: 11px; font-weight: 800; color: #fbbf24; text-transform: uppercase; margin: 4px 0 0 0; letter-spacing: 0.5px;">
+                HOMESTYLE DELICACIES • 3.0 KM RANGE • 232/6, EZHIL NAGAR
+              </p>
+              <p id="postcardFssaiText" style="font-size: 10px; font-weight: 700; color: #d6d3d1; margin: 2px 0 0 0; display: none;">
+                FSSAI Lic No: <span id="postcardFssaiNo" style="color: #f97316;"></span>
+              </p>
             </div>
-            <span class="bg-orange-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-full">Fresh Daily</span>
+            <span style="background-color: #ea580c; color: #ffffff; font-size: 11px; font-weight: 900; text-transform: uppercase; padding: 6px 14px; border-radius: 9999px; letter-spacing: 0.5px;">
+              FRESH DAILY
+            </span>
           </div>
 
-          <div id="postcardAllMenuContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[380px] overflow-y-auto pr-1"></div>
+          <!-- FULL ALL-DISH GRID WITHOUT SCROLL CLIPPING -->
+          <div id="postcardAllMenuContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;"></div>
 
-          <div class="bg-white/5 rounded-2xl p-4 flex items-center justify-between gap-3 border border-white/10">
-            <div class="space-y-1">
-              <p class="text-stone-400 font-bold uppercase text-[10px]">Order Direct Online / WhatsApp:</p>
-              <p class="text-xs font-black text-amber-300">Helplines: +91 8667737440 / +91 8838377634</p>
-              <a id="postcardWebsiteAnchor" href="#" target="_blank" class="font-black text-white text-[11px] underline break-all block"></a>
+          <!-- POSTCARD FOOTER WITH QR & HELPLINE -->
+          <div style="background-color: #1c1917; border-radius: 16px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #44403c;">
+            <div style="line-height: 1.4;">
+              <p style="color: #a8a29e; font-weight: 800; text-transform: uppercase; font-size: 10px; margin: 0 0 2px 0; letter-spacing: 0.5px;">
+                ORDER DIRECT ONLINE / WHATSAPP:
+              </p>
+              <p style="font-size: 13px; font-weight: 900; color: #fbbf24; margin: 0 0 4px 0;">
+                Helplines: +91 8667737440 / +91 8838377634
+              </p>
+              <a id="postcardWebsiteAnchor" href="#" target="_blank" style="font-weight: 800; color: #ffffff; font-size: 11px; text-decoration: underline; word-break: break-all;"></a>
             </div>
-            <div class="bg-white p-1.5 rounded-xl shadow flex-shrink-0"><img id="postcardQrImg" src="" alt="QR" class="w-20 h-20 object-contain"></div>
+            <div style="background-color: #ffffff; padding: 6px; border-radius: 12px; flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);">
+              <img id="postcardQrImg" src="" alt="QR Code" crossorigin="anonymous" style="width: 80px; height: 80px; display: block; object-fit: contain;">
+            </div>
           </div>
+
         </div>
       </div>
+
       <div class="grid grid-cols-2 gap-2 font-sans pt-1">
-        <button onclick="downloadClickablePdf()" class="cursor-pointer bg-emerald-600 text-white font-black py-3 rounded-2xl uppercase text-xs">Download PDF</button>
-        <button onclick="downloadPostcardImage()" class="cursor-pointer bg-orange-600 text-white font-black py-3 rounded-2xl uppercase text-xs">Download PNG</button>
+        <button onclick="downloadClickablePdf()" class="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl uppercase text-xs shadow flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-file-pdf"></i> Download PDF
+        </button>
+        <button onclick="downloadPostcardImage()" class="cursor-pointer bg-orange-600 hover:bg-orange-700 text-white font-black py-3 rounded-2xl uppercase text-xs shadow flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-image"></i> Download PNG
+        </button>
       </div>
     </div>
   </div>
@@ -914,6 +958,7 @@
     let customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
     let kitchenSettings = JSON.parse(localStorage.getItem('rds_kitchen_settings') || JSON.stringify({
       gstEnabled: false, gstRate: 5.0, gstin: '',
+      fssaiEnabled: false, fssaiNo: '',
       surplusActive: false, surplusMessage: 'Extra portions cooked fresh & ready!',
       nextDayActive: false, nextDayText: '',
       useFixedPoint: false, fixedPointDesc: 'Main Gate Entrance Hub Handover',
@@ -1047,6 +1092,8 @@
     }
 
     function loadKitchenSettingsForm() {
+      document.getElementById('setFssaiEnabled').checked = !!kitchenSettings.fssaiEnabled;
+      document.getElementById('setFssaiNo').value = kitchenSettings.fssaiNo || '';
       document.getElementById('setGstEnabled').checked = !!kitchenSettings.gstEnabled;
       document.getElementById('setGstRate').value = kitchenSettings.gstRate || 5.0;
       document.getElementById('setGstin').value = kitchenSettings.gstin || '';
@@ -1087,6 +1134,8 @@
         kitchenSettings.pin = newPassword;
       }
 
+      kitchenSettings.fssaiEnabled = document.getElementById('setFssaiEnabled').checked;
+      kitchenSettings.fssaiNo = document.getElementById('setFssaiNo').value.trim();
       kitchenSettings.gstEnabled = document.getElementById('setGstEnabled').checked;
       kitchenSettings.gstRate = parseFloat(document.getElementById('setGstRate').value) || 5.0;
       kitchenSettings.gstin = document.getElementById('setGstin').value.trim().toUpperCase();
@@ -1387,7 +1436,6 @@
       order.status = newStatus;
       order.remark = remark;
 
-      // Restock portions whenever an order is rejected, cancelled, not delivered, or returned
       autoRestockOrderPortions(order);
 
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
@@ -1591,7 +1639,6 @@
       window.open(`https://wa.me/${targetPhone}?text=${cancelMsg}`, '_blank');
     }
 
-    // 🗓️ OWNER ORDER LIST WITH CALENDAR FILTER (DEFAULTS TO TODAY)
     function resetOrderDateToToday() {
       const todayIso = getTodayIsoDate();
       const input = document.getElementById('orderDateFilterInput');
@@ -1608,20 +1655,18 @@
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase().trim();
-      const dateFilterVal = document.getElementById('orderDateFilterInput')?.value; // YYYY-MM-DD
+      const dateFilterVal = document.getElementById('orderDateFilterInput')?.value;
 
       document.getElementById('ordersCount').innerText = customerOrders.length;
 
       let filtered = customerOrders;
 
-      // Filter by Selected Date (defaults to today's date)
       if (dateFilterVal) {
         const [yr, mo, da] = dateFilterVal.split('-');
         const targetIndianDate = `${da}/${mo}/${yr}`;
         filtered = filtered.filter(o => formatIndianDate(o.date) === targetIndianDate);
       }
 
-      // Filter by Name / Phone search
       if (search) {
         filtered = filtered.filter(o => o.customer.phone.toLowerCase().includes(search) || o.customer.name.toLowerCase().includes(search));
       }
@@ -1697,13 +1742,22 @@
       document.getElementById('invoiceModal').classList.remove('hidden');
     }
 
+    // 🧾 INVOICE SHEET WITH FSSAI SUPPORT
     function renderInvoiceSheet() {
       if (!currentInvoiceOrder) return;
       const o = currentInvoiceOrder;
       const gstActive = !!kitchenSettings.gstEnabled;
       const gstRate = Number(kitchenSettings.gstRate) || 5;
 
-      document.getElementById('invGstin').innerText = kitchenSettings.gstin ? `GSTIN: ${kitchenSettings.gstin}` : 'RETAIL CASH BILL';
+      const fssaiEl = document.getElementById('invFssaiNo');
+      if (kitchenSettings.fssaiEnabled && kitchenSettings.fssaiNo) {
+        fssaiEl.innerText = `FSSAI Lic No: ${kitchenSettings.fssaiNo}`;
+        fssaiEl.classList.remove('hidden');
+      } else {
+        fssaiEl.classList.add('hidden');
+      }
+
+      document.getElementById('invGstin').innerText = (gstActive && kitchenSettings.gstin) ? `GSTIN: ${kitchenSettings.gstin}` : 'RETAIL CASH BILL';
       document.getElementById('invOrderId').innerText = o.orderId;
       document.getElementById('invDateTime').innerText = `${formatIndianDate(o.date)} ${o.placedAt}`;
       document.getElementById('invOrderStatus').innerText = o.status;
@@ -1746,7 +1800,7 @@
       });
     }
 
-    // 📊 DATE-WISE INVENTORY & AUDIT REPORT LOGIC
+    // 📊 DATE-WISE INVENTORY & AUDIT REPORT LOGIC (WITH FSSAI & GST DETAILS)
     function openReportModal() {
       const todayIso = getTodayIsoDate();
       document.getElementById('reportFromDate').value = todayIso;
@@ -1785,8 +1839,14 @@
         return orderTime >= fromTimestamp && orderTime <= toTimestamp;
       });
 
-      document.getElementById('reportPeriodText').innerText = `Report Period: ${formatIndianDate(fromIso)} to ${formatIndianDate(toIso)}`;
+      document.getElementById('reportPeriodText').innerText = `Audit Period: ${formatIndianDate(fromIso)} to ${formatIndianDate(toIso)}`;
       document.getElementById('reportGeneratedTimestamp').innerText = `${getTodayIndianDate()} ${new Date().toLocaleTimeString()}`;
+
+      // FSSAI & GST line on report
+      const extraLines = [];
+      if (kitchenSettings.fssaiEnabled && kitchenSettings.fssaiNo) extraLines.push(`FSSAI Lic: ${kitchenSettings.fssaiNo}`);
+      if (kitchenSettings.gstEnabled && kitchenSettings.gstin) extraLines.push(`GSTIN: ${kitchenSettings.gstin}`);
+      document.getElementById('reportFssaiGstLine').innerText = extraLines.join(' • ');
 
       let grossSales = 0;
       let netSales = 0;
@@ -1876,46 +1936,81 @@
       });
     }
 
+    // 🖼️ ULTRA-CLEAR POSTCARD PREVIEW (WITH FSSAI & FULL GRID RENDERING)
     function openPostcardPreview() {
       const cleanUrl = window.location.origin + window.location.pathname;
       document.getElementById('postcardWebsiteAnchor').innerText = cleanUrl;
       document.getElementById('postcardWebsiteAnchor').href = cleanUrl;
-      document.getElementById('postcardQrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(cleanUrl)}`;
+      
+      // Load QR code with CORS support
+      const qrImg = document.getElementById('postcardQrImg');
+      qrImg.crossOrigin = "anonymous";
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(cleanUrl)}`;
 
+      // FSSAI Line on Postcard
+      const fssaiContainer = document.getElementById('postcardFssaiText');
+      if (kitchenSettings.fssaiEnabled && kitchenSettings.fssaiNo) {
+        document.getElementById('postcardFssaiNo').innerText = kitchenSettings.fssaiNo;
+        fssaiContainer.style.display = "block";
+      } else {
+        fssaiContainer.style.display = "none";
+      }
+
+      // Render crisp dish cards (No scroll cutoff)
       const container = document.getElementById('postcardAllMenuContainer');
       if (activeMenu.length > 0) {
         container.innerHTML = activeMenu.map(dish => `
-          <div class="bg-white/10 rounded-2xl p-2 flex flex-col justify-between border border-white/10">
-            <img src="${dish.image}" alt="${dish.name}" class="w-full h-16 object-cover rounded-xl bg-stone-900">
-            <div class="mt-1 text-left">
-              <span class="text-[8px] font-black uppercase text-amber-400">${dish.category}</span>
-              <p class="font-extrabold text-[11px] text-white leading-tight truncate">${dish.name}</p>
-              <p class="font-black text-amber-300 text-[10px]">₹${dish.price}</p>
+          <div style="background-color: #1c1917; border: 1px solid #292524; border-radius: 14px; padding: 8px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="width: 100%; height: 90px; background-color: #292524; border-radius: 10px; overflow: hidden; margin-bottom: 6px;">
+              <img src="${dish.image}" alt="${dish.name}" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+            </div>
+            <div style="text-align: left; line-height: 1.2;">
+              <span style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #f59e0b; display: block; margin-bottom: 2px;">${dish.category}</span>
+              <p style="font-size: 11px; font-weight: 800; color: #ffffff; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${dish.name}</p>
+              <p style="font-size: 11px; font-weight: 900; color: #fbbf24; margin: 0;">₹${dish.price}</p>
             </div>
           </div>
         `).join('');
       } else {
-        container.innerHTML = '<p class="text-xs text-stone-400 py-4 col-span-3 text-center">Menu dishes syncing from sheet...</p>';
+        container.innerHTML = '<p style="font-size: 12px; color: #a8a29e; grid-column: span 3; text-align: center; padding: 16px;">Menu syncing from sheet...</p>';
       }
 
       document.getElementById('postcardModal').classList.remove('hidden');
     }
 
+    // 🖨️ HIGH RESOLUTION POSTCARD EXPORT (PDF)
     function downloadClickablePdf() {
-      html2canvas(document.getElementById('adPostcardTarget'), { scale: 2 }).then(canvas => {
+      const target = document.getElementById('adPostcardTarget');
+      html2canvas(target, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#0c0a09',
+        logging: false
+      }).then(canvas => {
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', [210, (canvas.height * 210) / canvas.width]);
-        pdf.addImage(canvas.toDataURL('png'), 'PNG', 0, 0, 210, (canvas.height * 210) / canvas.width);
-        pdf.link(15, 15, 180, 200, { url: window.location.origin + window.location.pathname });
+        const pdfWidth = 210; // A4 mm
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
+        pdf.addImage(canvas.toDataURL('png'), 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.link(10, 10, 190, pdfHeight - 20, { url: window.location.origin + window.location.pathname });
         pdf.save(`RDS-Kitchen-Flyer.pdf`);
       });
     }
 
+    // 🖼️ HIGH RESOLUTION POSTCARD EXPORT (PNG)
     function downloadPostcardImage() {
-      html2canvas(document.getElementById('adPostcardTarget'), { scale: 2 }).then(canvas => {
+      const target = document.getElementById('adPostcardTarget');
+      html2canvas(target, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#0c0a09',
+        logging: false
+      }).then(canvas => {
         const link = document.createElement('a');
         link.download = `RDS-Kitchen-Postcard.png`;
-        link.href = canvas.toDataURL('png');
+        link.href = canvas.toDataURL('image/png');
         link.click();
       });
     }
