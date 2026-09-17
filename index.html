@@ -502,7 +502,7 @@
     </div>
   </div>
 
-  <!-- ❌ 5. OWNER STATUS UPDATE MODAL (REJECT, UNDELIVERED, RETURNED, CANCEL) -->
+  <!-- ❌ 5. OWNER STATUS UPDATE MODAL -->
   <div id="cancelOrderModal" class="fixed inset-0 z-[145] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border text-stone-900 text-xs">
       <div class="flex justify-between items-center border-b pb-2">
@@ -631,7 +631,7 @@
     </div>
   </div>
 
-  <!-- 🖼️ POSTCARD MODAL (AUTO-EXPANDING LENGTHY POSTCARD) -->
+  <!-- 🖼️ POSTCARD MODAL -->
   <div id="postcardModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
     <div class="bg-stone-900 rounded-3xl max-w-3xl w-full p-5 space-y-4 shadow-2xl border border-stone-800 text-white max-h-[95vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-stone-800 pb-3">
@@ -643,10 +643,8 @@
       </div>
       
       <div class="flex justify-center overflow-x-auto p-1">
-        <!-- LENGTHY AUTO-SIZED CARD TARGET (800px FIXED WIDTH) -->
         <div id="adPostcardTarget" style="width: 800px; min-width: 800px; background-color: #0c0a09; color: #ffffff; border: 4px solid #ea580c; border-radius: 28px; padding: 30px; font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; height: auto;">
           
-          <!-- FLYER HEADER -->
           <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #292524; padding-bottom: 18px; margin-bottom: 20px;">
             <div>
               <h3 style="font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin: 0; color: #ffffff; line-height: 1.1;">RDS CLOUD KITCHEN</h3>
@@ -662,10 +660,8 @@
             </span>
           </div>
 
-          <!-- FULL ALL-DISH GRID (AUTO LENGTH, NO CUTOFF) -->
           <div id="postcardAllMenuContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px;"></div>
 
-          <!-- FLYER FOOTER WITH DIRECT QR & CONTACT -->
           <div style="background-color: #1c1917; border-radius: 18px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #44403c;">
             <div style="line-height: 1.45;">
               <p style="color: #a8a29e; font-weight: 800; text-transform: uppercase; font-size: 11px; margin: 0 0 2px 0; letter-spacing: 0.5px;">
@@ -708,13 +704,41 @@
     const UPI_NUMBER = "8667737440";
     const UPI_ADDRESS = "8667737440@upi";
 
+    // 🌐 CROSS-DEVICE WHATSAPP DISPATCHER (LAPTOP / DESKTOP / PHONE COMPATIBLE)
+    function dispatchWhatsAppMessage(targetPhone, rawText) {
+      const cleanTargetPhone = String(targetPhone).replace(/\D/g, '');
+      const encodedMsg = encodeURIComponent(rawText);
+      
+      // Auto-copy to clipboard as backup
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(rawText).catch(() => {});
+      }
+
+      // Check if user is on mobile
+      const isMobile = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        window.location.href = `https://wa.me/${cleanTargetPhone}?text=${encodedMsg}`;
+      } else {
+        // Desktop / Laptop: Use window.open with fallback to WhatsApp Web
+        const waUrl = `https://web.whatsapp.com/send?phone=${cleanTargetPhone}&text=${encodedMsg}`;
+        const newWindow = window.open(waUrl, '_blank');
+        
+        // If popup blocker intervened, fallback to direct location change
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          window.location.href = `https://wa.me/${cleanTargetPhone}?text=${encodedMsg}`;
+        }
+      }
+    }
+
     // 🗓️ DATE HELPERS (INDIAN DD/MM/YYYY)
     function formatIndianDate(inputDate) {
       if (!inputDate) return "";
+      
       if (typeof inputDate === "string" && inputDate.includes("/")) {
         const parts = inputDate.split("/");
         if (parts.length === 3) {
-          if (parts[0].length <= 2 && parts[1].length <= 2 && parts[2].length === 4) {
+          if (parts[2].length === 4) {
             const p1 = parseInt(parts[0], 10);
             const p2 = parseInt(parts[1], 10);
             if (p1 <= 31 && p2 <= 12) {
@@ -723,6 +747,14 @@
           }
         }
       }
+
+      if (typeof inputDate === "string" && inputDate.includes("-")) {
+        const parts = inputDate.split("-");
+        if (parts.length === 3 && parts[0].length === 4) {
+          return `${String(parts[2]).padStart(2, '0')}/${String(parts[1]).padStart(2, '0')}/${parts[0]}`;
+        }
+      }
+
       const d = new Date(inputDate);
       if (isNaN(d.getTime())) return inputDate;
       const day = String(d.getDate()).padStart(2, '0');
@@ -741,15 +773,24 @@
 
     function getTodayIsoDate() {
       const d = new Date();
-      return d.toISOString().split('T')[0];
+      const yr = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, '0');
+      const da = String(d.getDate()).padStart(2, '0');
+      return `${yr}-${mo}-${da}`;
     }
 
     function parseDateToTimestamp(dateStr) {
       if (!dateStr) return 0;
-      if (dateStr.includes("/")) {
+      if (typeof dateStr === "string" && dateStr.includes("/")) {
         const parts = dateStr.split("/");
         if (parts.length === 3) {
           return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
+        }
+      }
+      if (typeof dateStr === "string" && dateStr.includes("-")) {
+        const parts = dateStr.split("-");
+        if (parts.length === 3 && parts[0].length === 4) {
+          return new Date(parts[0], parts[1] - 1, parts[2]).getTime();
         }
       }
       return new Date(dateStr).getTime();
@@ -1280,10 +1321,7 @@
       renderCustomerOrders();
 
       const rawOrderSummary = formatOrderWhatsAppText(newOrder);
-      navigator.clipboard.writeText(rawOrderSummary).catch(() => {});
-
-      const msg = encodeURIComponent(rawOrderSummary);
-      window.location.href = `https://wa.me/${phoneToUse}?text=${msg}`;
+      dispatchWhatsAppMessage(phoneToUse, rawOrderSummary);
     }
 
     function formatOrderWhatsAppText(o) {
@@ -1294,8 +1332,8 @@
     function resendOrderToWhatsApp(orderId, targetPhone) {
       const order = customerOrders.find(o => o.orderId === orderId);
       if (!order) return;
-      const msg = encodeURIComponent(formatOrderWhatsAppText(order));
-      window.open(`https://wa.me/${targetPhone}?text=${msg}`, '_blank');
+      const rawText = formatOrderWhatsAppText(order);
+      dispatchWhatsAppMessage(targetPhone, rawText);
     }
 
     function toggleStockModal(show) {
@@ -1359,7 +1397,7 @@
       toggleCancelModal(false);
 
       const notifyText = `*ORDER STATUS UPDATE*\n*Order ID:* ${order.orderId}\nHello ${order.customer.name}, your RDS Cloud Kitchen order status has been updated to: *${newStatus}*\n*Reason / Remark:* ${remark}\nContact our helpline (+91 8667737440) for any questions.`;
-      window.open(`https://wa.me/${order.customer.phone}?text=${encodeURIComponent(notifyText)}`, '_blank');
+      dispatchWhatsAppMessage(order.customer.phone, notifyText);
       alert(`Order ${order.orderId} marked as "${newStatus}". Portions returned to stock.`);
     }
 
@@ -1550,15 +1588,15 @@
         alert("This order has already been accepted and prep has commenced. It can no longer be cancelled.");
         return;
       }
-      const cancelMsg = `*URGENT: CANCELLATION REQUEST*%0A*Order ID:* ${order.orderId}%0A*Customer:* ${order.customer.name} (${order.customer.phone})%0APlease cancel this order before kitchen acceptance.`;
+      const cancelMsg = `*URGENT: CANCELLATION REQUEST*\n*Order ID:* ${order.orderId}\n*Customer:* ${order.customer.name} (${order.customer.phone})\nPlease cancel this order before kitchen acceptance.`;
       const targetPhone = confirm("Send cancellation request to Primary Helpline (+91 8667737440)? Click Cancel for Secondary Helpline (+91 8838377634).") ? PRIMARY_PHONE : SECONDARY_PHONE;
-      window.open(`https://wa.me/${targetPhone}?text=${cancelMsg}`, '_blank');
+      dispatchWhatsAppMessage(targetPhone, cancelMsg);
     }
 
+    // 🗓️ OWNER ORDER LIST WITH CALENDAR FILTER (DEFAULTS TO TODAY WITH ROBUST MATCHING)
     function resetOrderDateToToday() {
-      const todayIso = getTodayIsoDate();
       const input = document.getElementById('orderDateFilterInput');
-      if (input) input.value = todayIso;
+      if (input) input.value = getTodayIsoDate();
       renderCustomerOrders();
     }
 
@@ -1570,25 +1608,40 @@
 
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
+      if (!container) return;
+      
       const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase().trim();
-      const dateFilterVal = document.getElementById('orderDateFilterInput')?.value;
+      const dateFilterVal = document.getElementById('orderDateFilterInput')?.value; // YYYY-MM-DD
 
       document.getElementById('ordersCount').innerText = customerOrders.length;
 
       let filtered = customerOrders;
 
+      // Filter by Selected Date using normalizer
       if (dateFilterVal) {
         const [yr, mo, da] = dateFilterVal.split('-');
-        const targetIndianDate = `${da}/${mo}/${yr}`;
-        filtered = filtered.filter(o => formatIndianDate(o.date) === targetIndianDate);
+        const targetStandardDate = `${String(da).padStart(2,'0')}/${String(mo).padStart(2,'0')}/${yr}`;
+        
+        filtered = filtered.filter(o => {
+          const orderDateFormatted = formatIndianDate(o.date);
+          return orderDateFormatted === targetStandardDate;
+        });
       }
 
+      // Filter by Name / Phone search
       if (search) {
         filtered = filtered.filter(o => o.customer.phone.toLowerCase().includes(search) || o.customer.name.toLowerCase().includes(search));
       }
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="py-10 text-center text-xs text-stone-400">No orders found for the selected filter (${dateFilterVal ? formatIndianDate(dateFilterVal) : 'All Dates'}).</div>`;
+        container.innerHTML = `
+          <div class="py-10 text-center text-xs text-stone-400 space-y-2">
+            <p>No orders found for date: <strong class="text-stone-700">${dateFilterVal ? formatIndianDate(dateFilterVal) : 'All Dates'}</strong></p>
+            <button onclick="clearOrderDateFilter()" class="bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-1 rounded-xl text-[11px] font-bold">
+              View All Dates
+            </button>
+          </div>
+        `;
         return;
       }
 
@@ -1646,8 +1699,8 @@
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
       renderCustomerOrders();
 
-      const acceptMsg = `*ORDER ACCEPTED!*%0A*Order ID:* ${order.orderId}%0AHello ${order.customer.name}, your RDS Cloud Kitchen order has been officially accepted and entered preparation!%0A*Total:* ₹${order.total}`;
-      window.open(`https://wa.me/${order.customer.phone}?text=${acceptMsg}`, '_blank');
+      const acceptMsg = `*ORDER ACCEPTED!*\n*Order ID:* ${order.orderId}\nHello ${order.customer.name}, your RDS Cloud Kitchen order has been officially accepted and entered preparation!\n*Total:* ₹${order.total}`;
+      dispatchWhatsAppMessage(order.customer.phone, acceptMsg);
     }
 
     function openInvoiceModal(orderId) {
@@ -1716,7 +1769,7 @@
       });
     }
 
-    // 📊 DATE-WISE INVENTORY & AUDIT REPORT LOGIC (WITH FSSAI & GST DETAILS)
+    // 📊 DATE-WISE INVENTORY & AUDIT REPORT LOGIC
     function openReportModal() {
       const todayIso = getTodayIsoDate();
       document.getElementById('reportFromDate').value = todayIso;
@@ -1851,7 +1904,7 @@
       });
     }
 
-    // 🖼️ ULTRA-CLEAR, LENGTHY AUTO-EXPANDING POSTCARD PREVIEW (WITH FSSAI)
+    // 🖼️ ULTRA-CLEAR, LENGTHY AUTO-EXPANDING POSTCARD PREVIEW
     function openPostcardPreview() {
       const cleanUrl = window.location.origin + window.location.pathname;
       document.getElementById('postcardWebsiteAnchor').innerText = cleanUrl;
@@ -1869,7 +1922,6 @@
         fssaiContainer.style.display = "none";
       }
 
-      // Render crisp dish cards with word-wrapping and dedicated height (Zero slicing/squeezing)
       const container = document.getElementById('postcardAllMenuContainer');
       if (activeMenu.length > 0) {
         container.innerHTML = activeMenu.map(dish => `
@@ -1891,7 +1943,6 @@
       document.getElementById('postcardModal').classList.remove('hidden');
     }
 
-    // 🖨️ HIGH RESOLUTION POSTCARD EXPORT (PDF)
     function downloadClickablePdf() {
       const target = document.getElementById('adPostcardTarget');
       html2canvas(target, {
@@ -1903,7 +1954,7 @@
         windowWidth: 1200
       }).then(canvas => {
         const { jsPDF } = window.jspdf;
-        const pdfWidth = 210; // A4 mm
+        const pdfWidth = 210;
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
         const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
         pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
@@ -1912,7 +1963,6 @@
       });
     }
 
-    // 🖼️ HIGH RESOLUTION POSTCARD EXPORT (PNG)
     function downloadPostcardImage() {
       const target = document.getElementById('adPostcardTarget');
       html2canvas(target, {
@@ -1937,7 +1987,7 @@
       document.getElementById('settingsModal').classList.toggle('hidden', !show);
     }
     function toggleCustomerHistory(show) {
-      resetOrderDateToToday();
+      if (show) resetOrderDateToToday();
       document.getElementById('customerHistoryDrawer').classList.toggle('hidden', !show);
     }
     function toggleInvoiceModal(show) { document.getElementById('invoiceModal').classList.toggle('hidden', !show); }
