@@ -1274,15 +1274,11 @@
       placeCustomerOrder(selectedPhone);
     }
 
-    // 🛡️ BULLETPROOF CART ORDER GENERATOR
+    // 🛡️ BULLETPROOF CART ORDER GENERATOR WITH SAFE STATE SYNC
     function placeCustomerOrder(targetPhone) {
       const phoneToUse = targetPhone || PRIMARY_PHONE;
-      const nameInput = document.getElementById('custName');
-      const phoneInput = document.getElementById('custPhone');
-      const addressInput = document.getElementById('custAddress');
-      
-      const name = nameInput ? nameInput.value.trim() : "Valued Customer";
-      const rawPhone = phoneInput ? phoneInput.value.trim() : "9999999999";
+      const name = (document.getElementById('custName')?.value || '').trim();
+      const rawPhone = (document.getElementById('custPhone')?.value || '').trim();
       const cleanPhone = rawPhone.replace(/\D/g, '');
       const phone = cleanPhone.length === 10 ? `91${cleanPhone}` : (cleanPhone || PRIMARY_PHONE);
       
@@ -1292,7 +1288,7 @@
       const takeBtn = document.getElementById('tabTakeaway');
       const isTakeaway = takeBtn && takeBtn.dataset.active === "true";
 
-      let address = addressInput ? addressInput.value.trim() : "";
+      let address = (document.getElementById('custAddress')?.value || '').trim();
       if (isTakeaway) {
         address = `TAKEAWAY COUNTER PICKUP (${TAKEAWAY_FIXED_ADDRESS})`;
       } else if (kitchenSettings.useFixedPoint) {
@@ -1325,7 +1321,7 @@
         placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'Pending Acceptance',
         payment, 
-        customer: { name, phone, address }, 
+        customer: { name: name || 'Valued Customer', phone, address }, 
         items: orderItems, 
         total: grandTotal,
         remark: ''
@@ -1353,6 +1349,7 @@
     }
 
     function resendOrderToWhatsApp(orderId, targetPhone) {
+      customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
       const order = customerOrders.find(o => o.orderId === orderId);
       if (!order) return;
       const rawText = formatOrderWhatsAppText(order);
@@ -1393,6 +1390,7 @@
 
     function openStatusUpdateModal(orderId) {
       orderToStatusUpdateId = orderId;
+      customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
       const order = customerOrders.find(o => o.orderId === orderId);
       document.getElementById('statusSelectDropdown').value = (order && order.status !== 'Pending Acceptance') ? order.status : 'Accepted';
       document.getElementById('cancelRemarkInput').value = order?.remark || '';
@@ -1405,6 +1403,7 @@
 
     function confirmStatusUpdateWithRestock() {
       if (!orderToStatusUpdateId) return;
+      customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
       const order = customerOrders.find(o => o.orderId === orderToStatusUpdateId);
       if (!order) return;
 
