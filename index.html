@@ -540,7 +540,7 @@
     </div>
   </div>
 
-  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER -->
+  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER (STRICT VALIDATION) -->
   <div id="importOrderModal" class="fixed inset-0 z-[135] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border text-stone-900 text-xs max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-2">
@@ -679,92 +679,6 @@
 
         <button type="submit" class="cursor-pointer w-full bg-stone-900 text-amber-300 font-bold py-3 rounded-xl shadow uppercase">Save Settings</button>
       </form>
-    </div>
-  </div>
-
-  <!-- 📂 OWNER ORDERS DRAWER -->
-  <div id="customerHistoryDrawer" class="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm hidden flex justify-end">
-    <div class="w-full max-w-xl bg-white h-full shadow-2xl flex flex-col justify-between p-6 overflow-y-auto">
-      <div class="space-y-4">
-        <div class="flex items-center justify-between border-b pb-3">
-          <div class="flex items-center gap-2 font-extrabold text-base"><i class="fa-solid fa-clipboard-list text-orange-600"></i><h2>Kitchen Orders & Queue</h2></div>
-          <button onclick="toggleCustomerHistory(false)" class="cursor-pointer text-xl font-bold">&times;</button>
-        </div>
-
-        <div class="bg-amber-50/80 border border-amber-200 p-3 rounded-2xl space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-stone-800 text-xs flex items-center gap-1.5">
-              <i class="fa-solid fa-calendar-day text-orange-600"></i> Filter Orders by Date
-            </span>
-            <button onclick="clearOrderDateFilter()" class="cursor-pointer text-[10px] font-black uppercase text-orange-700 hover:underline">
-              Show All Orders
-            </button>
-          </div>
-          <div class="flex gap-2">
-            <input id="orderDateFilterInput" onchange="renderCustomerOrders()" type="date" class="p-2 border rounded-xl text-xs bg-white font-bold w-full">
-            <button onclick="clearOrderDateFilter()" title="View All Dates" class="cursor-pointer bg-stone-200 hover:bg-stone-300 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
-              All Dates
-            </button>
-          </div>
-        </div>
-
-        <input id="customerSearchInput" oninput="renderCustomerOrders()" type="text" placeholder="Search customer phone or name..." class="w-full p-2.5 border rounded-xl text-xs bg-stone-50 outline-none">
-        
-        <div id="customerOrdersList" class="space-y-3"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 🧾 INVOICE MODAL -->
-  <div id="invoiceModal" class="fixed inset-0 z-[130] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border text-stone-900">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h2 class="font-black text-base"><i class="fa-solid fa-file-invoice text-orange-600 mr-1"></i> Customer Bill</h2>
-        <button onclick="toggleInvoiceModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
-      </div>
-      <div id="invoicePrintTarget" class="bg-white p-5 border font-mono text-xs space-y-3 shadow-sm">
-        <div class="text-center border-b border-dashed pb-3 font-sans space-y-0.5">
-          <h3 class="text-lg font-black text-stone-900">RDS CLOUD KITCHEN</h3>
-          <p class="text-[11px] font-bold text-stone-700">232/6, Ezhil Nagar, Near Gas Godown • Ph: +91 8667737440</p>
-          <p id="invFssaiNo" class="text-[11px] font-bold text-amber-800 hidden"></p>
-          <p id="invGstin" class="text-[11px] font-bold text-stone-800"></p>
-        </div>
-        <div class="grid grid-cols-2 gap-2 text-[11px] border-b border-dashed pb-2">
-          <div>
-            <p><strong>Bill:</strong> <span id="invOrderId"></span></p>
-            <p><strong>Date:</strong> <span id="invDateTime"></span></p>
-          </div>
-          <div class="text-right">
-            <p><strong>Customer:</strong> <span id="invCustName"></span></p>
-            <p><strong>Phone:</strong> <span id="invCustPhone"></span></p>
-          </div>
-        </div>
-
-        <div class="p-2 bg-stone-50 rounded-xl text-[11px]">
-          <strong>Fulfillment / Location:</strong>
-          <p id="invCustAddress" class="break-words mt-0.5"></p>
-        </div>
-
-        <div id="invRemarkRow" class="hidden p-2 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800">
-          <strong>Remark / Reason:</strong> <span id="invRemarkText"></span>
-        </div>
-
-        <table class="w-full text-left text-[11px]">
-          <thead><tr class="border-b font-bold"><th class="py-1">Item</th><th class="text-center">Qty</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead>
-          <tbody id="invItemsTable" class="divide-y"></tbody>
-        </table>
-        <div class="border-t border-dashed pt-2 space-y-1 text-[11px]">
-          <div id="invGstFields" class="hidden space-y-1">
-            <div class="flex justify-between"><span>Taxable Food Value:</span><span id="invTaxable">₹0.00</span></div>
-            <div class="flex justify-between text-stone-600"><span>GST (<span id="invGstPct">5</span>%):</span><span id="invGstVal">₹0.00</span></div>
-          </div>
-          <div class="flex justify-between border-t pt-1.5 text-sm font-black font-sans"><span>Grand Total (Net Payable):</span><span id="invGrandTotal" class="text-orange-600">₹0.00</span></div>
-        </div>
-      </div>
-      <div class="flex gap-2 font-sans pt-1">
-        <button onclick="printInvoiceSheet()" class="cursor-pointer flex-1 bg-stone-900 text-amber-300 font-black py-3 rounded-2xl uppercase text-xs">Print Bill</button>
-        <button onclick="downloadInvoicePdf()" class="cursor-pointer flex-1 bg-orange-600 text-white font-black py-3 rounded-2xl uppercase text-xs">Download PDF</button>
-      </div>
     </div>
   </div>
 
@@ -1126,8 +1040,7 @@
     function handleOwnerLogin(e) {
       e.preventDefault();
       const entered = document.getElementById('ownerPinInput').value.trim();
-      const expectedPassword = kitchenSettings.pin || 'Dheeraj@123';
-      if (entered === expectedPassword || entered === "Dheeraj@123") {
+      if (entered === "Dheeraj@123" || entered === (kitchenSettings.pin || 'Dheeraj@123')) {
         isOwnerLoggedIn = true;
         sessionStorage.setItem('rds_owner_auth', 'true');
         updateAuthUI();
@@ -1348,13 +1261,30 @@
       placeCustomerOrder(selectedPhone);
     }
 
-    // 🛡️ BULLETPROOF CART ORDER GENERATOR
+    // 🛡️ STRICT VALIDATION CART ORDER GENERATOR (PREVENTS FALLBACK LOOPHOLES)
     function placeCustomerOrder(targetPhone) {
       const phoneToUse = targetPhone || PRIMARY_PHONE;
-      const name = (document.getElementById('custName')?.value || '').trim();
-      const rawPhone = (document.getElementById('custPhone')?.value || '').trim();
+      const nameInput = document.getElementById('custName');
+      const phoneInput = document.getElementById('custPhone');
+      const addressInput = document.getElementById('custAddress');
+      
+      const name = nameInput ? nameInput.value.trim() : "";
+      const rawPhone = phoneInput ? phoneInput.value.trim() : "";
       const cleanPhone = rawPhone.replace(/\D/g, '');
-      const phone = cleanPhone.length === 10 ? `91${cleanPhone}` : (cleanPhone || PRIMARY_PHONE);
+
+      if (!name) {
+        alert("Please enter your Name before sending the order.");
+        if (nameInput) nameInput.focus();
+        return;
+      }
+
+      if (cleanPhone.length < 10) {
+        alert("Please enter a valid 10-digit mobile number.");
+        if (phoneInput) phoneInput.focus();
+        return;
+      }
+
+      const phone = `91${cleanPhone}`;
       
       const paymentEl = document.querySelector('input[name="paymentType"]:checked');
       const payment = paymentEl ? paymentEl.value : 'COD';
@@ -1362,13 +1292,15 @@
       const takeBtn = document.getElementById('tabTakeaway');
       const isTakeaway = takeBtn && takeBtn.dataset.active === "true";
 
-      let address = (document.getElementById('custAddress')?.value || '').trim();
+      let address = addressInput ? addressInput.value.trim() : "";
       if (isTakeaway) {
         address = `TAKEAWAY COUNTER PICKUP (${TAKEAWAY_FIXED_ADDRESS})`;
       } else if (kitchenSettings.useFixedPoint) {
         address = `[FIXED POINT HUB]: ${kitchenSettings.fixedPointDesc} | Notes: ${address}`;
       } else if (!address) {
-        address = TAKEAWAY_FIXED_ADDRESS;
+        alert("Please provide your complete Delivery Address.");
+        if (addressInput) addressInput.focus();
+        return;
       }
 
       let orderItems = [];
@@ -1395,7 +1327,7 @@
         placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'Pending Acceptance',
         payment, 
-        customer: { name: name || 'Valued Customer', phone, address }, 
+        customer: { name, phone, address }, 
         items: orderItems, 
         total: grandTotal,
         remark: ''
@@ -1566,8 +1498,8 @@
       const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
 
       let orderId = 'RDS-' + Math.floor(100000 + Math.random() * 900000);
-      let name = 'WhatsApp Customer';
-      let phone = 'Not Provided';
+      let name = '';
+      let phone = '';
       let address = TAKEAWAY_FIXED_ADDRESS;
       let payment = 'COD';
       let orderDate = getTodayIndianDate();
@@ -1604,23 +1536,9 @@
         }
       }
 
-      if (parsedItems.length === 0) {
-        lines.forEach(l => {
-          if (l.includes('₹') || /\d+/.test(l)) {
-            const parts = l.split(/[-–:]/);
-            if (parts.length >= 2) {
-              const itemName = parts[0].replace(/^[•·\-\*\d\.]+\s*/, '').trim();
-              const priceNum = parseFloat(parts[1].replace(/\D/g, '')) || 100;
-              if (itemName && !itemName.toLowerCase().includes('total') && !itemName.toLowerCase().includes('new order')) {
-                parsedItems.push({ name: itemName, qty: 1, price: priceNum, total: priceNum });
-              }
-            }
-          }
-        });
-      }
-
-      if (parsedItems.length === 0) {
-        parsedItems.push({ name: "Custom WhatsApp Order Item", qty: 1, price: grandTotal || 100, total: grandTotal || 100 });
+      if (!name || phone.length < 10) {
+        alert("Parsing Error: Could not extract valid Customer Name and 10-digit Phone from the pasted WhatsApp message. Please use Option 2 (Manual Entry) below instead.");
+        return;
       }
 
       customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
