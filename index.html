@@ -555,7 +555,7 @@
       <textarea id="importOrderText" rows="6" placeholder="Paste full WhatsApp order text here..." class="w-full p-3 border rounded-2xl bg-stone-50 font-mono text-[11px]"></textarea>
       
       <button type="button" onclick="processImportedWhatsAppOrder()" class="cursor-pointer w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl uppercase">
-        Ingest & Auto-Deduct Portions
+        Ingest & Validate Order
       </button>
     </div>
   </div>
@@ -1428,7 +1428,7 @@
       }
     }
 
-    // 🛡️ BULLETPROOF WHATSAPP ORDER INGESTER
+    // 🛡️ FULLY HARDENED INGESTER WITH DEFERRED STOCK DEDUCTION
     function processImportedWhatsAppOrder() {
       const rawText = document.getElementById('importOrderText').value.trim();
       if (!rawText) {
@@ -1447,7 +1447,7 @@
         let payment = 'COD';
         let orderDate = getTodayIsoDate();
         let grandTotal = 0;
-        const items = [];
+        const parsedItems = [];
 
         for (let line of lines) {
           if (/^NEW ORDER:/i.test(line)) {
@@ -1467,15 +1467,16 @@
           } else if (/^Total:/i.test(line)) {
             const totalMatch = line.match(/[0-9.]+/);
             if (totalMatch) grandTotal = parseFloat(totalMatch[0]);
-          } else if (line.startsWith('•') || line.startsWith('-')) {
-            const itemLine = line.replace(/^[•\-]\s*/, '').trim();
+          } else if (/^([•·\-\*]|\d+\.)/.test(line) || line.includes('(x')) {
+            // Flexible match for bullets (·, •, -, *) or item lines containing (xQty)
+            const itemLine = line.replace(/^[•·\-\*\d\.]+\s*/, '').trim();
             const parsed = itemLine.match(/^(.*?)\s*\(x(\d+)\)\s*(?:[-–:]\s*)?([0-9.]+)/i);
             if (parsed) {
               const itemName = parsed[1].trim();
               const qty = parseInt(parsed[2], 10);
               const totalLinePrice = parseFloat(parsed[3]);
               const unitRate = qty > 0 ? (totalLinePrice / qty) : totalLinePrice;
-              items.push({ name: itemName, qty: qty, price: unitRate, total: totalLinePrice });
+              parsedItems.push({ name: itemName, qty: qty, price: unitRate, total: totalLinePrice });
             }
           }
         }
@@ -1484,14 +1485,19 @@
           orderId = 'RDS-' + Math.floor(100000 + Math.random() * 900000);
         }
 
+        if (parsedItems.length === 0) {
+          alert("⚠️ Parsing Error: Could not detect any menu items in the pasted text. Please make sure you copied the full WhatsApp message including item quantities like (x2).");
+          return;
+        }
+
         const isDuplicate = customerOrders.some(o => o.orderId.toLowerCase() === orderId.toLowerCase());
         if (isDuplicate) {
-          alert(`⚠️ DUPLICATE ORDER WARNING!\n\nOrder [${orderId}] has ALREADY been ingested into the kitchen queue!\n\nRe-ingesting this order is blocked to prevent double-deducting menu portions.`);
+          alert(`⚠️ DUPLICATE ORDER WARNING!\n\nOrder [${orderId}] has ALREADY been ingested into the kitchen queue!\n\nRe-ingesting this order is blocked.`);
           toggleImportModal(false);
           return;
         }
 
-        const calculatedSum = items.reduce((sum, item) => sum + item.total, 0);
+        const calculatedSum = parsedItems.reduce((sum, item) => sum + item.total, 0);
         if (calculatedSum > 0 && grandTotal === 0) {
           grandTotal = calculatedSum;
         }
@@ -1499,7 +1505,8 @@
         if (!name) name = "WhatsApp Customer";
         if (!phone) phone = "Not Provided";
 
-        autoDeductOrderPortions(items);
+        // ONLY DEDUCT PORTIONS AFTER SUCCESSFUL PARSING & VALIDATION
+        autoDeductOrderPortions(parsedItems);
 
         const importedOrder = {
           orderId,
@@ -1508,7 +1515,7 @@
           status: 'Pending Acceptance',
           payment,
           customer: { name, phone, address },
-          items,
+          items: parsedItems,
           total: grandTotal,
           remark: ''
         };
@@ -1521,13 +1528,13 @@
         if (typeof toggleCustomerHistory === 'function') {
           toggleCustomerHistory(true);
         }
-        alert(`Order ${orderId} successfully registered for ${name}!`);
+        alert(`Order ${orderId} successfully registered for ${name}! Portions deducted from stock.`);
       } catch (err) {
         alert("Error parsing WhatsApp text. Please make sure you copied the whole message.");
       }
     }
 
-    // 🧾 CUSTOMER RECEIPTS VIEWER: NO FAKE STATUS & NO LOCAL CANCEL BUTTON
+    // 🧾 CUSTOMER RECEIPTS VIEWER
     function renderFrontUserOrders() {
       const phoneInput = document.getElementById('frontUserPhoneInput').value.trim().replace(/\D/g, '');
       const container = document.getElementById('frontUserOrdersList');
@@ -1603,7 +1610,8 @@
       const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase().trim();
       const dateFilterVal = document.getElementById('orderDateFilterInput')?.value; // YYYY-MM-DD
 
-      document.getElementById('ordersCount').innerText = customerOrders.length;
+      const countEl = document.getElementById('ordersCount');
+      if (countEl) countEl.innerText = customerOrders.length;
 
       let filtered = customerOrders;
 
