@@ -540,7 +540,7 @@
     </div>
   </div>
 
-  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER (STRICT VALIDATION) -->
+  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER -->
   <div id="importOrderModal" class="fixed inset-0 z-[135] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border text-stone-900 text-xs max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-2">
@@ -1261,7 +1261,7 @@
       placeCustomerOrder(selectedPhone);
     }
 
-    // 🛡️ STRICT VALIDATION CART ORDER GENERATOR (PREVENTS FALLBACK LOOPHOLES)
+    // 🛡️ STRICT VALIDATION CART ORDER GENERATOR
     function placeCustomerOrder(targetPhone) {
       const phoneToUse = targetPhone || PRIMARY_PHONE;
       const nameInput = document.getElementById('custName');
@@ -1537,7 +1537,7 @@
       }
 
       if (!name || phone.length < 10) {
-        alert("Parsing Error: Could not extract valid Customer Name and 10-digit Phone from the pasted WhatsApp message. Please use Option 2 (Manual Entry) below instead.");
+        alert("Validation Error: The pasted WhatsApp text is missing a valid Name or 10-digit Phone number. Please use Option 2 (Manual Entry) below to complete the order.");
         return;
       }
 
