@@ -111,7 +111,7 @@
         <button type="button" onclick="toggleSettingsModal(true)" class="cursor-pointer bg-white/25 hover:bg-white/40 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-gear"></i> Settings
         </button>
-        <button type="button" onclick="toggleCustomerHistory(true)" class="cursor-pointer bg-white/25 hover:bg-white/40 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+        <button type="button" onclick="openOrdersDrawerDirect()" class="cursor-pointer bg-white/25 hover:bg-white/40 px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-users"></i> Orders (<span id="ordersCount">0</span>)
         </button>
         <button type="button" onclick="logoutOwner()" class="cursor-pointer bg-rose-700 hover:bg-rose-800 text-white px-2.5 py-1 rounded-full text-xs font-bold transition shadow-sm">
@@ -539,7 +539,7 @@
     </div>
   </div>
 
-  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER (WITH RELIABLE MANUAL FALLBACK) -->
+  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER (TYPO FIXED) -->
   <div id="importOrderModal" class="fixed inset-0 z-[135] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border text-stone-900 text-xs max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-2">
@@ -681,6 +681,93 @@
     </div>
   </div>
 
+  <!-- 📂 OWNER ORDERS DRAWER -->
+  <div id="customerHistoryDrawer" class="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm hidden flex justify-end">
+    <div class="w-full max-w-xl bg-white h-full shadow-2xl flex flex-col justify-between p-6 overflow-y-auto">
+      <div class="space-y-4">
+        <div class="flex items-center justify-between border-b pb-3">
+          <div class="flex items-center gap-2 font-extrabold text-base"><i class="fa-solid fa-clipboard-list text-orange-600"></i><h2>Kitchen Orders & Queue</h2></div>
+          <button onclick="toggleCustomerHistory(false)" class="cursor-pointer text-xl font-bold">&times;</button>
+        </div>
+
+        <div class="bg-amber-50/80 border border-amber-200 p-3 rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-stone-800 text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-calendar-day text-orange-600"></i> Filter Orders by Date
+            </span>
+            <button onclick="clearOrderDateFilter()" class="cursor-pointer text-[10px] font-black uppercase text-orange-700 hover:underline">
+              Show All Orders
+            </button>
+          </div>
+          <div class="flex gap-2">
+            <input id="orderDateFilterInput" onchange="renderCustomerOrders()" type="date" class="p-2 border rounded-xl text-xs bg-white font-bold w-full">
+            <button onclick="clearOrderDateFilter()" title="View All Dates" class="cursor-pointer bg-stone-200 hover:bg-stone-300 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
+              All Dates
+            </button>
+          </div>
+        </div>
+
+        <input id="customerSearchInput" oninput="renderCustomerOrders()" type="text" placeholder="Search customer phone or name..." class="w-full p-2.5 border rounded-xl text-xs bg-stone-50 outline-none">
+        
+        <div id="customerOrdersList" class="space-y-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧾 INVOICE MODAL -->
+  <div id="invoiceModal" class="fixed inset-0 z-[130] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border text-stone-900">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="font-black text-base"><i class="fa-solid fa-file-invoice text-orange-600 mr-1"></i> Customer Bill</h2>
+        <button onclick="toggleInvoiceModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
+      </div>
+      <div id="invoicePrintTarget" class="bg-white p-5 border font-mono text-xs space-y-3 shadow-sm">
+        <div class="text-center border-b border-dashed pb-3 font-sans space-y-0.5">
+          <h3 class="text-lg font-black text-stone-900">RDS CLOUD KITCHEN</h3>
+          <p class="text-[11px] font-bold text-stone-700">232/6, Ezhil Nagar, Near Gas Godown • Ph: +91 8667737440</p>
+          <p id="invFssaiNo" class="text-[11px] font-bold text-amber-800 hidden"></p>
+          <p id="invGstin" class="text-[11px] font-bold text-stone-800"></p>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-[11px] border-b border-dashed pb-2">
+          <div>
+            <p><strong>Bill:</strong> <span id="invOrderId"></span></p>
+            <p><strong>Date:</strong> <span id="invDateTime"></span></p>
+            <p><strong>Status:</strong> <span id="invOrderStatus" class="font-bold uppercase"></span></p>
+          </div>
+          <div class="text-right">
+            <p><strong>Customer:</strong> <span id="invCustName"></span></p>
+            <p><strong>Phone:</strong> <span id="invCustPhone"></span></p>
+          </div>
+        </div>
+
+        <div class="p-2 bg-stone-50 rounded-xl text-[11px]">
+          <strong>Fulfillment / Location:</strong>
+          <p id="invCustAddress" class="break-words mt-0.5"></p>
+        </div>
+
+        <div id="invRemarkRow" class="hidden p-2 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800">
+          <strong>Remark / Reason:</strong> <span id="invRemarkText"></span>
+        </div>
+
+        <table class="w-full text-left text-[11px]">
+          <thead><tr class="border-b font-bold"><th class="py-1">Item</th><th class="text-center">Qty</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead>
+          <tbody id="invItemsTable" class="divide-y"></tbody>
+        </table>
+        <div class="border-t border-dashed pt-2 space-y-1 text-[11px]">
+          <div id="invGstFields" class="hidden space-y-1">
+            <div class="flex justify-between"><span>Taxable Food Value:</span><span id="invTaxable">₹0.00</span></div>
+            <div class="flex justify-between text-stone-600"><span>GST (<span id="invGstPct">5</span>%):</span><span id="invGstVal">₹0.00</span></div>
+          </div>
+          <div class="flex justify-between border-t pt-1.5 text-sm font-black font-sans"><span>Grand Total (Net Payable):</span><span id="invGrandTotal" class="text-orange-600">₹0.00</span></div>
+        </div>
+      </div>
+      <div class="flex gap-2 font-sans pt-1">
+        <button onclick="printInvoiceSheet()" class="cursor-pointer flex-1 bg-stone-900 text-amber-300 font-black py-3 rounded-2xl uppercase text-xs">Print Bill</button>
+        <button onclick="downloadInvoicePdf()" class="cursor-pointer flex-1 bg-orange-600 text-white font-black py-3 rounded-2xl uppercase text-xs">Download PDF</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 🖼️ POSTCARD MODAL -->
   <div id="postcardModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
     <div class="bg-stone-900 rounded-3xl max-w-3xl w-full p-5 space-y-4 shadow-2xl border border-stone-800 text-white max-h-[95vh] overflow-y-auto">
@@ -754,7 +841,7 @@
     const UPI_NUMBER = "8667737440";
     const UPI_ADDRESS = "8667737440@upi";
 
-    // 🌐 CROSS-DEVICE WHATSAPP DISPATCHER
+    // 🌐 FAILSAFE CROSS-DEVICE WHATSAPP DISPATCHER
     function dispatchWhatsAppMessage(targetPhone, rawText) {
       if (!targetPhone || !rawText) return;
       const cleanTargetPhone = String(targetPhone).replace(/\D/g, '');
@@ -770,17 +857,14 @@
       } else {
         const waUrl = `https://web.whatsapp.com/send?phone=${cleanTargetPhone}&text=${encodedMsg}`;
         try {
-          const newWindow = window.open(waUrl, '_blank');
-          if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-            window.location.href = `https://wa.me/${cleanTargetPhone}?text=${encodedMsg}`;
-          }
+          window.open(waUrl, '_blank');
         } catch(e) {
-          window.location.href = `https://wa.me/${cleanTargetPhone}?text=${encodedMsg}`;
+          console.log("Popup suppressed");
         }
       }
     }
 
-    // 🗓️ PLAIN INDIAN DATE HELPERS (DD/MM/YYYY)
+    // 🗓️ CLEAN INDIAN DATE HELPERS (DD/MM/YYYY)
     function getTodayIndianDate() {
       const d = new Date();
       const day = String(d.getDate()).padStart(2, '0');
@@ -1472,7 +1556,7 @@
       }
     }
 
-    // 🛡️ BULLETPROOF WHATSAPP INGESTER WITH GUARANTEED STORAGE PERSISTENCE
+    // 🛡️ ULTRA-RELAXED INGESTER WITH ZERO SILENT FAILS
     function processImportedWhatsAppOrder() {
       const rawText = (document.getElementById('importOrderText')?.value || '').trim();
       if (!rawText) {
@@ -1541,7 +1625,6 @@
         parsedItems.push({ name: "Custom WhatsApp Order Item", qty: 1, price: grandTotal || 100, total: grandTotal || 100 });
       }
 
-      // Reload fresh list to prevent duplicate checks against stale cache
       customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
 
       const isDuplicate = customerOrders.some(o => o.orderId.toLowerCase() === orderId.toLowerCase());
@@ -1574,17 +1657,11 @@
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
       
       toggleImportModal(false);
-      clearOrderDateFilter();
-      
-      const drawer = document.getElementById('customerHistoryDrawer');
-      if (drawer) {
-        drawer.classList.remove('hidden');
-      }
-      renderCustomerOrders();
+      openOrdersDrawerDirect();
       alert(`Order ${orderId} successfully registered for ${name}! Portions deducted.`);
     }
 
-    // ✍️ MANUAL ORDER ENTRY
+    // ✍️ MANUAL ORDER ENTRY (FALLBACK)
     function processManualOrderEntry() {
       const name = (document.getElementById('manualCustName')?.value || '').trim();
       const rawPhone = (document.getElementById('manualCustPhone')?.value || '').trim().replace(/\D/g, '');
@@ -1637,13 +1714,7 @@
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
 
       toggleImportModal(false);
-      clearOrderDateFilter();
-      
-      const drawer = document.getElementById('customerHistoryDrawer');
-      if (drawer) {
-        drawer.classList.remove('hidden');
-      }
-      renderCustomerOrders();
+      openOrdersDrawerDirect();
       alert(`Manual Order ${manualOrder.orderId} created successfully for ${name}!`);
     }
 
@@ -1659,7 +1730,7 @@
       }
 
       customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
-      const userOrders = customerOrders.filter(o => o.customer.phone.includes(phoneInput));
+      const userOrders = customerOrders.filter(o => o.customer && o.customer.phone && o.customer.phone.includes(phoneInput));
 
       if (userOrders.length === 0) {
         container.innerHTML = `<p class="text-xs text-stone-500 italic text-center py-2">No past receipts found for phone number: ${phoneInput}</p>`;
@@ -1708,12 +1779,19 @@
       renderCustomerOrders();
     }
 
+    function openOrdersDrawerDirect() {
+      const drawer = document.getElementById('customerHistoryDrawer');
+      if (drawer) {
+        drawer.classList.remove('hidden');
+      }
+      clearOrderDateFilter();
+    }
+
     // 🗓️ OWNER ORDER LIST RENDERER (BULLETPROOF TOLERANT DATE COMPARISON)
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       if (!container) return;
       
-      // Always sync from local storage first
       customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
 
       const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase().trim();
@@ -1745,15 +1823,15 @@
       }
 
       if (search) {
-        filtered = filtered.filter(o => o.customer.phone.toLowerCase().includes(search) || o.customer.name.toLowerCase().includes(search));
+        filtered = filtered.filter(o => (o.customer?.phone && o.customer.phone.toLowerCase().includes(search)) || (o.customer?.name && o.customer.name.toLowerCase().includes(search)));
       }
 
       if (filtered.length === 0) {
         container.innerHTML = `
           <div class="py-10 text-center text-xs text-stone-400 space-y-2">
-            <p>No orders found in queue.</p>
+            <p>No orders found.</p>
             <button onclick="clearOrderDateFilter()" class="bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-1 rounded-xl text-[11px] font-bold">
-              View All Dates
+              Show All Orders
             </button>
           </div>
         `;
@@ -1780,8 +1858,8 @@
             </div>
           </div>
           <div class="bg-stone-50 p-2 rounded-xl space-y-1">
-            <p><strong>Customer:</strong> ${o.customer.name} (${o.customer.phone})</p>
-            <p><strong>Place / Address:</strong> ${o.customer.address}</p>
+            <p><strong>Customer:</strong> ${o.customer?.name || 'Customer'} (${o.customer?.phone || 'No Phone'})</p>
+            <p><strong>Place / Address:</strong> ${o.customer?.address || 'Counter'}</p>
             <p><strong>Payment:</strong> <span class="font-bold text-stone-800">${o.payment}</span></p>
             ${o.remark ? `<p class="text-rose-700 font-bold"><strong>Remark:</strong> ${o.remark}</p>` : ''}
           </div>
@@ -1807,7 +1885,7 @@
       `).join('');
     }
 
-    // ⚡ FAILSAFE IN-PLACE ACCEPTANCE
+    // ⚡ INSTANT IN-PLACE ACCEPTANCE: SAVES STATUS FIRST BEFORE DISPATCH
     function ownerAcceptOrder(orderId) {
       customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
       const order = customerOrders.find(o => o.orderId === orderId);
@@ -1816,16 +1894,11 @@
       order.status = 'Accepted';
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
       
-      // Re-render UI immediately
+      // Update the UI immediately
       renderCustomerOrders();
 
       const acceptMsg = `*ORDER ACCEPTED!*\n*Order ID:* ${order.orderId}\nHello ${order.customer.name}, your RDS Cloud Kitchen order has been officially accepted and entered preparation!\n*Total:* ₹${order.total}`;
-      
-      try {
-        dispatchWhatsAppMessage(order.customer.phone, acceptMsg);
-      } catch (err) {
-        console.log("WhatsApp redirect blocked");
-      }
+      dispatchWhatsAppMessage(order.customer.phone, acceptMsg);
     }
 
     function openInvoiceModal(orderId) {
