@@ -555,7 +555,7 @@
       <textarea id="importOrderText" rows="6" placeholder="Paste full WhatsApp order text here..." class="w-full p-3 border rounded-2xl bg-stone-50 font-mono text-[11px]"></textarea>
       
       <button type="button" onclick="processImportedWhatsAppOrder()" class="cursor-pointer w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl uppercase">
-        Ingest & Validate Order
+        Ingest & Auto-Deduct Portions
       </button>
     </div>
   </div>
@@ -729,42 +729,26 @@
       }
     }
 
-    // 🗓️ UNIVERSAL DATE NORMALIZER & INDIAN FORMATTER
-    function toStandardIso(input) {
-      if (!input) return getTodayIsoDate();
-      
-      if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
-        return input;
+    // 🗓️ CLEAN INDIAN DATE HELPERS (DD/MM/YYYY)
+    function formatIndianDate(inputDate) {
+      if (!inputDate) return getTodayIndianDate();
+      let str = String(inputDate).trim();
+      // If already in DD/MM/YYYY format
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) return str;
+      // If in ISO YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        const [yr, mo, da] = str.split('-');
+        return `${da}/${mo}/${yr}`;
       }
-      
-      if (typeof input === 'string' && input.includes('/')) {
-        const parts = input.split('/');
-        if (parts.length === 3) {
-          if (parts[2].length === 4) {
-            const day = String(parts[0]).padStart(2, '0');
-            const month = String(parts[1]).padStart(2, '0');
-            const year = parts[2];
-            return `${year}-${month}-${day}`;
-          }
-        }
-      }
-      
-      const d = new Date(input);
-      if (!isNaN(d.getTime())) {
-        const yr = d.getFullYear();
-        const mo = String(d.getMonth() + 1).padStart(2, '0');
-        const da = String(d.getDate()).padStart(2, '0');
-        return `${yr}-${mo}-${da}`;
-      }
-      
-      return getTodayIsoDate();
+      return str;
     }
 
-    function formatIndianDate(inputDate) {
-      if (!inputDate) return "";
-      const iso = toStandardIso(inputDate);
-      const [yr, mo, da] = iso.split('-');
-      return `${da}/${mo}/${yr}`;
+    function getTodayIndianDate() {
+      const d = new Date();
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
     }
 
     function getTodayIsoDate() {
@@ -775,13 +759,14 @@
       return `${yr}-${mo}-${da}`;
     }
 
-    function getTodayIndianDate() {
-      return formatIndianDate(getTodayIsoDate());
-    }
-
     function parseDateToTimestamp(dateStr) {
-      const iso = toStandardIso(dateStr);
-      return new Date(iso + 'T00:00:00').getTime();
+      if (!dateStr) return 0;
+      let str = String(dateStr).trim();
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
+        const [da, mo, yr] = str.split('/');
+        return new Date(`${yr}-${mo}-${da}T00:00:00`).getTime();
+      }
+      return new Date(str + 'T00:00:00').getTime();
     }
 
     function openKitchenGoogleMaps() {
@@ -901,15 +886,6 @@
 
     let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || '[]');
     let customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
-    
-    // Auto-migrate orders to standard ISO
-    customerOrders = customerOrders.map(o => {
-      if (o && o.date) {
-        o.date = toStandardIso(o.date);
-      }
-      return o;
-    });
-    localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
 
     let kitchenSettings = JSON.parse(localStorage.getItem('rds_kitchen_settings') || JSON.stringify({
       gstEnabled: false, gstRate: 5.0, gstin: '',
@@ -1300,7 +1276,7 @@
 
       const newOrder = {
         orderId: 'RDS-' + Math.floor(100000 + Math.random() * 900000),
-        date: getTodayIsoDate(),
+        date: getTodayIndianDate(), // Stored as plain DD/MM/YYYY text string
         placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'Pending Acceptance',
         payment, customer: { name, phone, address }, items: orderItems, total: grandTotal,
@@ -1324,7 +1300,7 @@
 
     function formatOrderWhatsAppText(o) {
       const itemSummary = o.items.map(i => `• ${i.name} (x${i.qty}) - ₹${i.total}`).join('\n');
-      return `*NEW ORDER: ${o.orderId}*\n*Customer:* ${o.customer.name}\n*Phone:* ${o.customer.phone}\n*Date:* ${formatIndianDate(o.date)}\n*Fulfillment / Place:* ${o.customer.address}\n*Payment:* ${o.payment}\n*Items:*\n${itemSummary}\n*Total:* ₹${o.total}\n*Status:* ${o.status}`;
+      return `*NEW ORDER: ${o.orderId}*\n*Customer:* ${o.customer.name}\n*Phone:* ${o.customer.phone}\n*Date:* ${o.date}\n*Fulfillment / Place:* ${o.customer.address}\n*Payment:* ${o.payment}\n*Items:*\n${itemSummary}\n*Total:* ₹${o.total}\n*Status:* ${o.status}`;
     }
 
     function resendOrderToWhatsApp(orderId, targetPhone) {
@@ -1428,7 +1404,7 @@
       }
     }
 
-    // 🛡️ FULLY HARDENED INGESTER WITH DEFERRED STOCK DEDUCTION
+    // 🛡️ BULLETPROOF WHATSAPP ORDER INGESTER WITH DEFERRED PORTION DEDUCTION
     function processImportedWhatsAppOrder() {
       const rawText = document.getElementById('importOrderText').value.trim();
       if (!rawText) {
@@ -1445,7 +1421,7 @@
         let phone = '';
         let address = TAKEAWAY_FIXED_ADDRESS;
         let payment = 'COD';
-        let orderDate = getTodayIsoDate();
+        let orderDate = getTodayIndianDate();
         let grandTotal = 0;
         const parsedItems = [];
 
@@ -1458,8 +1434,7 @@
           } else if (/^Phone:/i.test(line)) {
             phone = line.replace(/^Phone:\s*/i, '').replace(/\D/g, '').trim();
           } else if (/^Date:/i.test(line)) {
-            const extractedDate = line.replace(/^Date:\s*/i, '').trim();
-            orderDate = toStandardIso(extractedDate);
+            orderDate = line.replace(/^Date:\s*/i, '').trim();
           } else if (/^(Fulfillment \/ Place|Fulfillment|Address):/i.test(line)) {
             address = line.replace(/^(Fulfillment \/ Place|Fulfillment|Address):\s*/i, '').trim();
           } else if (/^Payment:/i.test(line)) {
@@ -1468,7 +1443,6 @@
             const totalMatch = line.match(/[0-9.]+/);
             if (totalMatch) grandTotal = parseFloat(totalMatch[0]);
           } else if (/^([•·\-\*]|\d+\.)/.test(line) || line.includes('(x')) {
-            // Flexible match for bullets (·, •, -, *) or item lines containing (xQty)
             const itemLine = line.replace(/^[•·\-\*\d\.]+\s*/, '').trim();
             const parsed = itemLine.match(/^(.*?)\s*\(x(\d+)\)\s*(?:[-–:]\s*)?([0-9.]+)/i);
             if (parsed) {
@@ -1486,7 +1460,7 @@
         }
 
         if (parsedItems.length === 0) {
-          alert("⚠️ Parsing Error: Could not detect any menu items in the pasted text. Please make sure you copied the full WhatsApp message including item quantities like (x2).");
+          alert("⚠️ Parsing Error: Could not detect any menu items in the pasted text. Please make sure you copied the full WhatsApp message including item quantities like (x1).");
           return;
         }
 
@@ -1505,7 +1479,7 @@
         if (!name) name = "WhatsApp Customer";
         if (!phone) phone = "Not Provided";
 
-        // ONLY DEDUCT PORTIONS AFTER SUCCESSFUL PARSING & VALIDATION
+        // ONLY DEDUCT PORTIONS AFTER SUCCESSFUL PARSING
         autoDeductOrderPortions(parsedItems);
 
         const importedOrder = {
@@ -1552,13 +1526,12 @@
       }
 
       container.innerHTML = userOrders.map(o => {
-        const formattedDt = formatIndianDate(o.date);
         return `
           <div class="p-3.5 border rounded-2xl bg-stone-50 space-y-2 text-xs">
             <div class="flex justify-between items-center">
               <div>
                 <p class="font-black text-stone-900">${o.orderId} • <span class="text-orange-600">₹${o.total}</span></p>
-                <p class="text-[11px] text-stone-500">${formattedDt} at ${o.placedAt} (${o.payment})</p>
+                <p class="text-[11px] text-stone-500">${o.date} at ${o.placedAt} (${o.payment})</p>
               </div>
               <div class="flex items-center gap-1.5">
                 <button onclick="openInvoiceModal('${o.orderId}')" class="cursor-pointer bg-stone-900 text-amber-300 font-bold px-3 py-1.5 rounded-xl uppercase text-[10px]">
@@ -1616,10 +1589,9 @@
       let filtered = customerOrders;
 
       if (dateFilterVal) {
-        filtered = filtered.filter(o => {
-          const orderIso = toStandardIso(o.date);
-          return orderIso === dateFilterVal;
-        });
+        const [yr, mo, da] = dateFilterVal.split('-');
+        const targetIndianDate = `${da}/${mo}/${yr}`;
+        filtered = filtered.filter(o => o.date === targetIndianDate);
       }
 
       if (search) {
@@ -1643,7 +1615,7 @@
           <div class="flex justify-between items-center border-b pb-2">
             <div>
               <span class="font-extrabold text-stone-900 text-sm">${o.orderId}</span>
-              <p class="text-[10px] text-stone-500">${formatIndianDate(o.date)} at ${o.placedAt}</p>
+              <p class="text-[10px] text-stone-500">${o.date} at ${o.placedAt}</p>
               <span class="inline-block mt-0.5 px-2 py-0.5 text-[10px] font-black uppercase rounded ${
                 o.status === 'Accepted' ? 'bg-emerald-100 text-emerald-800' :
                 (o.status === 'Cancelled' || o.status === 'Rejected' || o.status === 'Not Delivered' || o.status === 'Returned by Customer') ? 'bg-rose-100 text-rose-800' :
@@ -1721,7 +1693,7 @@
 
       document.getElementById('invGstin').innerText = (gstActive && kitchenSettings.gstin) ? `GSTIN: ${kitchenSettings.gstin}` : 'RETAIL CASH BILL';
       document.getElementById('invOrderId').innerText = o.orderId;
-      document.getElementById('invDateTime').innerText = `${formatIndianDate(o.date)} ${o.placedAt}`;
+      document.getElementById('invDateTime').innerText = `${o.date} ${o.placedAt}`;
       document.getElementById('invOrderStatus').innerText = o.status;
       document.getElementById('invCustName').innerText = o.customer.name;
       document.getElementById('invCustPhone').innerText = o.customer.phone;
@@ -1855,7 +1827,7 @@
         return `
           <tr class="hover:bg-stone-50">
             <td class="py-2 px-1.5 font-bold text-stone-900">${o.orderId}</td>
-            <td class="px-1.5 whitespace-nowrap">${formatIndianDate(o.date)} ${o.placedAt}</td>
+            <td class="px-1.5 whitespace-nowrap">${o.date} ${o.placedAt}</td>
             <td class="px-1.5">${o.customer.name}<br><span class="text-stone-500">${o.customer.phone}</span></td>
             <td class="px-1.5 max-w-[140px] truncate" title="${o.customer.address}">${o.customer.address}</td>
             <td class="px-1.5 font-bold uppercase ${
