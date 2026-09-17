@@ -567,7 +567,7 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block font-bold mb-0.5 text-stone-700">Customer Name *</label>
-              <input id=" manualCustName" type="text" placeholder="e.g. Gomathi Nayagam" class="w-full p-2 border rounded-xl font-medium bg-stone-50">
+              <input id="manualCustName" type="text" placeholder="e.g. Rajesh Kumar" class="w-full p-2 border rounded-xl font-medium bg-stone-50">
             </div>
             <div>
               <label class="block font-bold mb-0.5 text-stone-700">Phone Number *</label>
@@ -1310,7 +1310,7 @@
 
       const newOrder = {
         orderId: 'RDS-' + Math.floor(100000 + Math.random() * 900000),
-        date: getTodayIndianDate(), // Plain DD/MM/YYYY string
+        date: getTodayIndianDate(),
         placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'Pending Acceptance',
         payment, customer: { name, phone, address }, items: orderItems, total: grandTotal,
@@ -1419,7 +1419,6 @@
     function promptImportOrder() {
       document.getElementById('importOrderText').value = '';
       
-      // Populate Manual Checklist
       const checklist = document.getElementById('manualItemsChecklist');
       if (activeMenu.length > 0) {
         checklist.innerHTML = activeMenu.map(d => `
@@ -1460,7 +1459,7 @@
       }
     }
 
-    // 🛡️ BULLETPROOF WHATSAPP ORDER INGESTER (RELAXED PARSER WITH ZERO CRASHES)
+    // 🛡️ ULTRA-RELAXED WHATSAPP ORDER INGESTER (ZERO CRASHES)
     function processImportedWhatsAppOrder() {
       const rawText = document.getElementById('importOrderText').value.trim();
       if (!rawText) {
@@ -1510,7 +1509,7 @@
         }
       }
 
-      // Fallback: If no item bullets matched, grab any line with numbers
+      // Fallback: If no item bullets matched, grab any line containing prices
       if (parsedItems.length === 0) {
         lines.forEach(l => {
           if (l.includes('₹') || /\d+/.test(l)) {
@@ -1532,7 +1531,7 @@
 
       const isDuplicate = customerOrders.some(o => o.orderId.toLowerCase() === orderId.toLowerCase());
       if (isDuplicate) {
-        alert(`⚠️ DUPLICATE ORDER WARNING!\n\nOrder [${orderId}] has ALREADY been ingested into the kitchen queue!`);
+        alert(`⚠️ DUPLICATE ORDER WARNING!\n\nOrder [${orderId}] has ALREADY been ingested into the kitchen queue!\n\nRe-ingesting this order is blocked.`);
         toggleImportModal(false);
         return;
       }
@@ -1567,7 +1566,7 @@
       alert(`Order ${orderId} successfully registered for ${name}! Portions deducted from stock.`);
     }
 
-    // ✍️ MANUAL ORDER ENTRY (FALLBACK IF WHATSAPP MESSAGE IS EDITED/BROKEN)
+    // ✍️ MANUAL ORDER ENTRY FORM (BULLETPROOF FALLBACK)
     function processManualOrderEntry() {
       const name = document.getElementById('manualCustName').value.trim();
       const rawPhone = document.getElementById('manualCustPhone').value.trim().replace(/\D/g, '');
