@@ -1027,8 +1027,16 @@
     }
 
     function updateAuthUI() {
-      document.getElementById('ownerAdminBar').classList.toggle('hidden', !isOwnerLoggedIn);
-      document.getElementById('lockedIndicator').classList.toggle('hidden', isOwnerLoggedIn);
+      const bar = document.getElementById('ownerAdminBar');
+      const lock = document.getElementById('lockedIndicator');
+      if (bar) bar.classList.toggle('hidden', !isOwnerLoggedIn);
+      if (lock) lock.classList.toggle('hidden', isOwnerLoggedIn);
+      
+      const countEl = document.getElementById('ordersCount');
+      if (countEl) {
+        const currentList = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
+        countEl.innerText = currentList.length;
+      }
     }
 
     function promptOwnerLogin() {
@@ -1156,51 +1164,53 @@
       }
 
       if (!items || items.length === 0) {
-        grid.classList.add('hidden');
-        empty.classList.remove('hidden');
+        if (grid) grid.classList.add('hidden');
+        if (empty) empty.classList.remove('hidden');
       } else {
-        empty.classList.add('hidden');
-        grid.classList.remove('hidden');
-        grid.innerHTML = items.map(item => {
-          return `
-            <div class="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm hover:shadow-xl transition flex flex-col justify-between">
-              <div>
-                <div class="relative w-full h-48 bg-stone-100 overflow-hidden">
-                  <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">
-                  <div class="absolute top-3 left-3 bg-white/95 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase text-stone-700 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full ${item.isVeg ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
-                    ${item.isVeg ? 'Veg' : 'Non-Veg'}
-                  </div>
-                  <div class="absolute top-3 right-3 bg-orange-100 text-orange-900 border px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">
-                    ${item.category}
-                  </div>
-                </div>
-                <div class="p-4 space-y-2">
-                  <div class="flex justify-between items-start">
-                    <div>
-                      <h3 class="font-extrabold text-stone-900 text-base">${item.name}</h3>
-                      <span class="font-black text-stone-900 text-base">₹${item.price}</span>
+        if (empty) empty.classList.add('hidden');
+        if (grid) {
+          grid.classList.remove('hidden');
+          grid.innerHTML = items.map(item => {
+            return `
+              <div class="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm hover:shadow-xl transition flex flex-col justify-between">
+                <div>
+                  <div class="relative w-full h-48 bg-stone-100 overflow-hidden">
+                    <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">
+                    <div class="absolute top-3 left-3 bg-white/95 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase text-stone-700 flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full ${item.isVeg ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                      ${item.isVeg ? 'Veg' : 'Non-Veg'}
+                    </div>
+                    <div class="absolute top-3 right-3 bg-orange-100 text-orange-900 border px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                      ${item.category}
                     </div>
                   </div>
-                  <p class="text-xs text-stone-500">${item.desc}</p>
+                  <div class="p-4 space-y-2">
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <h3 class="font-extrabold text-stone-900 text-base">${item.name}</h3>
+                        <span class="font-black text-stone-900 text-base">₹${item.price}</span>
+                      </div>
+                    </div>
+                    <p class="text-xs text-stone-500">${item.desc}</p>
+                  </div>
+                </div>
+                <div class="p-4 pt-0">
+                  ${cart[item.id] ? `
+                    <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl p-1">
+                      <button type="button" onclick="changeQty('${item.id}', -1)" class="cursor-pointer w-8 h-8 rounded-xl bg-white text-orange-600 font-bold shadow-sm">-</button>
+                      <span class="font-black text-sm text-stone-900">${cart[item.id]}</span>
+                      <button type="button" onclick="changeQty('${item.id}', 1)" class="cursor-pointer w-8 h-8 rounded-xl bg-orange-500 text-white font-bold shadow-sm">+</button>
+                    </div>
+                  ` : `
+                    <button type="button" onclick="handleItemAddClick('${item.id}')" class="cursor-pointer w-full bg-stone-900 hover:bg-orange-600 text-white font-bold text-xs py-3 rounded-2xl shadow transition">
+                      ${item.isPreorder ? 'PRE-ORDER NOW +' : 'ADD TO ORDER +'}
+                    </button>
+                  `}
                 </div>
               </div>
-              <div class="p-4 pt-0">
-                ${cart[item.id] ? `
-                  <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl p-1">
-                    <button type="button" onclick="changeQty('${item.id}', -1)" class="cursor-pointer w-8 h-8 rounded-xl bg-white text-orange-600 font-bold shadow-sm">-</button>
-                    <span class="font-black text-sm text-stone-900">${cart[item.id]}</span>
-                    <button type="button" onclick="changeQty('${item.id}', 1)" class="cursor-pointer w-8 h-8 rounded-xl bg-orange-500 text-white font-bold shadow-sm">+</button>
-                  </div>
-                ` : `
-                  <button type="button" onclick="handleItemAddClick('${item.id}')" class="cursor-pointer w-full bg-stone-900 hover:bg-orange-600 text-white font-bold text-xs py-3 rounded-2xl shadow transition">
-                    ${item.isPreorder ? 'PRE-ORDER NOW +' : 'ADD TO ORDER +'}
-                  </button>
-                `}
-              </div>
-            </div>
-          `;
-        }).join('');
+            `;
+          }).join('');
+        }
       }
       updateCartUI();
     }
@@ -1229,30 +1239,35 @@
       const entries = Object.entries(cart);
       const count = entries.reduce((s, [, q]) => s + q, 0);
 
-      badge.innerText = count;
-      badge.classList.toggle('hidden', count === 0);
-      footer.classList.toggle('hidden', count === 0);
+      if (badge) {
+        badge.innerText = count;
+        badge.classList.toggle('hidden', count === 0);
+      }
+      if (footer) footer.classList.toggle('hidden', count === 0);
 
-      if (entries.length === 0) {
-        container.innerHTML = '<div class="py-10 text-center text-xs text-stone-400">Cart is empty</div>';
-      } else {
-        let total = 0;
-        container.innerHTML = entries.map(([id, qty]) => {
-          const dish = activeMenu.find(i => i.id === id);
-          if (!dish) return '';
-          total += dish.price * qty;
-          return `
-            <div class="py-2.5 flex justify-between items-center text-xs">
-              <div><p class="font-bold text-stone-900">${dish.name}</p><p class="text-stone-500">₹${dish.price} × ${qty}</p></div>
-              <div class="flex items-center gap-2">
-                <button onclick="changeQty('${dish.id}', -1)" class="w-6 h-6 bg-stone-100 rounded font-bold cursor-pointer">-</button>
-                <span class="font-bold">${qty}</span>
-                <button onclick="changeQty('${dish.id}', 1)" class="w-6 h-6 bg-stone-100 rounded font-bold cursor-pointer">+</button>
+      if (container) {
+        if (entries.length === 0) {
+          container.innerHTML = '<div class="py-10 text-center text-xs text-stone-400">Cart is empty</div>';
+        } else {
+          let total = 0;
+          container.innerHTML = entries.map(([id, qty]) => {
+            const dish = activeMenu.find(i => i.id === id);
+            if (!dish) return '';
+            total += dish.price * qty;
+            return `
+              <div class="py-2.5 flex justify-between items-center text-xs">
+                <div><p class="font-bold text-stone-900">${dish.name}</p><p class="text-stone-500">₹${dish.price} × ${qty}</p></div>
+                <div class="flex items-center gap-2">
+                  <button onclick="changeQty('${dish.id}', -1)" class="w-6 h-6 bg-stone-100 rounded font-bold cursor-pointer">-</button>
+                  <span class="font-bold">${qty}</span>
+                  <button onclick="changeQty('${dish.id}', 1)" class="w-6 h-6 bg-stone-100 rounded font-bold cursor-pointer">+</button>
+                </div>
               </div>
-            </div>
-          `;
-        }).join('');
-        document.getElementById('cartTotal').innerText = '₹' + total;
+            `;
+          }).join('');
+          const totalEl = document.getElementById('cartTotal');
+          if (totalEl) totalEl.innerText = '₹' + total;
+        }
       }
     }
 
@@ -1369,6 +1384,7 @@
 
     function renderStockManager() {
       const tbody = document.getElementById('stockManagerTableBody');
+      if (!tbody) return;
       if (!activeMenu || activeMenu.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-stone-400">No dishes loaded</td></tr>';
         return;
@@ -1398,13 +1414,16 @@
       orderToStatusUpdateId = orderId;
       customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
       const order = customerOrders.find(o => o.orderId === orderId);
-      document.getElementById('statusSelectDropdown').value = (order && order.status !== 'Pending Acceptance') ? order.status : 'Accepted';
-      document.getElementById('cancelRemarkInput').value = order?.remark || '';
+      const dropdown = document.getElementById('statusSelectDropdown');
+      const remarkInput = document.getElementById('cancelRemarkInput');
+      if (dropdown) dropdown.value = (order && order.status !== 'Pending Acceptance') ? order.status : 'Accepted';
+      if (remarkInput) remarkInput.value = order?.remark || '';
       toggleCancelModal(true);
     }
 
     function toggleCancelModal(show) {
-      document.getElementById('cancelOrderModal').classList.toggle('hidden', !show);
+      const modal = document.getElementById('cancelOrderModal');
+      if (modal) modal.classList.toggle('hidden', !show);
     }
 
     function confirmStatusUpdateWithRestock() {
@@ -1819,6 +1838,7 @@
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
       
       renderCustomerOrders();
+      updateAuthUI();
 
       const acceptMsg = `*ORDER ACCEPTED!*\n*Order ID:* ${order.orderId}\nHello ${order.customer?.name || 'Customer'}, your RDS Cloud Kitchen order has been officially accepted and entered preparation!\n*Total:* ₹${order.total}`;
       dispatchWhatsAppMessage(order.customer?.phone, acceptMsg);
@@ -1835,6 +1855,7 @@
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
 
       renderCustomerOrders();
+      updateAuthUI();
 
       const deliveryMsg = `*ORDER DELIVERED!*\n*Order ID:* ${order.orderId}\nHello ${order.customer?.name || 'Customer'}, your order has been successfully handed over/delivered. Thank you for choosing RDS Cloud Kitchen!`;
       dispatchWhatsAppMessage(order.customer?.phone, deliveryMsg);
