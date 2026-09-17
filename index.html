@@ -344,37 +344,25 @@
           </div>
         </div>
       </div>
-      <div id="cartFooter" class="hidden pt-4 border-t space-y-3">
-        <div class="flex justify-between items-center text-sm font-black"><span>Net Payable Total:</span><span id="cartTotal" class="text-orange-600 text-base">₹0</span></div>
-        <button type="button" onclick="placeCustomerOrder()" class="cursor-pointer w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-extrabold py-3.5 rounded-2xl shadow-lg active:scale-95 transition text-xs uppercase tracking-wider">Place Order</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- ✅ ORDER SUCCESS MODAL -->
-  <div id="orderSuccessModal" class="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-4 shadow-2xl text-center border text-stone-900">
-      <div class="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
-        <i class="fa-solid fa-check"></i>
-      </div>
-      <div>
-        <h2 class="text-xl font-black">Order Registered!</h2>
-        <p id="successOrderIdText" class="text-xs text-orange-600 font-extrabold mt-1"></p>
-        <p class="text-xs text-stone-500 mt-2">Your order has been recorded. Tap below to send the pre-filled bill directly to our primary kitchen WhatsApp.</p>
-      </div>
-
-      <div class="space-y-2 pt-1">
-        <button type="button" onclick="sendOrderToPrimaryWhatsApp()" class="cursor-pointer w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl shadow flex items-center justify-center gap-2 text-xs uppercase">
-          <i class="fa-brands fa-whatsapp text-lg"></i> Send Directly to Kitchen (+91 8667737440)
+      <!-- ⚡ DUAL-LINE DISPATCH: INSTANT CLICK, ZERO DROPOFF -->
+      <div id="cartFooter" class="hidden pt-4 border-t space-y-2.5">
+        <div class="flex justify-between items-center text-sm font-black">
+          <span>Net Payable Total:</span>
+          <span id="cartTotal" class="text-orange-600 text-base">₹0</span>
+        </div>
+        
+        <p class="text-[11px] font-bold text-stone-600 text-center">Tap to send order directly to Kitchen WhatsApp:</p>
+        
+        <button type="button" onclick="placeCustomerOrderToTarget('primary')" class="cursor-pointer w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl shadow active:scale-95 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <i class="fa-brands fa-whatsapp text-lg"></i> Send via Primary Line (+91 8667737440)
         </button>
 
-        <button type="button" onclick="sendOrderToSecondaryWhatsApp()" class="cursor-pointer w-full bg-stone-900 hover:bg-black text-amber-300 font-black py-2.5 rounded-2xl shadow flex items-center justify-center gap-2 text-xs uppercase">
-          <i class="fa-brands fa-whatsapp"></i> Backup Helpline (+91 8838377634)
+        <button type="button" onclick="placeCustomerOrderToTarget('secondary')" class="cursor-pointer w-full bg-stone-900 hover:bg-black text-amber-300 font-black py-2.5 rounded-2xl shadow active:scale-95 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <i class="fa-brands fa-whatsapp text-base"></i> Send via Backup Line (+91 8838377634)
         </button>
-
-        <button type="button" onclick="closeSuccessModal()" class="cursor-pointer w-full bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-2.5 rounded-2xl text-xs uppercase">
-          Close & Return
-        </button>
+        
+        <p class="text-[10px] text-stone-400 text-center italic">If Line 1 is busy or has 1 grey tick, tap Line 2.</p>
       </div>
     </div>
   </div>
@@ -1083,8 +1071,13 @@
       }
     }
 
-    // FIXED PLACE ORDER: DEDUCTS PORTIONS EXACTLY ONCE
-    function placeCustomerOrder() {
+    function placeCustomerOrderToTarget(target) {
+      const selectedPhone = target === 'secondary' ? SECONDARY_PHONE : PRIMARY_PHONE;
+      placeCustomerOrder(selectedPhone);
+    }
+
+    function placeCustomerOrder(targetPhone) {
+      const phoneToUse = targetPhone || PRIMARY_PHONE;
       const name = document.getElementById('custName').value.trim();
       let rawPhone = document.getElementById('custPhone').value.trim();
       const cleanPhone = rawPhone.replace(/\D/g, '');
@@ -1110,7 +1103,6 @@
       let orderItems = [];
       let grandTotal = 0;
 
-      // Compile order items without duplicate deduction
       Object.entries(cart).forEach(([id, qty]) => {
         const dish = activeMenu.find(i => i.id === id);
         if (dish) {
@@ -1119,7 +1111,7 @@
         }
       });
 
-      // Deduct portions exactly once
+      // Single-cut portion deduction
       autoDeductOrderPortions(orderItems);
 
       const newOrder = {
@@ -1135,15 +1127,18 @@
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
 
       lastPlacedOrder = newOrder;
-      document.getElementById('successOrderIdText').innerText = `Order ID: ${newOrder.orderId} (Total: ₹${grandTotal})`;
-      document.getElementById('orderSuccessModal').classList.remove('hidden');
-
       playOwnerAlertBeep();
 
       cart = {};
       updateUI();
       toggleCart(false);
       renderCustomerOrders();
+
+      const rawOrderSummary = formatOrderWhatsAppText(newOrder);
+      navigator.clipboard.writeText(rawOrderSummary).catch(() => {});
+
+      const msg = encodeURIComponent(rawOrderSummary);
+      window.location.href = `https://wa.me/${phoneToUse}?text=${msg}`;
     }
 
     function formatOrderWhatsAppText(o) {
@@ -1151,20 +1146,11 @@
       return `*NEW ORDER: ${o.orderId}*\n*Customer:* ${o.customer.name}\n*Phone:* ${o.customer.phone}\n*Fulfillment / Place:* ${o.customer.address}\n*Payment:* ${o.payment}\n*Items:*\n${itemSummary}\n*Total:* ₹${o.total}\n*Status:* ${o.status}`;
     }
 
-    function sendOrderToPrimaryWhatsApp() {
-      if (!lastPlacedOrder) return;
-      const msg = encodeURIComponent(formatOrderWhatsAppText(lastPlacedOrder));
-      window.open(`https://wa.me/${PRIMARY_PHONE}?text=${msg}`, '_blank');
-    }
-
-    function sendOrderToSecondaryWhatsApp() {
-      if (!lastPlacedOrder) return;
-      const msg = encodeURIComponent(formatOrderWhatsAppText(lastPlacedOrder));
-      window.open(`https://wa.me/${SECONDARY_PHONE}?text=${msg}`, '_blank');
-    }
-
-    function closeSuccessModal() {
-      document.getElementById('orderSuccessModal').classList.add('hidden');
+    function resendOrderToWhatsApp(orderId, targetPhone) {
+      const order = customerOrders.find(o => o.orderId === orderId);
+      if (!order) return;
+      const msg = encodeURIComponent(formatOrderWhatsAppText(order));
+      window.open(`https://wa.me/${targetPhone}?text=${msg}`, '_blank');
     }
 
     function toggleStockModal(show) {
@@ -1383,18 +1369,26 @@
               </div>
             ` : ''}
 
-            ${canCancel ? `
-              <div class="pt-1 flex items-center justify-between border-t border-stone-200">
-                <span class="text-[10px] text-stone-500">Order not accepted yet.</span>
-                <button onclick="requestOrderCancellation('${o.orderId}')" class="cursor-pointer bg-rose-600 hover:bg-rose-700 text-white font-black text-[10px] px-3 py-1.5 rounded-xl uppercase">
-                  Cancel via WhatsApp
+            <div class="flex items-center justify-between border-t border-stone-200 pt-2 gap-2">
+              <div class="flex items-center gap-1.5">
+                <button onclick="resendOrderToWhatsApp('${o.orderId}', '${PRIMARY_PHONE}')" class="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg">
+                  <i class="fa-brands fa-whatsapp"></i> Primary (+91 8667737440)
+                </button>
+                <button onclick="resendOrderToWhatsApp('${o.orderId}', '${SECONDARY_PHONE}')" class="cursor-pointer bg-stone-800 hover:bg-stone-900 text-amber-300 font-bold text-[10px] px-2.5 py-1 rounded-lg">
+                  <i class="fa-brands fa-whatsapp"></i> Backup
                 </button>
               </div>
-            ` : `
-              <p class="text-[10px] italic ${o.status === 'Accepted' ? 'text-emerald-700' : 'text-stone-500'}">
-                ${o.status === 'Accepted' ? 'Order accepted by kitchen. Preparation started.' : 'Order has been finalized.'}
-              </p>
-            `}
+
+              ${canCancel ? `
+                <button onclick="requestOrderCancellation('${o.orderId}')" class="cursor-pointer bg-rose-600 hover:bg-rose-700 text-white font-black text-[10px] px-3 py-1 rounded-lg uppercase">
+                  Cancel
+                </button>
+              ` : `
+                <span class="text-[10px] italic ${o.status === 'Accepted' ? 'text-emerald-700' : 'text-stone-500'}">
+                  ${o.status === 'Accepted' ? 'Accepted' : 'Finalized'}
+                </span>
+              `}
+            </div>
           </div>
         `;
       }).join('');
