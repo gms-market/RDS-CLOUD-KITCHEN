@@ -1083,6 +1083,7 @@
       }
     }
 
+    // FIXED PLACE ORDER: DEDUCTS PORTIONS EXACTLY ONCE
     function placeCustomerOrder() {
       const name = document.getElementById('custName').value.trim();
       let rawPhone = document.getElementById('custPhone').value.trim();
@@ -1109,15 +1110,16 @@
       let orderItems = [];
       let grandTotal = 0;
 
+      // Compile order items without duplicate deduction
       Object.entries(cart).forEach(([id, qty]) => {
         const dish = activeMenu.find(i => i.id === id);
         if (dish) {
-          dish.quantity = Math.max(0, (dish.quantity || 0) - qty);
           orderItems.push({ name: dish.name, qty, price: dish.price, total: dish.price * qty });
           grandTotal += dish.price * qty;
         }
       });
 
+      // Deduct portions exactly once
       autoDeductOrderPortions(orderItems);
 
       const newOrder = {
