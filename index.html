@@ -8,7 +8,7 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -568,7 +568,7 @@
     </div>
   </div>
 
-  <!-- ⚙️ SETTINGS MODAL (WITH FSSAI & GST CONTROLS) -->
+  <!-- ⚙️ SETTINGS MODAL -->
   <div id="settingsModal" class="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto text-xs">
       <div class="flex justify-between items-center border-b pb-3"><h2 class="font-extrabold text-base"><i class="fa-solid fa-gear text-orange-600 mr-1.5"></i> Kitchen Settings</h2><button onclick="toggleSettingsModal(false)" class="cursor-pointer text-xl font-bold">&times;</button></div>
@@ -631,137 +631,53 @@
     </div>
   </div>
 
-  <!-- 📂 OWNER ORDERS & DATE FILTER CONTROLS -->
-  <div id="customerHistoryDrawer" class="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm hidden flex justify-end">
-    <div class="w-full max-w-xl bg-white h-full shadow-2xl flex flex-col justify-between p-6 overflow-y-auto">
-      <div class="space-y-4">
-        <div class="flex items-center justify-between border-b pb-3">
-          <div class="flex items-center gap-2 font-extrabold text-base"><i class="fa-solid fa-clipboard-list text-orange-600"></i><h2>Kitchen Orders & Queue</h2></div>
-          <button onclick="toggleCustomerHistory(false)" class="cursor-pointer text-xl font-bold">&times;</button>
-        </div>
-
-        <div class="bg-amber-50/80 border border-amber-200 p-3 rounded-2xl space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-stone-800 text-xs flex items-center gap-1.5">
-              <i class="fa-solid fa-calendar-day text-orange-600"></i> Filter Orders by Date
-            </span>
-            <button onclick="resetOrderDateToToday()" class="cursor-pointer text-[10px] font-black uppercase text-orange-700 hover:underline">
-              Today Only
-            </button>
-          </div>
-          <div class="flex gap-2">
-            <input id="orderDateFilterInput" onchange="renderCustomerOrders()" type="date" class="p-2 border rounded-xl text-xs bg-white font-bold w-full">
-            <button onclick="clearOrderDateFilter()" title="View All Dates" class="cursor-pointer bg-stone-200 hover:bg-stone-300 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
-              All Dates
-            </button>
-          </div>
-        </div>
-
-        <input id="customerSearchInput" oninput="renderCustomerOrders()" type="text" placeholder="Search customer phone or name..." class="w-full p-2.5 border rounded-xl text-xs bg-stone-50 outline-none">
-        
-        <div id="customerOrdersList" class="space-y-3"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 🧾 INVOICE MODAL (WITH FSSAI SUPPORT) -->
-  <div id="invoiceModal" class="fixed inset-0 z-[130] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border text-stone-900">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h2 class="font-black text-base"><i class="fa-solid fa-file-invoice text-orange-600 mr-1"></i> Customer Bill</h2>
-        <button onclick="toggleInvoiceModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
-      </div>
-      <div id="invoicePrintTarget" class="bg-white p-5 border font-mono text-xs space-y-3 shadow-sm">
-        <div class="text-center border-b border-dashed pb-3 font-sans space-y-0.5">
-          <h3 class="text-lg font-black text-stone-900">RDS CLOUD KITCHEN</h3>
-          <p class="text-[11px] font-bold text-stone-700">232/6, Ezhil Nagar, Near Gas Godown • Ph: +91 8667737440</p>
-          <p id="invFssaiNo" class="text-[11px] font-bold text-amber-800 hidden"></p>
-          <p id="invGstin" class="text-[11px] font-bold text-stone-800"></p>
-        </div>
-        <div class="grid grid-cols-2 gap-2 text-[11px] border-b border-dashed pb-2">
-          <div>
-            <p><strong>Bill:</strong> <span id="invOrderId"></span></p>
-            <p><strong>Date:</strong> <span id="invDateTime"></span></p>
-            <p><strong>Status:</strong> <span id="invOrderStatus" class="font-bold uppercase"></span></p>
-          </div>
-          <div class="text-right">
-            <p><strong>Customer:</strong> <span id="invCustName"></span></p>
-            <p><strong>Phone:</strong> <span id="invCustPhone"></span></p>
-          </div>
-        </div>
-
-        <div class="p-2 bg-stone-50 rounded-xl text-[11px]">
-          <strong>Fulfillment / Location:</strong>
-          <p id="invCustAddress" class="break-words mt-0.5"></p>
-        </div>
-
-        <div id="invRemarkRow" class="hidden p-2 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800">
-          <strong>Remark / Reason:</strong> <span id="invRemarkText"></span>
-        </div>
-
-        <table class="w-full text-left text-[11px]">
-          <thead><tr class="border-b font-bold"><th class="py-1">Item</th><th class="text-center">Qty</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead>
-          <tbody id="invItemsTable" class="divide-y"></tbody>
-        </table>
-        <div class="border-t border-dashed pt-2 space-y-1 text-[11px]">
-          <div id="invGstFields" class="hidden space-y-1">
-            <div class="flex justify-between"><span>Taxable Food Value:</span><span id="invTaxable">₹0.00</span></div>
-            <div class="flex justify-between text-stone-600"><span>GST (<span id="invGstPct">5</span>%):</span><span id="invGstVal">₹0.00</span></div>
-          </div>
-          <div class="flex justify-between border-t pt-1.5 text-sm font-black font-sans"><span>Grand Total (Net Payable):</span><span id="invGrandTotal" class="text-orange-600">₹0.00</span></div>
-        </div>
-      </div>
-      <div class="flex gap-2 font-sans pt-1">
-        <button onclick="printInvoiceSheet()" class="cursor-pointer flex-1 bg-stone-900 text-amber-300 font-black py-3 rounded-2xl uppercase text-xs">Print Bill</button>
-        <button onclick="downloadInvoicePdf()" class="cursor-pointer flex-1 bg-orange-600 text-white font-black py-3 rounded-2xl uppercase text-xs">Download PDF</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 🖼️ POSTCARD MODAL (HIGH CLARITY CAPTURE CONTAINER) -->
+  <!-- 🖼️ POSTCARD MODAL (AUTO-EXPANDING LENGTHY POSTCARD) -->
   <div id="postcardModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
-    <div class="bg-stone-900 rounded-3xl max-w-2xl w-full p-5 space-y-4 shadow-2xl border border-stone-800 text-white max-h-[95vh] overflow-y-auto">
+    <div class="bg-stone-900 rounded-3xl max-w-3xl w-full p-5 space-y-4 shadow-2xl border border-stone-800 text-white max-h-[95vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-stone-800 pb-3">
-        <h2 class="font-extrabold text-sm sm:text-base"><i class="fa-solid fa-bullhorn text-orange-500 mr-1.5"></i> RDS Cloud Kitchen Menu Flyer</h2>
+        <div>
+          <h2 class="font-extrabold text-sm sm:text-base"><i class="fa-solid fa-bullhorn text-orange-500 mr-1.5"></i> RDS Cloud Kitchen Menu Flyer</h2>
+          <p class="text-[11px] text-stone-400">Length auto-expands with all menu items for full readability.</p>
+        </div>
         <button onclick="togglePostcardModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
       </div>
       
       <div class="flex justify-center overflow-x-auto p-1">
-        <!-- FIXED 680px CANVAS TARGET FOR ULTRA-SHARP CAPTURE -->
-        <div id="adPostcardTarget" style="width: 680px; max-width: 680px; background-color: #0c0a09; color: #ffffff; border: 4px solid #ea580c; border-radius: 24px; padding: 24px; font-family: 'Plus Jakarta Sans', sans-serif;">
+        <!-- LENGTHY AUTO-SIZED CARD TARGET (800px FIXED WIDTH) -->
+        <div id="adPostcardTarget" style="width: 800px; min-width: 800px; background-color: #0c0a09; color: #ffffff; border: 4px solid #ea580c; border-radius: 28px; padding: 30px; font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; height: auto;">
           
-          <!-- POSTCARD HEADER -->
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #292524; padding-bottom: 14px; margin-bottom: 16px;">
+          <!-- FLYER HEADER -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #292524; padding-bottom: 18px; margin-bottom: 20px;">
             <div>
-              <h3 style="font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin: 0; color: #ffffff;">RDS CLOUD KITCHEN</h3>
-              <p style="font-size: 11px; font-weight: 800; color: #fbbf24; text-transform: uppercase; margin: 4px 0 0 0; letter-spacing: 0.5px;">
-                HOMESTYLE DELICACIES • 3.0 KM RANGE • 232/6, EZHIL NAGAR
+              <h3 style="font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin: 0; color: #ffffff; line-height: 1.1;">RDS CLOUD KITCHEN</h3>
+              <p style="font-size: 13px; font-weight: 800; color: #fbbf24; text-transform: uppercase; margin: 6px 0 0 0; letter-spacing: 0.5px;">
+                HOMESTYLE DELICACIES • 3.0 KM FIXED RANGE • 232/6, EZHIL NAGAR
               </p>
-              <p id="postcardFssaiText" style="font-size: 10px; font-weight: 700; color: #d6d3d1; margin: 2px 0 0 0; display: none;">
-                FSSAI Lic No: <span id="postcardFssaiNo" style="color: #f97316;"></span>
+              <p id="postcardFssaiText" style="font-size: 11px; font-weight: 700; color: #d6d3d1; margin: 4px 0 0 0; display: none;">
+                FSSAI Registration No: <span id="postcardFssaiNo" style="color: #f97316;"></span>
               </p>
             </div>
-            <span style="background-color: #ea580c; color: #ffffff; font-size: 11px; font-weight: 900; text-transform: uppercase; padding: 6px 14px; border-radius: 9999px; letter-spacing: 0.5px;">
+            <span style="background-color: #ea580c; color: #ffffff; font-size: 12px; font-weight: 900; text-transform: uppercase; padding: 6px 16px; border-radius: 9999px; letter-spacing: 0.5px; white-space: nowrap;">
               FRESH DAILY
             </span>
           </div>
 
-          <!-- FULL ALL-DISH GRID WITHOUT SCROLL CLIPPING -->
-          <div id="postcardAllMenuContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;"></div>
+          <!-- FULL ALL-DISH GRID (AUTO LENGTH, NO CUTOFF) -->
+          <div id="postcardAllMenuContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px;"></div>
 
-          <!-- POSTCARD FOOTER WITH QR & HELPLINE -->
-          <div style="background-color: #1c1917; border-radius: 16px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #44403c;">
-            <div style="line-height: 1.4;">
-              <p style="color: #a8a29e; font-weight: 800; text-transform: uppercase; font-size: 10px; margin: 0 0 2px 0; letter-spacing: 0.5px;">
+          <!-- FLYER FOOTER WITH DIRECT QR & CONTACT -->
+          <div style="background-color: #1c1917; border-radius: 18px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #44403c;">
+            <div style="line-height: 1.45;">
+              <p style="color: #a8a29e; font-weight: 800; text-transform: uppercase; font-size: 11px; margin: 0 0 2px 0; letter-spacing: 0.5px;">
                 ORDER DIRECT ONLINE / WHATSAPP:
               </p>
-              <p style="font-size: 13px; font-weight: 900; color: #fbbf24; margin: 0 0 4px 0;">
+              <p style="font-size: 15px; font-weight: 900; color: #fbbf24; margin: 0 0 6px 0;">
                 Helplines: +91 8667737440 / +91 8838377634
               </p>
-              <a id="postcardWebsiteAnchor" href="#" target="_blank" style="font-weight: 800; color: #ffffff; font-size: 11px; text-decoration: underline; word-break: break-all;"></a>
+              <a id="postcardWebsiteAnchor" href="#" target="_blank" style="font-weight: 800; color: #ffffff; font-size: 12px; text-decoration: underline; word-break: break-all;"></a>
             </div>
-            <div style="background-color: #ffffff; padding: 6px; border-radius: 12px; flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);">
-              <img id="postcardQrImg" src="" alt="QR Code" crossorigin="anonymous" style="width: 80px; height: 80px; display: block; object-fit: contain;">
+            <div style="background-color: #ffffff; padding: 8px; border-radius: 14px; flex-shrink: 0; box-shadow: 0 6px 12px -2px rgba(0,0,0,0.5);">
+              <img id="postcardQrImg" src="" alt="QR Code" crossorigin="anonymous" style="width: 90px; height: 90px; display: block; object-fit: contain;">
             </div>
           </div>
 
@@ -1842,7 +1758,6 @@
       document.getElementById('reportPeriodText').innerText = `Audit Period: ${formatIndianDate(fromIso)} to ${formatIndianDate(toIso)}`;
       document.getElementById('reportGeneratedTimestamp').innerText = `${getTodayIndianDate()} ${new Date().toLocaleTimeString()}`;
 
-      // FSSAI & GST line on report
       const extraLines = [];
       if (kitchenSettings.fssaiEnabled && kitchenSettings.fssaiNo) extraLines.push(`FSSAI Lic: ${kitchenSettings.fssaiNo}`);
       if (kitchenSettings.gstEnabled && kitchenSettings.gstin) extraLines.push(`GSTIN: ${kitchenSettings.gstin}`);
@@ -1936,18 +1851,16 @@
       });
     }
 
-    // 🖼️ ULTRA-CLEAR POSTCARD PREVIEW (WITH FSSAI & FULL GRID RENDERING)
+    // 🖼️ ULTRA-CLEAR, LENGTHY AUTO-EXPANDING POSTCARD PREVIEW (WITH FSSAI)
     function openPostcardPreview() {
       const cleanUrl = window.location.origin + window.location.pathname;
       document.getElementById('postcardWebsiteAnchor').innerText = cleanUrl;
       document.getElementById('postcardWebsiteAnchor').href = cleanUrl;
       
-      // Load QR code with CORS support
       const qrImg = document.getElementById('postcardQrImg');
       qrImg.crossOrigin = "anonymous";
       qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(cleanUrl)}`;
 
-      // FSSAI Line on Postcard
       const fssaiContainer = document.getElementById('postcardFssaiText');
       if (kitchenSettings.fssaiEnabled && kitchenSettings.fssaiNo) {
         document.getElementById('postcardFssaiNo').innerText = kitchenSettings.fssaiNo;
@@ -1956,23 +1869,23 @@
         fssaiContainer.style.display = "none";
       }
 
-      // Render crisp dish cards (No scroll cutoff)
+      // Render crisp dish cards with word-wrapping and dedicated height (Zero slicing/squeezing)
       const container = document.getElementById('postcardAllMenuContainer');
       if (activeMenu.length > 0) {
         container.innerHTML = activeMenu.map(dish => `
-          <div style="background-color: #1c1917; border: 1px solid #292524; border-radius: 14px; padding: 8px; display: flex; flex-direction: column; justify-content: space-between;">
-            <div style="width: 100%; height: 90px; background-color: #292524; border-radius: 10px; overflow: hidden; margin-bottom: 6px;">
-              <img src="${dish.image}" alt="${dish.name}" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+          <div style="background-color: #171514; border: 1.5px solid #292524; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+            <div style="width: 100%; height: 130px; background-color: #262320; border-radius: 12px; overflow: hidden; margin-bottom: 10px;">
+              <img src="${dish.image}" alt="${dish.name}" crossorigin="anonymous" style="width: 100%; height: 130px; object-fit: cover; display: block;">
             </div>
-            <div style="text-align: left; line-height: 1.2;">
-              <span style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #f59e0b; display: block; margin-bottom: 2px;">${dish.category}</span>
-              <p style="font-size: 11px; font-weight: 800; color: #ffffff; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${dish.name}</p>
-              <p style="font-size: 11px; font-weight: 900; color: #fbbf24; margin: 0;">₹${dish.price}</p>
+            <div style="text-align: left; box-sizing: border-box;">
+              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #f59e0b; display: block; margin-bottom: 4px; letter-spacing: 0.5px;">${dish.category}</span>
+              <p style="font-size: 13px; font-weight: 900; color: #ffffff; margin: 0 0 6px 0; word-break: break-word; white-space: normal; line-height: 1.35; min-height: 38px;">${dish.name}</p>
+              <p style="font-size: 14px; font-weight: 900; color: #fbbf24; margin: 0;">₹${dish.price}</p>
             </div>
           </div>
         `).join('');
       } else {
-        container.innerHTML = '<p style="font-size: 12px; color: #a8a29e; grid-column: span 3; text-align: center; padding: 16px;">Menu syncing from sheet...</p>';
+        container.innerHTML = '<p style="font-size: 13px; color: #a8a29e; grid-column: span 3; text-align: center; padding: 24px;">Menu syncing from sheet...</p>';
       }
 
       document.getElementById('postcardModal').classList.remove('hidden');
@@ -1986,14 +1899,15 @@
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#0c0a09',
-        logging: false
+        logging: false,
+        windowWidth: 1200
       }).then(canvas => {
         const { jsPDF } = window.jspdf;
         const pdfWidth = 210; // A4 mm
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
         const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
-        pdf.addImage(canvas.toDataURL('png'), 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.link(10, 10, 190, pdfHeight - 20, { url: window.location.origin + window.location.pathname });
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+        pdf.link(10, 10, pdfWidth - 20, pdfHeight - 20, { url: window.location.origin + window.location.pathname });
         pdf.save(`RDS-Kitchen-Flyer.pdf`);
       });
     }
@@ -2006,7 +1920,8 @@
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#0c0a09',
-        logging: false
+        logging: false,
+        windowWidth: 1200
       }).then(canvas => {
         const link = document.createElement('a');
         link.download = `RDS-Kitchen-Postcard.png`;
