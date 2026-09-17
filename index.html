@@ -513,6 +513,7 @@
       <div>
         <label class="block font-bold text-stone-700 mb-1">Select Order Status *</label>
         <select id="statusSelectDropdown" class="w-full p-2.5 border rounded-xl bg-stone-50 font-bold text-xs">
+          <option value="Accepted">Accepted</option>
           <option value="Rejected">Rejected</option>
           <option value="Cancelled">Cancelled</option>
           <option value="Not Delivered">Not Delivered</option>
@@ -521,13 +522,13 @@
       </div>
 
       <div>
-        <label class="block font-bold text-stone-700 mb-1">Remarks / Reason *</label>
-        <textarea id="cancelRemarkInput" rows="3" placeholder="Enter reason (e.g. Out of stock, customer unreachable)..." class="w-full p-2.5 border rounded-xl bg-stone-50 font-medium text-xs"></textarea>
+        <label class="block font-bold text-stone-700 mb-1">Remarks / Reason</label>
+        <textarea id="cancelRemarkInput" rows="3" placeholder="Enter reason if rejecting or updating status..." class="w-full p-2.5 border rounded-xl bg-stone-50 font-medium text-xs"></textarea>
       </div>
 
       <div class="space-y-1.5">
         <button type="button" onclick="confirmStatusUpdateWithRestock()" class="cursor-pointer w-full bg-rose-600 hover:bg-rose-700 text-white font-black py-2.5 rounded-xl uppercase shadow">
-          Apply Status & Auto-Restock Portions
+          Apply Status & Sync Portions
         </button>
         <button type="button" onclick="toggleCancelModal(false)" class="cursor-pointer w-full bg-stone-100 text-stone-700 font-bold py-2 rounded-xl uppercase">
           Back
@@ -631,6 +632,93 @@
     </div>
   </div>
 
+  <!-- 📂 OWNER ORDERS & DATE FILTER CONTROLS -->
+  <div id="customerHistoryDrawer" class="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm hidden flex justify-end">
+    <div class="w-full max-w-xl bg-white h-full shadow-2xl flex flex-col justify-between p-6 overflow-y-auto">
+      <div class="space-y-4">
+        <div class="flex items-center justify-between border-b pb-3">
+          <div class="flex items-center gap-2 font-extrabold text-base"><i class="fa-solid fa-clipboard-list text-orange-600"></i><h2>Kitchen Orders & Queue</h2></div>
+          <button onclick="toggleCustomerHistory(false)" class="cursor-pointer text-xl font-bold">&times;</button>
+        </div>
+
+        <div class="bg-amber-50/80 border border-amber-200 p-3 rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-stone-800 text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-calendar-day text-orange-600"></i> Filter Orders by Date
+            </span>
+            <button onclick="resetOrderDateToToday()" class="cursor-pointer text-[10px] font-black uppercase text-orange-700 hover:underline">
+              Today Only
+            </button>
+          </div>
+          <div class="flex gap-2">
+            <input id="orderDateFilterInput" onchange="renderCustomerOrders()" type="date" class="p-2 border rounded-xl text-xs bg-white font-bold w-full">
+            <button onclick="clearOrderDateFilter()" title="View All Dates" class="cursor-pointer bg-stone-200 hover:bg-stone-300 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
+              All Dates
+            </button>
+          </div>
+        </div>
+
+        <input id="customerSearchInput" oninput="renderCustomerOrders()" type="text" placeholder="Search customer phone or name..." class="w-full p-2.5 border rounded-xl text-xs bg-stone-50 outline-none">
+        
+        <div id="customerOrdersList" class="space-y-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧾 INVOICE MODAL -->
+  <div id="invoiceModal" class="fixed inset-0 z-[130] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border text-stone-900">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="font-black text-base"><i class="fa-solid fa-file-invoice text-orange-600 mr-1"></i> Customer Bill</h2>
+        <button onclick="toggleInvoiceModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
+      </div>
+      <div id="invoicePrintTarget" class="bg-white p-5 border font-mono text-xs space-y-3 shadow-sm">
+        <div class="text-center border-b border-dashed pb-3 font-sans space-y-0.5">
+          <h3 class="text-lg font-black text-stone-900">RDS CLOUD KITCHEN</h3>
+          <p class="text-[11px] font-bold text-stone-700">232/6, Ezhil Nagar, Near Gas Godown • Ph: +91 8667737440</p>
+          <p id="invFssaiNo" class="text-[11px] font-bold text-amber-800 hidden"></p>
+          <p id="invGstin" class="text-[11px] font-bold text-stone-800"></p>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-[11px] border-b border-dashed pb-2">
+          <div>
+            <p><strong>Bill:</strong> <span id="invOrderId"></span></p>
+            <p><strong>Date:</strong> <span id="invDateTime"></span></p>
+            <p><strong>Status:</strong> <span id="invOrderStatus" class="font-bold uppercase"></span></p>
+          </div>
+          <div class="text-right">
+            <p><strong>Customer:</strong> <span id="invCustName"></span></p>
+            <p><strong>Phone:</strong> <span id="invCustPhone"></span></p>
+          </div>
+        </div>
+
+        <div class="p-2 bg-stone-50 rounded-xl text-[11px]">
+          <strong>Fulfillment / Location:</strong>
+          <p id="invCustAddress" class="break-words mt-0.5"></p>
+        </div>
+
+        <div id="invRemarkRow" class="hidden p-2 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800">
+          <strong>Remark / Reason:</strong> <span id="invRemarkText"></span>
+        </div>
+
+        <table class="w-full text-left text-[11px]">
+          <thead><tr class="border-b font-bold"><th class="py-1">Item</th><th class="text-center">Qty</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead>
+          <tbody id="invItemsTable" class="divide-y"></tbody>
+        </table>
+        <div class="border-t border-dashed pt-2 space-y-1 text-[11px]">
+          <div id="invGstFields" class="hidden space-y-1">
+            <div class="flex justify-between"><span>Taxable Food Value:</span><span id="invTaxable">₹0.00</span></div>
+            <div class="flex justify-between text-stone-600"><span>GST (<span id="invGstPct">5</span>%):</span><span id="invGstVal">₹0.00</span></div>
+          </div>
+          <div class="flex justify-between border-t pt-1.5 text-sm font-black font-sans"><span>Grand Total (Net Payable):</span><span id="invGrandTotal" class="text-orange-600">₹0.00</span></div>
+        </div>
+      </div>
+      <div class="flex gap-2 font-sans pt-1">
+        <button onclick="printInvoiceSheet()" class="cursor-pointer flex-1 bg-stone-900 text-amber-300 font-black py-3 rounded-2xl uppercase text-xs">Print Bill</button>
+        <button onclick="downloadInvoicePdf()" class="cursor-pointer flex-1 bg-orange-600 text-white font-black py-3 rounded-2xl uppercase text-xs">Download PDF</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 🖼️ POSTCARD MODAL -->
   <div id="postcardModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
     <div class="bg-stone-900 rounded-3xl max-w-3xl w-full p-5 space-y-4 shadow-2xl border border-stone-800 text-white max-h-[95vh] overflow-y-auto">
@@ -704,71 +792,70 @@
     const UPI_NUMBER = "8667737440";
     const UPI_ADDRESS = "8667737440@upi";
 
-    // 🌐 CROSS-DEVICE WHATSAPP DISPATCHER (LAPTOP / DESKTOP / PHONE COMPATIBLE)
+    // 🌐 CROSS-DEVICE WHATSAPP DISPATCHER
     function dispatchWhatsAppMessage(targetPhone, rawText) {
       const cleanTargetPhone = String(targetPhone).replace(/\D/g, '');
       const encodedMsg = encodeURIComponent(rawText);
       
-      // Auto-copy to clipboard as backup
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(rawText).catch(() => {});
       }
 
-      // Check if user is on mobile
       const isMobile = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
       
       if (isMobile) {
         window.location.href = `https://wa.me/${cleanTargetPhone}?text=${encodedMsg}`;
       } else {
-        // Desktop / Laptop: Use window.open with fallback to WhatsApp Web
         const waUrl = `https://web.whatsapp.com/send?phone=${cleanTargetPhone}&text=${encodedMsg}`;
         const newWindow = window.open(waUrl, '_blank');
-        
-        // If popup blocker intervened, fallback to direct location change
         if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
           window.location.href = `https://wa.me/${cleanTargetPhone}?text=${encodedMsg}`;
         }
       }
     }
 
-    // 🗓️ DATE HELPERS (INDIAN DD/MM/YYYY)
-    function formatIndianDate(inputDate) {
-      if (!inputDate) return "";
+    // 🗓️ UNIVERSAL DATE NORMALIZER & INDIAN FORMATTER
+    // Converts any input date into a standardized ISO date 'YYYY-MM-DD'
+    function toStandardIso(input) {
+      if (!input) return getTodayIsoDate();
       
-      if (typeof inputDate === "string" && inputDate.includes("/")) {
-        const parts = inputDate.split("/");
+      // If already YYYY-MM-DD
+      if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
+        return input;
+      }
+      
+      // If DD/MM/YYYY or MM/DD/YYYY
+      if (typeof input === 'string' && input.includes('/')) {
+        const parts = input.split('/');
         if (parts.length === 3) {
+          // If format is DD/MM/YYYY (Day <= 31, Month <= 12, Year = 4 digits)
           if (parts[2].length === 4) {
-            const p1 = parseInt(parts[0], 10);
-            const p2 = parseInt(parts[1], 10);
-            if (p1 <= 31 && p2 <= 12) {
-              return `${String(p1).padStart(2, '0')}/${String(p2).padStart(2, '0')}/${parts[2]}`;
-            }
+            const day = String(parts[0]).padStart(2, '0');
+            const month = String(parts[1]).padStart(2, '0');
+            const year = parts[2];
+            return `${year}-${month}-${day}`;
           }
         }
       }
-
-      if (typeof inputDate === "string" && inputDate.includes("-")) {
-        const parts = inputDate.split("-");
-        if (parts.length === 3 && parts[0].length === 4) {
-          return `${String(parts[2]).padStart(2, '0')}/${String(parts[1]).padStart(2, '0')}/${parts[0]}`;
-        }
+      
+      // Fallback native Date parser
+      const d = new Date(input);
+      if (!isNaN(d.getTime())) {
+        const yr = d.getFullYear();
+        const mo = String(d.getMonth() + 1).padStart(2, '0');
+        const da = String(d.getDate()).padStart(2, '0');
+        return `${yr}-${mo}-${da}`;
       }
-
-      const d = new Date(inputDate);
-      if (isNaN(d.getTime())) return inputDate;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
+      
+      return getTodayIsoDate();
     }
 
-    function getTodayIndianDate() {
-      const d = new Date();
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
+    // Converts ISO 'YYYY-MM-DD' or any date into Indian 'DD/MM/YYYY'
+    function formatIndianDate(inputDate) {
+      if (!inputDate) return "";
+      const iso = toStandardIso(inputDate);
+      const [yr, mo, da] = iso.split('-');
+      return `${da}/${mo}/${yr}`;
     }
 
     function getTodayIsoDate() {
@@ -779,21 +866,13 @@
       return `${yr}-${mo}-${da}`;
     }
 
+    function getTodayIndianDate() {
+      return formatIndianDate(getTodayIsoDate());
+    }
+
     function parseDateToTimestamp(dateStr) {
-      if (!dateStr) return 0;
-      if (typeof dateStr === "string" && dateStr.includes("/")) {
-        const parts = dateStr.split("/");
-        if (parts.length === 3) {
-          return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
-        }
-      }
-      if (typeof dateStr === "string" && dateStr.includes("-")) {
-        const parts = dateStr.split("-");
-        if (parts.length === 3 && parts[0].length === 4) {
-          return new Date(parts[0], parts[1] - 1, parts[2]).getTime();
-        }
-      }
-      return new Date(dateStr).getTime();
+      const iso = toStandardIso(dateStr);
+      return new Date(iso + 'T00:00:00').getTime();
     }
 
     function openKitchenGoogleMaps() {
@@ -913,6 +992,16 @@
 
     let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || '[]');
     let customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
+    
+    // Auto-migrate any existing customerOrders to standardized ISO dates
+    customerOrders = customerOrders.map(o => {
+      if (o && o.date) {
+        o.date = toStandardIso(o.date);
+      }
+      return o;
+    });
+    localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
+
     let kitchenSettings = JSON.parse(localStorage.getItem('rds_kitchen_settings') || JSON.stringify({
       gstEnabled: false, gstRate: 5.0, gstin: '',
       fssaiEnabled: false, fssaiNo: '',
@@ -1034,7 +1123,7 @@
         sessionStorage.setItem('rds_owner_auth', 'true');
         updateAuthUI();
         toggleLoginModal(false);
-        resetOrderDateToToday();
+        renderCustomerOrders();
         alert('Welcome back, Kitchen Owner!');
       } else {
         alert('Incorrect Password.');
@@ -1302,7 +1391,7 @@
 
       const newOrder = {
         orderId: 'RDS-' + Math.floor(100000 + Math.random() * 900000),
-        date: getTodayIndianDate(),
+        date: getTodayIsoDate(), // Saved as ISO YYYY-MM-DD for bulletproof date filtering
         placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'Pending Acceptance',
         payment, customer: { name, phone, address }, items: orderItems, total: grandTotal,
@@ -1370,8 +1459,9 @@
 
     function openStatusUpdateModal(orderId) {
       orderToStatusUpdateId = orderId;
-      document.getElementById('statusSelectDropdown').value = 'Rejected';
-      document.getElementById('cancelRemarkInput').value = 'Out of Stock / Delivery Not Possible';
+      const order = customerOrders.find(o => o.orderId === orderId);
+      document.getElementById('statusSelectDropdown').value = (order && order.status !== 'Pending Acceptance') ? order.status : 'Rejected';
+      document.getElementById('cancelRemarkInput').value = order?.remark || '';
       toggleCancelModal(true);
     }
 
@@ -1385,20 +1475,26 @@
       if (!order) return;
 
       const newStatus = document.getElementById('statusSelectDropdown').value;
-      const remark = document.getElementById('cancelRemarkInput').value.trim() || 'Portion out of stock';
+      const remark = document.getElementById('cancelRemarkInput').value.trim();
+      const oldStatus = order.status;
       
       order.status = newStatus;
       order.remark = remark;
 
-      autoRestockOrderPortions(order);
+      const wasDeducted = (oldStatus === 'Pending Acceptance' || oldStatus === 'Accepted');
+      const isReturnedState = (newStatus === 'Cancelled' || newStatus === 'Rejected' || newStatus === 'Not Delivered' || newStatus === 'Returned by Customer');
+
+      if (wasDeducted && isReturnedState) {
+        autoRestockOrderPortions(order);
+      }
 
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
       renderCustomerOrders();
       toggleCancelModal(false);
 
-      const notifyText = `*ORDER STATUS UPDATE*\n*Order ID:* ${order.orderId}\nHello ${order.customer.name}, your RDS Cloud Kitchen order status has been updated to: *${newStatus}*\n*Reason / Remark:* ${remark}\nContact our helpline (+91 8667737440) for any questions.`;
+      const notifyText = `*ORDER STATUS UPDATE*\n*Order ID:* ${order.orderId}\nHello ${order.customer.name}, your RDS Cloud Kitchen order status has been updated to: *${newStatus}*${remark ? `\n*Reason / Remark:* ${remark}` : ''}\nContact our helpline (+91 8667737440) for any questions.`;
       dispatchWhatsAppMessage(order.customer.phone, notifyText);
-      alert(`Order ${order.orderId} marked as "${newStatus}". Portions returned to stock.`);
+      alert(`Order ${order.orderId} marked as "${newStatus}".`);
     }
 
     function promptImportOrder() {
@@ -1439,6 +1535,7 @@
         let phone = '';
         let address = TAKEAWAY_FIXED_ADDRESS;
         let payment = 'COD';
+        let orderDate = getTodayIsoDate();
         let grandTotal = 0;
         const items = [];
 
@@ -1450,6 +1547,9 @@
             name = line.replace(/^Customer:\s*/i, '').trim();
           } else if (/^Phone:/i.test(line)) {
             phone = line.replace(/^Phone:\s*/i, '').replace(/\D/g, '').trim();
+          } else if (/^Date:/i.test(line)) {
+            const extractedDate = line.replace(/^Date:\s*/i, '').trim();
+            orderDate = toStandardIso(extractedDate);
           } else if (/^(Fulfillment \/ Place|Fulfillment|Address):/i.test(line)) {
             address = line.replace(/^(Fulfillment \/ Place|Fulfillment|Address):\s*/i, '').trim();
           } else if (/^Payment:/i.test(line)) {
@@ -1493,7 +1593,7 @@
 
         const importedOrder = {
           orderId,
-          date: getTodayIndianDate(),
+          date: orderDate, // Saved in standard ISO YYYY-MM-DD
           placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: 'Pending Acceptance',
           payment,
@@ -1506,9 +1606,10 @@
         customerOrders.unshift(importedOrder);
         localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
         
-        renderCustomerOrders();
         toggleImportModal(false);
-        alert(`Order ${orderId} successfully registered for ${name}! Portions deducted from stock.`);
+        clearOrderDateFilter();
+        toggleCustomerHistory(true);
+        alert(`Order ${orderId} successfully registered for ${name}!`);
       } catch (err) {
         alert("Error parsing WhatsApp text. Please make sure you copied the whole message.");
       }
@@ -1593,7 +1694,6 @@
       dispatchWhatsAppMessage(targetPhone, cancelMsg);
     }
 
-    // 🗓️ OWNER ORDER LIST WITH CALENDAR FILTER (DEFAULTS TO TODAY WITH ROBUST MATCHING)
     function resetOrderDateToToday() {
       const input = document.getElementById('orderDateFilterInput');
       if (input) input.value = getTodayIsoDate();
@@ -1606,6 +1706,7 @@
       renderCustomerOrders();
     }
 
+    // 🗓️ OWNER ORDER LIST RENDERER (BULLETPROOF DATE MATCHING)
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       if (!container) return;
@@ -1617,14 +1718,11 @@
 
       let filtered = customerOrders;
 
-      // Filter by Selected Date using normalizer
+      // Filter by Selected Date using standardized ISO comparison
       if (dateFilterVal) {
-        const [yr, mo, da] = dateFilterVal.split('-');
-        const targetStandardDate = `${String(da).padStart(2,'0')}/${String(mo).padStart(2,'0')}/${yr}`;
-        
         filtered = filtered.filter(o => {
-          const orderDateFormatted = formatIndianDate(o.date);
-          return orderDateFormatted === targetStandardDate;
+          const orderIso = toStandardIso(o.date);
+          return orderIso === dateFilterVal;
         });
       }
 
@@ -1636,7 +1734,7 @@
       if (filtered.length === 0) {
         container.innerHTML = `
           <div class="py-10 text-center text-xs text-stone-400 space-y-2">
-            <p>No orders found for date: <strong class="text-stone-700">${dateFilterVal ? formatIndianDate(dateFilterVal) : 'All Dates'}</strong></p>
+            <p>No orders found for: <strong class="text-stone-700">${dateFilterVal ? formatIndianDate(dateFilterVal) : 'All Dates'}</strong></p>
             <button onclick="clearOrderDateFilter()" class="bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-1 rounded-xl text-[11px] font-bold">
               View All Dates
             </button>
@@ -1987,8 +2085,10 @@
       document.getElementById('settingsModal').classList.toggle('hidden', !show);
     }
     function toggleCustomerHistory(show) {
-      if (show) resetOrderDateToToday();
       document.getElementById('customerHistoryDrawer').classList.toggle('hidden', !show);
+      if (show) {
+        clearOrderDateFilter();
+      }
     }
     function toggleInvoiceModal(show) { document.getElementById('invoiceModal').classList.toggle('hidden', !show); }
     function togglePostcardModal(show) { document.getElementById('postcardModal').classList.toggle('hidden', !show); }
@@ -2045,7 +2145,7 @@
         document.getElementById('fixedPointNoticeText').innerText = kitchenSettings.fixedPointDesc;
       }
       setOrderMode('delivery');
-      resetOrderDateToToday();
+      renderCustomerOrders();
     }
 
     window.onload = init;
