@@ -1417,33 +1417,41 @@
     }
 
     function promptImportOrder() {
-      document.getElementById('importOrderText').value = '';
+      const importBox = document.getElementById('importOrderText');
+      if (importBox) importBox.value = '';
       
       const checklist = document.getElementById('manualItemsChecklist');
-      if (activeMenu.length > 0) {
-        checklist.innerHTML = activeMenu.map(d => `
-          <div class="flex items-center justify-between text-xs py-1 border-b border-stone-100">
-            <span class="font-bold text-stone-900">${d.name} (₹${d.price})</span>
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] text-stone-500">Qty:</span>
-              <input type="number" min="0" value="0" data-dish-id="${d.id}" class="manual-item-qty w-14 p-1 border rounded text-center font-bold bg-white">
+      if (checklist) {
+        if (activeMenu.length > 0) {
+          checklist.innerHTML = activeMenu.map(d => `
+            <div class="flex items-center justify-between text-xs py-1 border-b border-stone-100">
+              <span class="font-bold text-stone-900">${d.name} (₹${d.price})</span>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] text-stone-500">Qty:</span>
+                <input type="number" min="0" value="0" data-dish-id="${d.id}" class="manual-item-qty w-14 p-1 border rounded text-center font-bold bg-white">
+              </div>
             </div>
-          </div>
-        `).join('');
-      } else {
-        checklist.innerHTML = '<p class="text-xs text-stone-400 italic">No menu items loaded yet.</p>';
+          `).join('');
+        } else {
+          checklist.innerHTML = '<p class="text-xs text-stone-400 italic">No menu items loaded yet.</p>';
+        }
       }
 
-      document.getElementById('manualOrderDate').value = getTodayIndianDate();
-      document.getElementById('manualCustName').value = '';
-      document.getElementById('manualCustPhone').value = '';
-      document.getElementById('manualCustAddress').value = '';
+      const mDate = document.getElementById('manualOrderDate');
+      if (mDate) mDate.value = getTodayIndianDate();
+      const mName = document.getElementById('manualCustName');
+      if (mName) mName.value = '';
+      const mPhone = document.getElementById('manualCustPhone');
+      if (mPhone) mPhone.value = '';
+      const mAddr = document.getElementById('manualCustAddress');
+      if (mAddr) mAddr.value = '';
 
       toggleImportModal(true);
     }
 
     function toggleImportModal(show) {
-      document.getElementById('importOrderModal').classList.toggle('hidden', !show);
+      const modal = document.getElementById('importOrderModal');
+      if (modal) modal.classList.toggle('hidden', !show);
     }
 
     async function pasteFromClipboardDirect() {
@@ -1459,9 +1467,9 @@
       }
     }
 
-    // 🛡️ BULLETPROOF INGESTER (HANDLES ALL FORMATS CLEANLY WITHOUT POPUP ERRORS)
+    // 🛡️ BULLETPROOF PARSER: NEVER THROWS UNHANDLED EXCEPTIONS
     function processImportedWhatsAppOrder() {
-      const rawText = document.getElementById('importOrderText').value.trim();
+      const rawText = (document.getElementById('importOrderText')?.value || '').trim();
       if (!rawText) {
         alert("Please paste the WhatsApp order text.");
         return;
@@ -1559,21 +1567,22 @@
       
       toggleImportModal(false);
       clearOrderDateFilter();
+      
       const drawer = document.getElementById('customerHistoryDrawer');
       if (drawer) {
         drawer.classList.remove('hidden');
         renderCustomerOrders();
       }
-      alert(`Order ${orderId} successfully registered for ${name}! Portions deducted from stock.`);
+      alert(`Order ${orderId} successfully registered for ${name}! Portions deducted.`);
     }
 
-    // ✍️ MANUAL ORDER ENTRY (FALLBACK IF WHATSAPP MESSAGE IS EDITED/BROKEN)
+    // ✍️ MANUAL ORDER ENTRY
     function processManualOrderEntry() {
-      const name = document.getElementById('manualCustName').value.trim();
-      const rawPhone = document.getElementById('manualCustPhone').value.trim().replace(/\D/g, '');
-      const address = document.getElementById('manualCustAddress').value.trim();
-      const payment = document.getElementById('manualPayMode').value;
-      const orderDate = document.getElementById('manualOrderDate').value.trim() || getTodayIndianDate();
+      const name = (document.getElementById('manualCustName')?.value || '').trim();
+      const rawPhone = (document.getElementById('manualCustPhone')?.value || '').trim().replace(/\D/g, '');
+      const address = (document.getElementById('manualCustAddress')?.value || '').trim();
+      const payment = document.getElementById('manualPayMode')?.value || 'COD';
+      const orderDate = (document.getElementById('manualOrderDate')?.value || '').trim() || getTodayIndianDate();
 
       if (!name || rawPhone.length < 10 || !address) {
         alert("Please enter Customer Name, a valid 10-digit Phone, and Address.");
@@ -1620,6 +1629,7 @@
 
       toggleImportModal(false);
       clearOrderDateFilter();
+      
       const drawer = document.getElementById('customerHistoryDrawer');
       if (drawer) {
         drawer.classList.remove('hidden');
@@ -1630,8 +1640,9 @@
 
     // 🧾 CUSTOMER RECEIPTS VIEWER
     function renderFrontUserOrders() {
-      const phoneInput = document.getElementById('frontUserPhoneInput').value.trim().replace(/\D/g, '');
+      const phoneInput = (document.getElementById('frontUserPhoneInput')?.value || '').trim().replace(/\D/g, '');
       const container = document.getElementById('frontUserOrdersList');
+      if (!container) return;
 
       if (!phoneInput) {
         container.innerHTML = '<p class="text-xs text-rose-600 font-bold text-center py-2">Please enter your 10-digit mobile number.</p>';
@@ -1645,42 +1656,40 @@
         return;
       }
 
-      container.innerHTML = userOrders.map(o => {
-        return `
-          <div class="p-3.5 border rounded-2xl bg-stone-50 space-y-2 text-xs">
-            <div class="flex justify-between items-center">
-              <div>
-                <p class="font-black text-stone-900">${o.orderId} • <span class="text-orange-600">₹${o.total}</span></p>
-                <p class="text-[11px] text-stone-500">${o.date} at ${o.placedAt} (${o.payment})</p>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <button onclick="openInvoiceModal('${o.orderId}')" class="cursor-pointer bg-stone-900 text-amber-300 font-bold px-3 py-1.5 rounded-xl uppercase text-[10px]">
-                  View Bill
-                </button>
-              </div>
+      container.innerHTML = userOrders.map(o => `
+        <div class="p-3.5 border rounded-2xl bg-stone-50 space-y-2 text-xs">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="font-black text-stone-900">${o.orderId} • <span class="text-orange-600">₹${o.total}</span></p>
+              <p class="text-[11px] text-stone-500">${o.date} at ${o.placedAt} (${o.payment})</p>
             </div>
-
-            <div class="bg-white p-2 rounded-xl text-[11px] border">
-              <strong>Place / Fulfillment:</strong> ${o.customer.address}
-            </div>
-
-            <div class="flex items-center justify-between border-t border-stone-200 pt-2 gap-2">
-              <div class="flex items-center gap-1.5">
-                <button onclick="resendOrderToWhatsApp('${o.orderId}', '${PRIMARY_PHONE}')" class="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg">
-                  <i class="fa-brands fa-whatsapp"></i> Primary (+91 8667737440)
-                </button>
-                <button onclick="resendOrderToWhatsApp('${o.orderId}', '${SECONDARY_PHONE}')" class="cursor-pointer bg-stone-800 hover:bg-stone-900 text-amber-300 font-bold text-[10px] px-2.5 py-1 rounded-lg">
-                  <i class="fa-brands fa-whatsapp"></i> Backup
-                </button>
-              </div>
-
-              <span class="text-[10px] text-stone-500 italic text-right">
-                For changes/cancellation, call kitchen before acceptance.
-              </span>
+            <div class="flex items-center gap-1.5">
+              <button onclick="openInvoiceModal('${o.orderId}')" class="cursor-pointer bg-stone-900 text-amber-300 font-bold px-3 py-1.5 rounded-xl uppercase text-[10px]">
+                View Bill
+              </button>
             </div>
           </div>
-        `;
-      }).join('');
+
+          <div class="bg-white p-2 rounded-xl text-[11px] border">
+            <strong>Place / Fulfillment:</strong> ${o.customer.address}
+          </div>
+
+          <div class="flex items-center justify-between border-t border-stone-200 pt-2 gap-2">
+            <div class="flex items-center gap-1.5">
+              <button onclick="resendOrderToWhatsApp('${o.orderId}', '${PRIMARY_PHONE}')" class="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg">
+                <i class="fa-brands fa-whatsapp"></i> Primary (+91 8667737440)
+              </button>
+              <button onclick="resendOrderToWhatsApp('${o.orderId}', '${SECONDARY_PHONE}')" class="cursor-pointer bg-stone-800 hover:bg-stone-900 text-amber-300 font-bold text-[10px] px-2.5 py-1 rounded-lg">
+                <i class="fa-brands fa-whatsapp"></i> Backup
+              </button>
+            </div>
+
+            <span class="text-[10px] text-stone-500 italic text-right">
+              For changes/cancellation, call kitchen before acceptance.
+            </span>
+          </div>
+        </div>
+      `).join('');
     }
 
     function clearOrderDateFilter() {
@@ -1689,7 +1698,7 @@
       renderCustomerOrders();
     }
 
-    // 🗓️ OWNER ORDER LIST RENDERER (BULLETPROOF TOLERANT DATE COMPARISON)
+    // 🗓️ OWNER ORDER LIST RENDERER: RELIABLE ACCEPT BUTTON AND TOLERANT MATCHING
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       if (!container) return;
@@ -1704,7 +1713,6 @@
 
       if (dateFilterVal) {
         const [yr, mo, da] = dateFilterVal.split('-');
-        // Strip leading zeros for robust integer matching
         const filterD = parseInt(da, 10);
         const filterM = parseInt(mo, 10);
         const filterY = parseInt(yr, 10);
@@ -1786,15 +1794,24 @@
       `).join('');
     }
 
+    // ⚡ INSTANT IN-PLACE ACCEPTANCE
     function ownerAcceptOrder(orderId) {
       const order = customerOrders.find(o => o.orderId === orderId);
       if (!order) return;
+      
       order.status = 'Accepted';
       localStorage.setItem('rds_customer_orders', JSON.stringify(customerOrders));
+      
+      // Re-render UI immediately
       renderCustomerOrders();
 
       const acceptMsg = `*ORDER ACCEPTED!*\n*Order ID:* ${order.orderId}\nHello ${order.customer.name}, your RDS Cloud Kitchen order has been officially accepted and entered preparation!\n*Total:* ₹${order.total}`;
-      dispatchWhatsAppMessage(order.customer.phone, acceptMsg);
+      
+      try {
+        dispatchWhatsAppMessage(order.customer.phone, acceptMsg);
+      } catch (err) {
+        console.log("WhatsApp redirect popup blocked");
+      }
     }
 
     function openInvoiceModal(orderId) {
@@ -2082,7 +2099,7 @@
     }
     function toggleCustomerHistory(show) {
       const drawer = document.getElementById('customerHistoryDrawer');
-      drawer.classList.toggle('hidden', !show);
+      if (drawer) drawer.classList.toggle('hidden', !show);
       if (show) {
         clearOrderDateFilter();
       }
