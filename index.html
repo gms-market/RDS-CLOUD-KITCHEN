@@ -236,7 +236,7 @@
       <button onclick="filterCategory('Pre-Orders')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-purple-100 text-purple-800 border border-purple-300 hover:bg-purple-200 cursor-pointer">Pre-Orders</button>
     </div>
 
-    <!-- 🧾 CUSTOMER ORDER RECEIPTS VIEWER (MODIFIED: NO FAKE STATUS & NO LOCAL CANCEL BUTTON) -->
+    <!-- CUSTOMER ORDER RECEIPTS VIEWER -->
     <section class="bg-white border border-orange-200 rounded-3xl p-5 shadow-sm space-y-3">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-3 border-b pb-3">
         <div>
@@ -1300,7 +1300,7 @@
 
       const newOrder = {
         orderId: 'RDS-' + Math.floor(100000 + Math.random() * 900000),
-        date: getTodayIsoDate(), // Stored in ISO format for stable filtering
+        date: getTodayIsoDate(),
         placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'Pending Acceptance',
         payment, customer: { name, phone, address }, items: orderItems, total: grandTotal,
@@ -1428,6 +1428,7 @@
       }
     }
 
+    // 🛡️ BULLETPROOF WHATSAPP ORDER INGESTER
     function processImportedWhatsAppOrder() {
       const rawText = document.getElementById('importOrderText').value.trim();
       if (!rawText) {
@@ -1517,14 +1518,16 @@
         
         toggleImportModal(false);
         clearOrderDateFilter();
-        toggleCustomerHistory(true);
+        if (typeof toggleCustomerHistory === 'function') {
+          toggleCustomerHistory(true);
+        }
         alert(`Order ${orderId} successfully registered for ${name}!`);
       } catch (err) {
         alert("Error parsing WhatsApp text. Please make sure you copied the whole message.");
       }
     }
 
-    // 🧾 CUSTOMER RECEIPTS VIEWER: NO FAKE STATUS, NO LOCAL CANCEL BUTTON
+    // 🧾 CUSTOMER RECEIPTS VIEWER: NO FAKE STATUS & NO LOCAL CANCEL BUTTON
     function renderFrontUserOrders() {
       const phoneInput = document.getElementById('frontUserPhoneInput').value.trim().replace(/\D/g, '');
       const container = document.getElementById('frontUserOrdersList');
