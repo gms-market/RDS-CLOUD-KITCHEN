@@ -539,7 +539,7 @@
     </div>
   </div>
 
-  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER (WITH MANUAL FALLBACK ENTRY FORM) -->
+  <!-- 📥 MODAL: OWNER INGEST WHATSAPP ORDER (WITH RELIABLE MANUAL FALLBACK) -->
   <div id="importOrderModal" class="fixed inset-0 z-[135] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border text-stone-900 text-xs max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-2">
@@ -1459,7 +1459,7 @@
       }
     }
 
-    // 🛡️ ULTRA-RELAXED WHATSAPP ORDER INGESTER (ZERO CRASHES)
+    // 🛡️ BULLETPROOF INGESTER (HANDLES ALL FORMATS CLEANLY WITHOUT POPUP ERRORS)
     function processImportedWhatsAppOrder() {
       const rawText = document.getElementById('importOrderText').value.trim();
       if (!rawText) {
@@ -1509,7 +1509,6 @@
         }
       }
 
-      // Fallback: If no item bullets matched, grab any line containing prices
       if (parsedItems.length === 0) {
         lines.forEach(l => {
           if (l.includes('₹') || /\d+/.test(l)) {
@@ -1560,13 +1559,15 @@
       
       toggleImportModal(false);
       clearOrderDateFilter();
-      if (typeof toggleCustomerHistory === 'function') {
-        toggleCustomerHistory(true);
+      const drawer = document.getElementById('customerHistoryDrawer');
+      if (drawer) {
+        drawer.classList.remove('hidden');
+        renderCustomerOrders();
       }
       alert(`Order ${orderId} successfully registered for ${name}! Portions deducted from stock.`);
     }
 
-    // ✍️ MANUAL ORDER ENTRY FORM (BULLETPROOF FALLBACK)
+    // ✍️ MANUAL ORDER ENTRY (FALLBACK IF WHATSAPP MESSAGE IS EDITED/BROKEN)
     function processManualOrderEntry() {
       const name = document.getElementById('manualCustName').value.trim();
       const rawPhone = document.getElementById('manualCustPhone').value.trim().replace(/\D/g, '');
@@ -1619,8 +1620,10 @@
 
       toggleImportModal(false);
       clearOrderDateFilter();
-      if (typeof toggleCustomerHistory === 'function') {
-        toggleCustomerHistory(true);
+      const drawer = document.getElementById('customerHistoryDrawer');
+      if (drawer) {
+        drawer.classList.remove('hidden');
+        renderCustomerOrders();
       }
       alert(`Manual Order ${manualOrder.orderId} created successfully for ${name}!`);
     }
@@ -1686,7 +1689,7 @@
       renderCustomerOrders();
     }
 
-    // 🗓️ OWNER ORDER LIST RENDERER
+    // 🗓️ OWNER ORDER LIST RENDERER (BULLETPROOF TOLERANT DATE COMPARISON)
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       if (!container) return;
@@ -1701,8 +1704,23 @@
 
       if (dateFilterVal) {
         const [yr, mo, da] = dateFilterVal.split('-');
-        const targetIndianDate = `${da}/${mo}/${yr}`;
-        filtered = filtered.filter(o => String(o.date).trim() === targetIndianDate);
+        // Strip leading zeros for robust integer matching
+        const filterD = parseInt(da, 10);
+        const filterM = parseInt(mo, 10);
+        const filterY = parseInt(yr, 10);
+
+        filtered = filtered.filter(o => {
+          if (!o.date) return false;
+          let dStr = String(o.date).trim();
+          if (dStr.includes('/')) {
+            const parts = dStr.split('/');
+            return parseInt(parts[0], 10) === filterD && parseInt(parts[1], 10) === filterM && parseInt(parts[2], 10) === filterY;
+          } else if (dStr.includes('-')) {
+            const parts = dStr.split('-');
+            return parseInt(parts[0], 10) === filterY && parseInt(parts[1], 10) === filterM && parseInt(parts[2], 10) === filterD;
+          }
+          return false;
+        });
       }
 
       if (search) {
@@ -2063,7 +2081,8 @@
       document.getElementById('settingsModal').classList.toggle('hidden', !show);
     }
     function toggleCustomerHistory(show) {
-      document.getElementById('customerHistoryDrawer').classList.toggle('hidden', !show);
+      const drawer = document.getElementById('customerHistoryDrawer');
+      drawer.classList.toggle('hidden', !show);
       if (show) {
         clearOrderDateFilter();
       }
