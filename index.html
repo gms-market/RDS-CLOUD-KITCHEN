@@ -236,12 +236,14 @@
       <button onclick="filterCategory('Pre-Orders')" class="cat-pill px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap bg-purple-100 text-purple-800 border border-purple-300 hover:bg-purple-200 cursor-pointer">Pre-Orders</button>
     </div>
 
-    <!-- CUSTOMER ORDER TRACKER -->
+    <!-- 🧾 CUSTOMER ORDER RECEIPTS VIEWER (MODIFIED: NO FAKE STATUS & NO LOCAL CANCEL BUTTON) -->
     <section class="bg-white border border-orange-200 rounded-3xl p-5 shadow-sm space-y-3">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-3 border-b pb-3">
         <div>
-          <h3 class="font-black text-stone-900 text-sm sm:text-base flex items-center gap-2"><i class="fa-solid fa-receipt text-orange-600"></i> Track / Cancel Your Orders</h3>
-          <p class="text-xs text-stone-500">Search with your 10-digit phone number. Orders can only be cancelled before kitchen acceptance.</p>
+          <h3 class="font-black text-stone-900 text-sm sm:text-base flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-orange-600"></i> Your Recent Order Receipts
+          </h3>
+          <p class="text-xs text-stone-500">View or print your order receipts. For modifications or cancellations, contact kitchen staff directly.</p>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <input id="frontUserPhoneInput" type="tel" placeholder="Enter phone number..." class="p-2 border rounded-xl text-xs bg-stone-50 outline-none w-full sm:w-48 font-bold">
@@ -249,7 +251,7 @@
         </div>
       </div>
       <div id="frontUserOrdersList" class="space-y-2">
-        <p class="text-xs text-stone-400 italic text-center py-2">Enter your phone number above to view your order history.</p>
+        <p class="text-xs text-stone-400 italic text-center py-2">Enter your phone number above to view your recent bills and receipts.</p>
       </div>
     </section>
 
@@ -280,7 +282,7 @@
         </div>
         <div>
           <p class="font-bold text-stone-900"><i class="fa-solid fa-ban text-rose-600 mr-1"></i> 3. Cancellation Policy</p>
-          <p>Orders can only be cancelled prior to kitchen acceptance. Once the kitchen accepts the order, cancellation is disabled. All cancellations must be communicated directly via our registered helpline numbers (+91 8667737440 / +91 8838377634).</p>
+          <p>Orders can only be cancelled prior to kitchen acceptance by calling our registered helpline numbers (+91 8667737440 / +91 8838377634). Once the kitchen accepts the order, cancellation is disabled.</p>
         </div>
         <div>
           <p class="font-bold text-stone-900"><i class="fa-solid fa-wheat-awn text-amber-700 mr-1"></i> 4. Food Safety & Consumption</p>
@@ -632,93 +634,6 @@
     </div>
   </div>
 
-  <!-- 📂 OWNER ORDERS & DATE FILTER CONTROLS -->
-  <div id="customerHistoryDrawer" class="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm hidden flex justify-end">
-    <div class="w-full max-w-xl bg-white h-full shadow-2xl flex flex-col justify-between p-6 overflow-y-auto">
-      <div class="space-y-4">
-        <div class="flex items-center justify-between border-b pb-3">
-          <div class="flex items-center gap-2 font-extrabold text-base"><i class="fa-solid fa-clipboard-list text-orange-600"></i><h2>Kitchen Orders & Queue</h2></div>
-          <button onclick="toggleCustomerHistory(false)" class="cursor-pointer text-xl font-bold">&times;</button>
-        </div>
-
-        <div class="bg-amber-50/80 border border-amber-200 p-3 rounded-2xl space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-stone-800 text-xs flex items-center gap-1.5">
-              <i class="fa-solid fa-calendar-day text-orange-600"></i> Filter Orders by Date
-            </span>
-            <button onclick="resetOrderDateToToday()" class="cursor-pointer text-[10px] font-black uppercase text-orange-700 hover:underline">
-              Today Only
-            </button>
-          </div>
-          <div class="flex gap-2">
-            <input id="orderDateFilterInput" onchange="renderCustomerOrders()" type="date" class="p-2 border rounded-xl text-xs bg-white font-bold w-full">
-            <button onclick="clearOrderDateFilter()" title="View All Dates" class="cursor-pointer bg-stone-200 hover:bg-stone-300 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
-              All Dates
-            </button>
-          </div>
-        </div>
-
-        <input id="customerSearchInput" oninput="renderCustomerOrders()" type="text" placeholder="Search customer phone or name..." class="w-full p-2.5 border rounded-xl text-xs bg-stone-50 outline-none">
-        
-        <div id="customerOrdersList" class="space-y-3"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 🧾 INVOICE MODAL -->
-  <div id="invoiceModal" class="fixed inset-0 z-[130] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border text-stone-900">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h2 class="font-black text-base"><i class="fa-solid fa-file-invoice text-orange-600 mr-1"></i> Customer Bill</h2>
-        <button onclick="toggleInvoiceModal(false)" class="cursor-pointer text-xl font-bold">&times;</button>
-      </div>
-      <div id="invoicePrintTarget" class="bg-white p-5 border font-mono text-xs space-y-3 shadow-sm">
-        <div class="text-center border-b border-dashed pb-3 font-sans space-y-0.5">
-          <h3 class="text-lg font-black text-stone-900">RDS CLOUD KITCHEN</h3>
-          <p class="text-[11px] font-bold text-stone-700">232/6, Ezhil Nagar, Near Gas Godown • Ph: +91 8667737440</p>
-          <p id="invFssaiNo" class="text-[11px] font-bold text-amber-800 hidden"></p>
-          <p id="invGstin" class="text-[11px] font-bold text-stone-800"></p>
-        </div>
-        <div class="grid grid-cols-2 gap-2 text-[11px] border-b border-dashed pb-2">
-          <div>
-            <p><strong>Bill:</strong> <span id="invOrderId"></span></p>
-            <p><strong>Date:</strong> <span id="invDateTime"></span></p>
-            <p><strong>Status:</strong> <span id="invOrderStatus" class="font-bold uppercase"></span></p>
-          </div>
-          <div class="text-right">
-            <p><strong>Customer:</strong> <span id="invCustName"></span></p>
-            <p><strong>Phone:</strong> <span id="invCustPhone"></span></p>
-          </div>
-        </div>
-
-        <div class="p-2 bg-stone-50 rounded-xl text-[11px]">
-          <strong>Fulfillment / Location:</strong>
-          <p id="invCustAddress" class="break-words mt-0.5"></p>
-        </div>
-
-        <div id="invRemarkRow" class="hidden p-2 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800">
-          <strong>Remark / Reason:</strong> <span id="invRemarkText"></span>
-        </div>
-
-        <table class="w-full text-left text-[11px]">
-          <thead><tr class="border-b font-bold"><th class="py-1">Item</th><th class="text-center">Qty</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead>
-          <tbody id="invItemsTable" class="divide-y"></tbody>
-        </table>
-        <div class="border-t border-dashed pt-2 space-y-1 text-[11px]">
-          <div id="invGstFields" class="hidden space-y-1">
-            <div class="flex justify-between"><span>Taxable Food Value:</span><span id="invTaxable">₹0.00</span></div>
-            <div class="flex justify-between text-stone-600"><span>GST (<span id="invGstPct">5</span>%):</span><span id="invGstVal">₹0.00</span></div>
-          </div>
-          <div class="flex justify-between border-t pt-1.5 text-sm font-black font-sans"><span>Grand Total (Net Payable):</span><span id="invGrandTotal" class="text-orange-600">₹0.00</span></div>
-        </div>
-      </div>
-      <div class="flex gap-2 font-sans pt-1">
-        <button onclick="printInvoiceSheet()" class="cursor-pointer flex-1 bg-stone-900 text-amber-300 font-black py-3 rounded-2xl uppercase text-xs">Print Bill</button>
-        <button onclick="downloadInvoicePdf()" class="cursor-pointer flex-1 bg-orange-600 text-white font-black py-3 rounded-2xl uppercase text-xs">Download PDF</button>
-      </div>
-    </div>
-  </div>
-
   <!-- 🖼️ POSTCARD MODAL -->
   <div id="postcardModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5">
     <div class="bg-stone-900 rounded-3xl max-w-3xl w-full p-5 space-y-4 shadow-2xl border border-stone-800 text-white max-h-[95vh] overflow-y-auto">
@@ -815,20 +730,16 @@
     }
 
     // 🗓️ UNIVERSAL DATE NORMALIZER & INDIAN FORMATTER
-    // Converts any input date into a standardized ISO date 'YYYY-MM-DD'
     function toStandardIso(input) {
       if (!input) return getTodayIsoDate();
       
-      // If already YYYY-MM-DD
       if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
         return input;
       }
       
-      // If DD/MM/YYYY or MM/DD/YYYY
       if (typeof input === 'string' && input.includes('/')) {
         const parts = input.split('/');
         if (parts.length === 3) {
-          // If format is DD/MM/YYYY (Day <= 31, Month <= 12, Year = 4 digits)
           if (parts[2].length === 4) {
             const day = String(parts[0]).padStart(2, '0');
             const month = String(parts[1]).padStart(2, '0');
@@ -838,7 +749,6 @@
         }
       }
       
-      // Fallback native Date parser
       const d = new Date(input);
       if (!isNaN(d.getTime())) {
         const yr = d.getFullYear();
@@ -850,7 +760,6 @@
       return getTodayIsoDate();
     }
 
-    // Converts ISO 'YYYY-MM-DD' or any date into Indian 'DD/MM/YYYY'
     function formatIndianDate(inputDate) {
       if (!inputDate) return "";
       const iso = toStandardIso(inputDate);
@@ -993,7 +902,7 @@
     let activeMenu = JSON.parse(localStorage.getItem('rds_cloud_active_menu') || '[]');
     let customerOrders = JSON.parse(localStorage.getItem('rds_customer_orders') || '[]');
     
-    // Auto-migrate any existing customerOrders to standardized ISO dates
+    // Auto-migrate orders to standard ISO
     customerOrders = customerOrders.map(o => {
       if (o && o.date) {
         o.date = toStandardIso(o.date);
@@ -1391,7 +1300,7 @@
 
       const newOrder = {
         orderId: 'RDS-' + Math.floor(100000 + Math.random() * 900000),
-        date: getTodayIsoDate(), // Saved as ISO YYYY-MM-DD for bulletproof date filtering
+        date: getTodayIsoDate(), // Stored in ISO format for stable filtering
         placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'Pending Acceptance',
         payment, customer: { name, phone, address }, items: orderItems, total: grandTotal,
@@ -1460,7 +1369,7 @@
     function openStatusUpdateModal(orderId) {
       orderToStatusUpdateId = orderId;
       const order = customerOrders.find(o => o.orderId === orderId);
-      document.getElementById('statusSelectDropdown').value = (order && order.status !== 'Pending Acceptance') ? order.status : 'Rejected';
+      document.getElementById('statusSelectDropdown').value = (order && order.status !== 'Pending Acceptance') ? order.status : 'Accepted';
       document.getElementById('cancelRemarkInput').value = order?.remark || '';
       toggleCancelModal(true);
     }
@@ -1593,7 +1502,7 @@
 
         const importedOrder = {
           orderId,
-          date: orderDate, // Saved in standard ISO YYYY-MM-DD
+          date: orderDate,
           placedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: 'Pending Acceptance',
           payment,
@@ -1615,6 +1524,7 @@
       }
     }
 
+    // 🧾 CUSTOMER RECEIPTS VIEWER: NO FAKE STATUS, NO LOCAL CANCEL BUTTON
     function renderFrontUserOrders() {
       const phoneInput = document.getElementById('frontUserPhoneInput').value.trim().replace(/\D/g, '');
       const container = document.getElementById('frontUserOrdersList');
@@ -1627,12 +1537,11 @@
       const userOrders = customerOrders.filter(o => o.customer.phone.includes(phoneInput));
 
       if (userOrders.length === 0) {
-        container.innerHTML = `<p class="text-xs text-stone-500 italic text-center py-2">No past orders found for phone number: ${phoneInput}</p>`;
+        container.innerHTML = `<p class="text-xs text-stone-500 italic text-center py-2">No past receipts found for phone number: ${phoneInput}</p>`;
         return;
       }
 
       container.innerHTML = userOrders.map(o => {
-        const canCancel = o.status === 'Pending Acceptance';
         const formattedDt = formatIndianDate(o.date);
         return `
           <div class="p-3.5 border rounded-2xl bg-stone-50 space-y-2 text-xs">
@@ -1640,22 +1549,17 @@
               <div>
                 <p class="font-black text-stone-900">${o.orderId} • <span class="text-orange-600">₹${o.total}</span></p>
                 <p class="text-[11px] text-stone-500">${formattedDt} at ${o.placedAt} (${o.payment})</p>
-                <p class="text-[11px] font-bold mt-0.5">Status: <span class="${o.status === 'Accepted' ? 'text-emerald-700' : (o.status === 'Cancelled' || o.status === 'Rejected' || o.status === 'Not Delivered' || o.status === 'Returned by Customer') ? 'text-rose-700' : 'text-amber-700'}">${o.status}</span></p>
               </div>
               <div class="flex items-center gap-1.5">
-                <button onclick="openInvoiceModal('${o.orderId}')" class="cursor-pointer bg-stone-900 text-amber-300 font-bold px-3 py-1.5 rounded-xl uppercase text-[10px]">Bill</button>
+                <button onclick="openInvoiceModal('${o.orderId}')" class="cursor-pointer bg-stone-900 text-amber-300 font-bold px-3 py-1.5 rounded-xl uppercase text-[10px]">
+                  View Bill
+                </button>
               </div>
             </div>
 
             <div class="bg-white p-2 rounded-xl text-[11px] border">
               <strong>Place / Fulfillment:</strong> ${o.customer.address}
             </div>
-
-            ${o.remark ? `
-              <div class="p-2 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800">
-                <strong>Kitchen Remark:</strong> ${o.remark}
-              </div>
-            ` : ''}
 
             <div class="flex items-center justify-between border-t border-stone-200 pt-2 gap-2">
               <div class="flex items-center gap-1.5">
@@ -1667,31 +1571,13 @@
                 </button>
               </div>
 
-              ${canCancel ? `
-                <button onclick="requestOrderCancellation('${o.orderId}')" class="cursor-pointer bg-rose-600 hover:bg-rose-700 text-white font-black text-[10px] px-3 py-1 rounded-lg uppercase">
-                  Cancel
-                </button>
-              ` : `
-                <span class="text-[10px] italic ${o.status === 'Accepted' ? 'text-emerald-700' : 'text-stone-500'}">
-                  ${o.status === 'Accepted' ? 'Accepted' : 'Finalized'}
-                </span>
-              `}
+              <span class="text-[10px] text-stone-500 italic text-right">
+                For changes/cancellation, call kitchen before acceptance.
+              </span>
             </div>
           </div>
         `;
       }).join('');
-    }
-
-    function requestOrderCancellation(orderId) {
-      const order = customerOrders.find(o => o.orderId === orderId);
-      if (!order) return;
-      if (order.status === 'Accepted') {
-        alert("This order has already been accepted and prep has commenced. It can no longer be cancelled.");
-        return;
-      }
-      const cancelMsg = `*URGENT: CANCELLATION REQUEST*\n*Order ID:* ${order.orderId}\n*Customer:* ${order.customer.name} (${order.customer.phone})\nPlease cancel this order before kitchen acceptance.`;
-      const targetPhone = confirm("Send cancellation request to Primary Helpline (+91 8667737440)? Click Cancel for Secondary Helpline (+91 8838377634).") ? PRIMARY_PHONE : SECONDARY_PHONE;
-      dispatchWhatsAppMessage(targetPhone, cancelMsg);
     }
 
     function resetOrderDateToToday() {
@@ -1706,7 +1592,7 @@
       renderCustomerOrders();
     }
 
-    // 🗓️ OWNER ORDER LIST RENDERER (BULLETPROOF DATE MATCHING)
+    // 🗓️ OWNER ORDER LIST RENDERER
     function renderCustomerOrders() {
       const container = document.getElementById('customerOrdersList');
       if (!container) return;
@@ -1718,7 +1604,6 @@
 
       let filtered = customerOrders;
 
-      // Filter by Selected Date using standardized ISO comparison
       if (dateFilterVal) {
         filtered = filtered.filter(o => {
           const orderIso = toStandardIso(o.date);
@@ -1726,7 +1611,6 @@
         });
       }
 
-      // Filter by Name / Phone search
       if (search) {
         filtered = filtered.filter(o => o.customer.phone.toLowerCase().includes(search) || o.customer.name.toLowerCase().includes(search));
       }
